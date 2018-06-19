@@ -32,6 +32,13 @@ func (b *Buffer) AsSlice() []byte {
 	return (*b.buffer)[:bufferSize-cap(b.LimitedBuffer)+len(b.LimitedBuffer)]
 }
 
+func (b *Buffer) Skip(n int) {
+	if n > len(b.LimitedBuffer) {
+		n = len(b.LimitedBuffer)
+	}
+	b.LimitedBuffer = b.LimitedBuffer[n:]
+}
+
 func (b *Buffer) Close() error {
 	b.LimitedBuffer = nil
 	if b.buffer != nil {
