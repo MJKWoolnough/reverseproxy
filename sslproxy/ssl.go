@@ -16,7 +16,7 @@ var Service service
 type service struct{}
 
 func (service) GetServerName(c net.Conn, buf *buffer.Buffer) (string, error) {
-	_, err := io.CopyN(buf, c, 5)
+	_, err := io.ReadFull(c, buf.LimitedBuffer[:5])
 	if err != nil {
 		return "", err
 	}
@@ -36,7 +36,7 @@ func (service) GetServerName(c net.Conn, buf *buffer.Buffer) (string, error) {
 		return "", io.ErrShortBuffer
 	}
 
-	_, err = io.CopyN(buf, c, int64(length))
+	_, err = io.ReadFull(buf, buf.LimitedBuffer[5:5+length])
 	if err != nil {
 		return "", err
 	}
