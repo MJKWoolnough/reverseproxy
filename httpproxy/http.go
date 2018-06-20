@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"vimagination.zapto.org/errors"
-	"vimagination.zapto.org/reverseproxy/internal/buffer"
 )
 
 const Name = "HTTP"
@@ -20,36 +19,38 @@ var (
 
 type service struct{}
 
-func (service) GetServerName(c io.Reader, buf *buffer.Buffer) (string, error) {
+func (service) GetServerName(c io.Reader, buf []byte) (int, []byte, error) {
 	end := -1
+	n := 0
 	for end < 0 {
-		if len(buf.LimitedBuffer) == cap(buf.LimitedBuffer) {
-			return "", ErrInvalidHeaders
+		if n == cap(buf) {
+			return n, nil, ErrInvalidHeaders
 		}
-		n, err := c.Read(buf.LimitedBuffer[len(buf.LimitedBuffer):cap(buf.LimitedBuffer)])
-		buf.LimitedBuffer = buf.LimitedBuffer[:len(buf.LimitedBuffer)+n]
+		m, err := c.Read(buf[n:cap(buf)])
+		n += m
 		if err != nil {
 			if terr, ok := err.(interface {
 				Temporary() bool
 			}); !ok || !terr.Temporary() {
-				return "", errors.WithContext("error reading headers: ", err)
+				return n, nil, errors.WithContext("error reading headers: ", err)
 			}
 		}
-		end = bytes.Index(buf.LimitedBuffer, eoh)
+		buf = buf[:n]
+		end = bytes.Index(buf, eoh)
 	}
 
-	data := buf.LimitedBuffer[:end-2]
+	buf = buf[:end-2]
 
-	hi := bytes.Index(data, host)
+	hi := bytes.Index(buf, host)
 	if hi < 0 {
-		return "", ErrNoHost
+		return n, nil, ErrNoHost
 	}
-	data = data[hi+len(host):]
-	lineEnd := bytes.Index(data, eol)
+	buf = buf[hi+len(host):]
+	lineEnd := bytes.Index(buf, eol)
 	if lineEnd < 0 {
-		return "", ErrNoHost
+		return n, nil, ErrNoHost
 	}
-	return string(bytes.TrimSpace(data[:lineEnd-2])), nil
+	return n, bytes.TrimSpace(buf[:lineEnd-2]), nil
 }
 
 func (service) Service() string {
