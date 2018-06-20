@@ -9,23 +9,29 @@ import (
 
 type Conn struct {
 	net.Conn
-	buffer buffer.Buffer
+	buffer      *buffer.Buffer
+	pos, length int
 }
 
 func (c *Conn) Read(b []byte) (int, error) {
-	if len(c.buffer.LimitedBuffer) > 0 {
-		n, err := c.buffer.Read(b)
-		if len(c.buffer.LimitedBuffer) == 0 {
-			c.buffer.Close()
+	if c.pos < c.length {
+		n := copy(b, c.buffer[c.pos:c.length])
+		c.pos += n
+		if c.pos == c.length {
+			buffer.Put(c.buffer)
+			c.buffer = nil
 		}
-		return n, err
+		return n, nil
 	}
 	return c.Conn.Read(b)
 }
 
 func (c *Conn) Close() error {
 	runtime.SetFinalizer(c, nil)
-	c.buffer.Close()
+	if c.buffer != nil {
+		buffer.Put(c.buffer)
+		c.buffer = nil
+	}
 	return c.Conn.Close()
 }
 

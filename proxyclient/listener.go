@@ -2,6 +2,7 @@ package proxyclient
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"runtime"
@@ -11,13 +12,14 @@ import (
 	"time"
 
 	"vimagination.zapto.org/errors"
+	"vimagination.zapto.org/reverseproxy/internal/buffer"
 )
 
 type Listener struct {
 	unix *net.UnixConn
 
 	mu     sync.Mutex
-	length [4]byte
+	length BufferLength
 	oob    []byte
 
 	conns sync.WaitGroup
@@ -45,10 +47,18 @@ func NewListener(socketFD uintptr) (*Listener, error) {
 		return nil, ErrInvalidFD
 	}
 
-	return &Listener{
+	l := &Listener{
 		unix: u,
 		oob:  make([]byte, syscall.CmsgSpace(4)),
-	}, nil
+	}
+	l.length.WriteUint(uint(socketFD))
+	u.SetWriteDeadline(time.Now().Add(time.Second * 5))
+	_, err = u.Write(l.length[:])
+	if err != nil {
+		return nil, err
+	}
+	u.SetWriteDeadline(time.Time{})
+	return l, nil
 }
 
 func (l *Listener) Accept() (net.Conn, error) {
@@ -58,35 +68,34 @@ func (l *Listener) Accept() (net.Conn, error) {
 		l.mu.Unlock()
 		return nil, errors.WithContext("error reading length and socket fd: ", err)
 	}
-	length := uint(l.length[0]) | uint(l.length[1])<<8 | uint(l.length[2])<<16 | uint(l.length[3])<<24
+	length := l.length.ReadUint()
 	c := new(Conn)
-	c.buffer.Init()
-	c.buffer.LimitedBuffer = c.buffer.LimitedBuffer[:0:length]
-	_, err = c.buffer.ReadFrom(&c.buffer)
+	c.buffer = buffer.Get()
+	_, err = io.ReadFull(l.unix, c.buffer[:length])
 	if err != nil {
-		c.buffer.Close()
+		buffer.Put(c.buffer)
 		l.mu.Unlock()
 		return nil, errors.WithContext("error reading buffered data: ", err)
 	}
 	msg, err := syscall.ParseSocketControlMessage(l.oob)
 	l.mu.Unlock()
 	if err != nil || len(msg) != 1 {
-		c.buffer.Close()
+		buffer.Put(c.buffer)
 		return nil, errors.WithContext("error parsing socket control message: ", err)
 	}
 	fd, err := syscall.ParseUnixRights(&msg[0])
 	if err != nil || len(fd) != 1 {
-		c.buffer.Close()
+		buffer.Put(c.buffer)
 		return nil, errors.WithContext("error parsing rights for socket descriptor: ", err)
 	}
 	f := os.NewFile(uintptr(fd[0]), "")
 	if f == nil {
-		c.buffer.Close()
+		buffer.Put(c.buffer)
 		return nil, ErrInvalidFD
 	}
 	c.Conn, err = net.FileConn(f)
 	if err != nil {
-		c.buffer.Close()
+		buffer.Put(c.buffer)
 		return nil, errors.WithContext("error creating connection from descriptor: ", err)
 	}
 	if ka, ok := c.Conn.(keepAlive); ok {
