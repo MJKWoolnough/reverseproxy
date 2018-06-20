@@ -2,48 +2,43 @@ package buffer
 
 import (
 	"sync"
-
-	"vimagination.zapto.org/memio"
 )
 
 const (
 	bufferSize = 8 << 10 // 8KB
 )
 
-type Buffer struct {
-	buffer *[bufferSize]byte
-	memio.LimitedBuffer
-}
+type Buffer [bufferSize]byte
 
 var bufferPool = sync.Pool{
 	New: func() interface{} {
-		return new([bufferSize]byte)
+		return new(Buffer)
 	},
 }
 
-func (b *Buffer) Init() {
-	if b.buffer == nil {
-		b.buffer = bufferPool.New().(*[bufferSize]byte)
-	}
-	b.LimitedBuffer = memio.LimitedBuffer((*b.buffer)[:0])
+func Get() *Buffer {
+	return bufferPool.New().(*Buffer)
 }
 
-func (b *Buffer) AsSlice() []byte {
-	return (*b.buffer)[:bufferSize-cap(b.LimitedBuffer)+len(b.LimitedBuffer)]
+func Put(buf *Buffer) {
+	bufferPool.Put(buf)
 }
 
-func (b *Buffer) Skip(n int) {
-	if n > len(b.LimitedBuffer) {
-		n = len(b.LimitedBuffer)
-	}
-	b.LimitedBuffer = b.LimitedBuffer[n:]
+type BufferLength [4]byte
+
+func (b BufferLength) ReadUint() uint {
+	return uint(b[0] |
+		b[1]<<8 |
+		b[2]<<16 |
+		b[3]<<24,
+	)
 }
 
-func (b *Buffer) Close() error {
-	b.LimitedBuffer = nil
-	if b.buffer != nil {
-		bufferPool.Put(b.buffer)
-		b.buffer = nil
+func (b *BufferLength) WriteUint(u uint) {
+	*b = [4]byte{
+		byte(u),
+		byte(u >> 8),
+		byte(u >> 16),
+		byte(u >> 24),
 	}
-	return nil
 }
