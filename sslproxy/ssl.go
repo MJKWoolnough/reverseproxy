@@ -2,7 +2,6 @@ package sslproxy
 
 import (
 	"io"
-	"net"
 
 	"vimagination.zapto.org/byteio"
 	"vimagination.zapto.org/errors"
@@ -15,7 +14,7 @@ var Service service
 
 type service struct{}
 
-func (service) GetServerName(c net.Conn, buf *buffer.Buffer) (string, error) {
+func (service) GetServerName(c io.Reader, buf *buffer.Buffer) (string, error) {
 	_, err := io.ReadFull(c, buf.LimitedBuffer[:5])
 	if err != nil {
 		return "", err
