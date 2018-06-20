@@ -19,7 +19,7 @@ type Listener struct {
 	unix *net.UnixConn
 
 	mu     sync.Mutex
-	length BufferLength
+	length buffer.BufferLength
 	oob    []byte
 
 	conns sync.WaitGroup
