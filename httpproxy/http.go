@@ -2,7 +2,7 @@ package httpproxy
 
 import (
 	"bytes"
-	"net"
+	"io"
 
 	"vimagination.zapto.org/errors"
 	"vimagination.zapto.org/reverseproxy/internal/buffer"
@@ -20,7 +20,7 @@ var (
 
 type service struct{}
 
-func (service) GetServerName(c net.Conn, buf *buffer.Buffer) (string, error) {
+func (service) GetServerName(c io.Reader, buf *buffer.Buffer) (string, error) {
 	end := -1
 	for end < 0 {
 		if len(buf.LimitedBuffer) == cap(buf.LimitedBuffer) {
@@ -44,7 +44,7 @@ func (service) GetServerName(c net.Conn, buf *buffer.Buffer) (string, error) {
 	if hi < 0 {
 		return "", ErrNoHost
 	}
-	data = data[hi+len(hosts)]
+	data = data[hi+len(host):]
 	lineEnd := bytes.Index(data, eol)
 	if lineEnd < 0 {
 		return "", ErrNoHost
