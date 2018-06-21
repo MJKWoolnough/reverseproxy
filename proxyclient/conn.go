@@ -14,14 +14,16 @@ type Conn struct {
 }
 
 func (c *Conn) Read(b []byte) (int, error) {
-	if c.pos < c.length {
+	if c.buffer != nil {
 		n := copy(b, c.buffer[c.pos:c.length])
 		c.pos += n
-		if c.pos == c.length {
+		if c.pos >= c.length {
 			buffer.Put(c.buffer)
 			c.buffer = nil
 		}
-		return n, nil
+		if n > 0 {
+			return n, nil
+		}
 	}
 	return c.Conn.Read(b)
 }
