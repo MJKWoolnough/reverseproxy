@@ -39,7 +39,7 @@ func (service) GetServerName(c io.Reader, buf []byte) (int, []byte, error) {
 		end = bytes.Index(buf, eoh)
 	}
 
-	buf = buf[:end-2]
+	buf = buf[:end+2]
 
 	hi := bytes.Index(buf, host)
 	if hi < 0 {
@@ -50,7 +50,7 @@ func (service) GetServerName(c io.Reader, buf []byte) (int, []byte, error) {
 	if lineEnd < 0 {
 		return n, nil, ErrNoHost
 	}
-	return n, bytes.TrimSpace(buf[:lineEnd-2]), nil
+	return n, bytes.TrimSpace(buf[:lineEnd]), nil
 }
 
 func (service) Service() string {
