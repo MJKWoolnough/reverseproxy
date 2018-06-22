@@ -12,9 +12,10 @@ const Name = "HTTP"
 var (
 	Service service
 
-	eoh  = []byte("\r\n\r\n")
-	eol  = eoh[:2]
-	host = []byte("\r\nHost: ")
+	eoh        = []byte("\r\n\r\n")
+	eol        = eoh[:2]
+	host       = []byte("\r\nHost: ")
+	badRequest = []byte("HTTP/1.0 400\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
 )
 
 type service struct{}
@@ -48,6 +49,9 @@ func (service) GetServerName(c io.Reader, buf []byte) (int, []byte, error) {
 	buf = buf[hi+len(host):]
 	lineEnd := bytes.Index(buf, eol)
 	if lineEnd < 0 {
+		if w, ok := c.(io.Writer); ok {
+			w.Write(badRequest)
+		}
 		return n, nil, ErrNoHost
 	}
 	return n, bytes.TrimSpace(buf[:lineEnd]), nil
