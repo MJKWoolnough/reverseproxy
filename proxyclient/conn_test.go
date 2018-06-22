@@ -21,7 +21,7 @@ func TestConn(t *testing.T) {
 			Remote: ioconn.Addr{},
 		},
 	}
-	for n, test := range []struct {
+	for n, test := range [...]struct {
 		BufferData, ConnData, ReadBuf []byte
 		Output                        [][]byte
 	}{
