@@ -88,12 +88,7 @@ func (l *Listener) Accept() (net.Conn, error) {
 		buffer.Put(c.buffer)
 		return nil, errors.WithContext("error parsing rights for socket descriptor: ", err)
 	}
-	f := os.NewFile(uintptr(fd[0]), "")
-	if f == nil {
-		buffer.Put(c.buffer)
-		return nil, ErrInvalidFD
-	}
-	c.Conn, err = net.FileConn(f)
+	c.Conn, err = net.FileConn(os.NewFile(uintptr(fd[0]), ""))
 	if err != nil {
 		buffer.Put(c.buffer)
 		return nil, errors.WithContext("error creating connection from descriptor: ", err)
