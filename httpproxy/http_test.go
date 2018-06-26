@@ -10,6 +10,7 @@ import (
 
 func TestHTTPRead(t *testing.T) {
 	buf := buffer.Get()
+	service := service{}
 	for n, test := range [...]struct {
 		Input  memio.Buffer
 		Output []byte
@@ -26,7 +27,7 @@ func TestHTTPRead(t *testing.T) {
 			nil,
 		},
 	} {
-		_, name, err := Service.GetServerName(&test.Input, buf[:0])
+		_, name, err := service.GetServerName(&test.Input, buf[:0])
 		if err != test.Error {
 			t.Errorf("test %d: expecting error %v, got %v", n+1, test.Error, err)
 		} else if !bytes.Equal(name, test.Output) {
