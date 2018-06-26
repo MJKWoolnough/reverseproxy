@@ -2,15 +2,19 @@ package sslproxy
 
 import (
 	"io"
+	"net"
 
 	"vimagination.zapto.org/byteio"
 	"vimagination.zapto.org/errors"
 	"vimagination.zapto.org/memio"
+	"vimagination.zapto.org/reverseproxy"
 )
 
 const Name = "SSL"
 
-var Service service
+func New(l net.Listener) *reverseproxy.Proxy {
+	return reverseproxy.NewProxy(l, service{})
+}
 
 type service struct{}
 
@@ -110,7 +114,7 @@ func (service) GetServerName(c io.Reader, buf []byte) (int, []byte, error) {
 	return n, nil, ErrNoName
 }
 
-func (service) Service() string {
+func (service) Name() string {
 	return Name
 }
 
