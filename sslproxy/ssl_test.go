@@ -9,6 +9,7 @@ import (
 
 func TestSSLRead(t *testing.T) {
 	buf := buffer.Get()
+	service := service{}
 	for n, test := range [...]struct {
 		Input []byte
 		Name  string
@@ -31,7 +32,7 @@ func TestSSLRead(t *testing.T) {
 		},
 	} {
 		r := memio.Buffer(test.Input)
-		_, name, err := Service.GetServerName(&r, buf[:])
+		_, name, err := service.GetServerName(&r, buf[:])
 		if err != nil {
 			t.Errorf("test %d: unexpected error: %s", n+1, err)
 		} else if string(name) != test.Name {
