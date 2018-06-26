@@ -3,20 +3,24 @@ package httpproxy
 import (
 	"bytes"
 	"io"
+	"net"
 
 	"vimagination.zapto.org/errors"
+	"vimagination.zapto.org/reverseproxy"
 )
 
 const Name = "HTTP"
 
 var (
-	Service service
-
 	eoh        = []byte("\r\n\r\n")
 	eol        = eoh[:2]
 	host       = []byte("\r\nHost: ")
 	badRequest = []byte("HTTP/1.0 400\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
 )
+
+func New(l net.Listener) *reverseproxy.Proxy {
+	return reverseproxy.NewProxy(l, service{})
+}
 
 type service struct{}
 
@@ -57,7 +61,7 @@ func (service) GetServerName(c io.Reader, buf []byte) (int, []byte, error) {
 	return n, bytes.TrimSpace(buf[:lineEnd]), nil
 }
 
-func (service) Service() string {
+func (service) Name() string {
 	return Name
 }
 
