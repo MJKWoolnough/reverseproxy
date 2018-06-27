@@ -1,4 +1,4 @@
-package sslproxy
+package proxyssl
 
 import (
 	"testing"

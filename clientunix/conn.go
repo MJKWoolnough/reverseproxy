@@ -1,4 +1,4 @@
-package unixclient
+package clientunix
 
 import (
 	"net"

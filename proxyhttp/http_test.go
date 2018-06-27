@@ -1,4 +1,4 @@
-package httpproxy
+package proxyhttp
 
 import (
 	"bytes"
