@@ -1,9 +1,10 @@
-package clientunix
+package conn
 
 import (
 	"net"
 	"runtime"
 
+	"vimagination.zapto.org/reverseproxy/internal/addr"
 	"vimagination.zapto.org/reverseproxy/internal/buffer"
 )
 
@@ -11,6 +12,14 @@ type Conn struct {
 	net.Conn
 	buffer      *buffer.Buffer
 	pos, length int
+}
+
+func New(c net.Conn, buf *buffer.Buffer, length int) net.Conn {
+	return &Conn{
+		Conn:   c,
+		buffer: buf,
+		length: length,
+	}
 }
 
 func (c *Conn) Read(b []byte) (int, error) {
@@ -39,32 +48,22 @@ func (c *Conn) Close() error {
 
 func (c *Conn) LocalConn() net.Addr {
 	if c.Conn == nil {
-		return fakeAddr{}
+		return addr.Addr{}
 	}
 	r := c.Conn.LocalAddr()
 	if r == nil {
-		return fakeAddr{}
+		return addr.Addr{}
 	}
 	return r
 }
 
 func (c *Conn) RemoteConn() net.Addr {
 	if c.Conn == nil {
-		return fakeAddr{}
+		return addr.Addr{}
 	}
 	r := c.Conn.RemoteAddr()
 	if r == nil {
-		return fakeAddr{}
+		return addr.Addr{}
 	}
 	return r
-}
-
-type fakeAddr struct{}
-
-func (fakeAddr) Network() string {
-	return ""
-}
-
-func (fakeAddr) String() string {
-	return ""
 }

@@ -1,4 +1,4 @@
-package clientunix
+package conn
 
 import (
 	"bytes"
