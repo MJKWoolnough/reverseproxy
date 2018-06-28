@@ -13,6 +13,7 @@ import (
 
 	"vimagination.zapto.org/errors"
 	"vimagination.zapto.org/reverseproxy/internal/buffer"
+	"vimagination.zapto.org/reverseproxy/internal/conn"
 )
 
 type Listener struct {
@@ -69,37 +70,37 @@ func (l *Listener) Accept() (net.Conn, error) {
 		return nil, errors.WithContext("error reading length and socket fd: ", err)
 	}
 	length := l.length.ReadUint()
-	c := new(Conn)
-	c.buffer = buffer.Get()
-	_, err = io.ReadFull(l.unix, c.buffer[:length])
+	buf := buffer.Get()
+	_, err = io.ReadFull(l.unix, buf[:length])
 	if err != nil {
-		buffer.Put(c.buffer)
+		buffer.Put(buf)
 		l.mu.Unlock()
 		return nil, errors.WithContext("error reading buffered data: ", err)
 	}
 	msg, err := syscall.ParseSocketControlMessage(l.oob)
 	l.mu.Unlock()
 	if err != nil || len(msg) != 1 {
-		buffer.Put(c.buffer)
+		buffer.Put(buf)
 		return nil, errors.WithContext("error parsing socket control message: ", err)
 	}
 	fd, err := syscall.ParseUnixRights(&msg[0])
 	if err != nil || len(fd) != 1 {
-		buffer.Put(c.buffer)
+		buffer.Put(buf)
 		return nil, errors.WithContext("error parsing rights for socket descriptor: ", err)
 	}
-	c.Conn, err = net.FileConn(os.NewFile(uintptr(fd[0]), ""))
+	cn, err := net.FileConn(os.NewFile(uintptr(fd[0]), ""))
 	if err != nil {
-		buffer.Put(c.buffer)
+		buffer.Put(buf)
 		return nil, errors.WithContext("error creating connection from descriptor: ", err)
 	}
-	if ka, ok := c.Conn.(keepAlive); ok {
+	if ka, ok := cn.(keepAlive); ok {
 		ka.SetKeepAlive(true)
 		ka.SetKeepAlivePeriod(3 * time.Minute)
 	}
 	l.conns.Add(1)
-	runtime.SetFinalizer(c, (*Conn).Close)
-	return c, nil
+	mc := conn.New(cn, buf, int(length))
+	runtime.SetFinalizer(mc, (*conn.Conn).Close)
+	return mc, nil
 }
 
 type keepAlive interface {
