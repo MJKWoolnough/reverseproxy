@@ -16,7 +16,7 @@ import (
 	"vimagination.zapto.org/reverseproxy/internal/conn"
 )
 
-type Listener struct {
+type listener struct {
 	unix *net.UnixConn
 
 	mu     sync.Mutex
@@ -26,19 +26,19 @@ type Listener struct {
 	conns sync.WaitGroup
 }
 
-func ProxyListener(srvname string) (*Listener, error) {
+func ProxyListener(srvname string) (net.Listener, error) {
 	sfd, ok := os.LookupEnv("rproxy_" + srvname)
 	if !ok {
 		return nil, ErrNoServerFD
 	}
 	fd, err := strconv.ParseUint(sfd, 10, 64)
 	if err != nil {
-		return nil, errors.WithContext(fmt.Sprintf("error getting fd from enc (%q): ", sfd), err)
+		return nil, errors.WithContext(fmt.Sprintf("error getting fd from env (%q): ", sfd), err)
 	}
 	return NewListener(uintptr(fd))
 }
 
-func NewListener(socketFD uintptr) (*Listener, error) {
+func NewListener(socketFD uintptr) (net.Listener, error) {
 	c, err := net.FileConn(os.NewFile(socketFD, ""))
 	if err != nil {
 		return nil, errors.WithContext("error creating file from descriptor: ", err)
@@ -48,7 +48,7 @@ func NewListener(socketFD uintptr) (*Listener, error) {
 		return nil, ErrInvalidFD
 	}
 
-	l := &Listener{
+	l := &listener{
 		unix: u,
 		oob:  make([]byte, syscall.CmsgSpace(4)),
 	}
@@ -62,7 +62,7 @@ func NewListener(socketFD uintptr) (*Listener, error) {
 	return l, nil
 }
 
-func (l *Listener) Accept() (net.Conn, error) {
+func (l *listener) Accept() (net.Conn, error) {
 	l.mu.Lock()
 	_, _, _, _, err := l.unix.ReadMsgUnix(l.length[:], l.oob)
 	if err != nil {
@@ -108,16 +108,16 @@ type keepAlive interface {
 	SetKeepAlivePeriod(time.Duration) error
 }
 
-func (l *Listener) Addr() net.Addr {
+func (l *listener) Addr() net.Addr {
 	return l.unix.LocalAddr()
 }
 
-func (l *Listener) Close() error {
+func (l *listener) Close() error {
 	l.conns.Done()
 	return l.unix.Close()
 }
 
-func (l *Listener) Wait() {
+func (l *listener) Wait() {
 	l.conns.Wait()
 }
 
