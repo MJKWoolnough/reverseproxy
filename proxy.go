@@ -9,9 +9,8 @@ import (
 	"vimagination.zapto.org/reverseproxy/internal/buffer"
 )
 
-type service struct {
-	Service
-	servers map[string]Server
+type service interface {
+	Handle(io.Reader, []buf) bool
 }
 
 type Proxy struct {
@@ -22,10 +21,10 @@ type Proxy struct {
 	services map[string]service
 }
 
-func New(l net.Listener, p Protocol) *Proxy {
+func NewProxy(l net.Listener, p Protocol) *Proxy {
 	return &Proxy{
 		l:        l,
-		protocol: p,
+		p:        p,
 		services: make(map[string]service),
 	}
 }
@@ -57,7 +56,7 @@ func (p *Proxy) run() {
 
 func (p *Proxy) handle(c net.Conn) {
 	buf := buffer.Get()
-	n, name, err := p.p.GetServerName(c, buf)
+	n, name, err := p.p.GetServerName(c, buf[:])
 	if err != nil {
 		buffer.Put(buf)
 		c.Close()
@@ -71,9 +70,10 @@ func (p *Proxy) handle(c net.Conn) {
 		c.Close()
 		return
 	}
-	serv.handle(c, buf[:n])
-	buffer.Put(buf)
-	c.Close()
+	if serv.handle(c, buf[:n]) {
+		buffer.Put(buf)
+		c.Close()
+	}
 }
 
 func (p *Proxy) Stop() error {
