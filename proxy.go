@@ -10,7 +10,7 @@ import (
 )
 
 type service interface {
-	Handle(io.Reader, []buf) bool
+	Handle(io.Reader, buffer.Buffer, int)
 }
 
 type Proxy struct {
@@ -70,10 +70,7 @@ func (p *Proxy) handle(c net.Conn) {
 		c.Close()
 		return
 	}
-	if serv.handle(c, buf[:n]) {
-		buffer.Put(buf)
-		c.Close()
-	}
+	serv.handle(c, buf, n)
 }
 
 func (p *Proxy) Stop() error {
