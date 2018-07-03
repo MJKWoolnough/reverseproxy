@@ -34,9 +34,7 @@ func (service) GetServerName(c io.Reader, buf []byte) (int, []byte, error) {
 		m, err := c.Read(buf[n:cap(buf)])
 		n += m
 		if err != nil {
-			if terr, ok := err.(interface {
-				Temporary() bool
-			}); !ok || !terr.Temporary() {
+			if terr, ok := err.(net.Error); !ok || !terr.Temporary() {
 				return n, nil, errors.WithContext("error reading headers: ", err)
 			}
 		}
