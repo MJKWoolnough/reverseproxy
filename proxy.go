@@ -11,6 +11,7 @@ import (
 
 type service interface {
 	Handle(io.Reader, *buffer.Buffer, int)
+	Stop()
 }
 
 type Proxy struct {
@@ -54,6 +55,16 @@ func (p *Proxy) run() {
 	}
 }
 
+func (p *Proxy) Add(serverName string, server Service) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if _, ok := p.services[serverName]; ok {
+		return ErrServerRegistered
+	}
+	p.services[serverName] = server
+	return nil
+}
+
 func (p *Proxy) handle(c net.Conn) {
 	buf := buffer.Get()
 	n, name, err := p.p.GetServerName(c, buf[:])
@@ -74,7 +85,14 @@ func (p *Proxy) handle(c net.Conn) {
 }
 
 func (p *Proxy) Stop() error {
-	return p.l.Close()
+	err := p.l.Close()
+	p.mu.Lock()
+	for n, s := range p.services {
+		s.Stop()
+		delete(p.services, n)
+	}
+	p.mu.Unlock()
+	return err
 }
 
 const (
