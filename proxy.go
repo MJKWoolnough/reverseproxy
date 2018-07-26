@@ -9,7 +9,7 @@ import (
 	"vimagination.zapto.org/reverseproxy/internal/buffer"
 )
 
-type service interface {
+type Service interface {
 	Handle(io.Reader, *buffer.Buffer, int)
 	Stop()
 }
@@ -19,14 +19,14 @@ type Proxy struct {
 	p Protocol
 
 	mu       sync.RWMutex
-	services map[string]service
+	services map[string]Service
 }
 
 func NewProxy(l net.Listener, p Protocol) *Proxy {
 	return &Proxy{
 		l:        l,
 		p:        p,
-		services: make(map[string]service),
+		services: make(map[string]Service),
 	}
 }
 
