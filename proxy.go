@@ -10,7 +10,7 @@ import (
 )
 
 type Service interface {
-	Handle(io.Reader, *buffer.Buffer, int)
+	Handle(net.Conn, *buffer.Buffer, int)
 	Stop()
 }
 
