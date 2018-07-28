@@ -3,6 +3,7 @@ package local
 import (
 	"net"
 
+	"vimagination.zapto.org/errors"
 	"vimagination.zapto.org/reverseproxy"
 	"vimagination.zapto.org/reverseproxy/internal/addr"
 	"vimagination.zapto.org/reverseproxy/internal/buffer"
@@ -34,7 +35,7 @@ func (l *listener) Stop() {
 func (l *listener) Accept() (net.Conn, error) {
 	c, ok := <-l.req
 	if !ok {
-		return nil, nil
+		return nil, ErrClosed
 	}
 	return c, nil
 }
@@ -48,4 +49,9 @@ func (l *listener) Close() error {
 	return nil
 }
 
-var localAddr net.Addr = addr.Addr{"local", "local"}
+const (
+	local                  = "local"
+	ErrClosed errors.Error = "connection closed"
+)
+
+var localAddr net.Addr = addr.Addr{local, local}
