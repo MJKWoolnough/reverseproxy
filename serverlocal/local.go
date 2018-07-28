@@ -2,6 +2,7 @@ package local
 
 import (
 	"net"
+	"sync"
 
 	"vimagination.zapto.org/errors"
 	"vimagination.zapto.org/reverseproxy"
@@ -12,14 +13,22 @@ import (
 
 type listener struct {
 	req chan net.Conn
+
+	mu     sync.Mutex
+	closed bool
 }
 
-func Listen(serverName string, p *reverseproxy.Proxy) (net.Listener, error) {
+func Listen(p *reverseproxy.Proxy, serverName string, aliases ...string) (net.Listener, error) {
 	l := &listener{
 		req: make(chan net.Conn),
 	}
 	if err := p.Add(serverName, l); err != nil {
 		return nil, err
+	}
+	for _, alias := range aliases {
+		if err := p.Add(alias, l); err != nil {
+			return nil, err
+		}
 	}
 	return l, nil
 }
@@ -29,7 +38,12 @@ func (l *listener) Handle(c net.Conn, buf *buffer.Buffer, length int) {
 }
 
 func (l *listener) Stop() {
-	close(l.req)
+	l.mu.Lock()
+	if !l.closed {
+		close(l.req)
+		l.closed = true
+	}
+	l.mu.Unlock()
 }
 
 func (l *listener) Accept() (net.Conn, error) {
@@ -45,7 +59,7 @@ func (l *listener) Addr() net.Addr {
 }
 
 func (l *listener) Close() error {
-	close(l.req)
+	l.Stop()
 	return nil
 }
 
