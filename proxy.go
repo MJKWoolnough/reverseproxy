@@ -68,7 +68,7 @@ func (p *Proxy) Add(serverName string, server Service) error {
 func (p *Proxy) Remove(serverName string) {
 	p.mu.Lock()
 	delete(p.services, serverName)
-	p.mu.Unlock
+	p.mu.Unlock()
 }
 
 func (p *Proxy) handle(c net.Conn) {
