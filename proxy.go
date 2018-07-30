@@ -10,7 +10,7 @@ import (
 )
 
 type Service interface {
-	Handle(net.Conn, *buffer.Buffer, int)
+	Handle(net.Conn, *buffer.Buffer, uint)
 	Stop()
 }
 
@@ -31,7 +31,7 @@ func NewProxy(l net.Listener, p Protocol) *Proxy {
 }
 
 type Protocol interface {
-	GetServerName(io.Reader, []byte) (int, []byte, error)
+	GetServerName(io.Reader, []byte) (uint, []byte, error)
 	Name() string
 }
 

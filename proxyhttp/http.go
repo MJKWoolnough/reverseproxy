@@ -24,18 +24,18 @@ func New(l net.Listener) *reverseproxy.Proxy {
 
 type service struct{}
 
-func (service) GetServerName(c io.Reader, buf []byte) (int, []byte, error) {
+func (service) GetServerName(c io.Reader, buf []byte) (uint, []byte, error) {
 	end := -1
 	n := 0
 	for end < 0 {
 		if n == cap(buf) {
-			return n, nil, ErrInvalidHeaders
+			return uint(n), nil, ErrInvalidHeaders
 		}
 		m, err := c.Read(buf[n:cap(buf)])
 		n += m
 		if err != nil {
 			if terr, ok := err.(net.Error); !ok || !terr.Temporary() {
-				return n, nil, errors.WithContext("error reading headers: ", err)
+				return uint(n), nil, errors.WithContext("error reading headers: ", err)
 			}
 		}
 		buf = buf[:n]
@@ -46,7 +46,7 @@ func (service) GetServerName(c io.Reader, buf []byte) (int, []byte, error) {
 
 	hi := bytes.Index(buf, host)
 	if hi < 0 {
-		return n, nil, ErrNoHost
+		return uint(n), nil, ErrNoHost
 	}
 	buf = buf[hi+len(host):]
 	lineEnd := bytes.Index(buf, eol)
@@ -54,9 +54,9 @@ func (service) GetServerName(c io.Reader, buf []byte) (int, []byte, error) {
 		if w, ok := c.(io.Writer); ok {
 			w.Write(badRequest)
 		}
-		return n, nil, ErrNoHost
+		return uint(n), nil, ErrNoHost
 	}
-	return n, bytes.TrimSpace(buf[:lineEnd]), nil
+	return uint(n), bytes.TrimSpace(buf[:lineEnd]), nil
 }
 
 func (service) Name() string {
