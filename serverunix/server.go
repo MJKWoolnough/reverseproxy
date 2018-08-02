@@ -1,6 +1,7 @@
 package serverunix
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"os/exec"
@@ -90,6 +91,7 @@ func (h *Host) RegisterCmd(cmd *exec.Cmd) error {
 		fds := socks[p]
 		c, _ := net.FileConn(os.NewFile(uintptr(fds[0]), ""))
 		s.conn = c.(*net.UnixConn)
+		cmd.Env = append(cmd.Env, fmt.Sprintf("rproxy_%s=%d", p.Name(), len(cmd.ExtraFiles)+3))
 		cmd.ExtraFiles = append(cmd.ExtraFiles, os.NewFile(uintptr(fds[1]), ""))
 		s.mu.Unlock()
 	}

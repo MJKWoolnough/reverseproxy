@@ -40,6 +40,10 @@ func (p *Proxy) Start() error {
 	return nil
 }
 
+func (p *Proxy) Name() string {
+	return p.p.Name()
+}
+
 func (p *Proxy) run() {
 	for {
 		c, err := p.l.Accept()
