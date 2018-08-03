@@ -120,6 +120,9 @@ func (h *Host) Close() error {
 	var e error
 	for _, s := range h.services {
 		s.mu.Lock()
+		if s.conn == nil {
+			continue
+		}
 		if err := s.conn.Close(); err != nil && e != nil {
 			e = err
 		}
