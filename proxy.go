@@ -19,7 +19,9 @@ type Proxy struct {
 	p Protocol
 
 	mu       sync.RWMutex
+	started  bool
 	services map[string]Service
+	err      error
 }
 
 func NewProxy(l net.Listener, p Protocol) *Proxy {
@@ -35,16 +37,29 @@ type Protocol interface {
 	Name() string
 }
 
-func (p *Proxy) Start() error {
-	go p.run()
-	return nil
+func (p *Proxy) Start() {
+	go func() {
+		err := p.Run()
+		if err != nil && err != ErrRunning {
+			p.mu.Lock()
+			p.err = err
+			p.mu.Unlock()
+		}
+	}()
 }
 
 func (p *Proxy) Name() string {
 	return p.p.Name()
 }
 
-func (p *Proxy) run() {
+func (p *Proxy) Run() error {
+	p.mu.Lock()
+	s := p.started
+	p.started = true
+	p.mu.Unlock()
+	if s {
+		return ErrRunning
+	}
 	for {
 		c, err := p.l.Accept()
 		if err != nil {
@@ -53,7 +68,7 @@ func (p *Proxy) run() {
 					continue
 				}
 			}
-			break // set error?
+			return err
 		}
 		go p.handle(c)
 	}
@@ -101,10 +116,14 @@ func (p *Proxy) Stop() error {
 		s.Stop()
 		delete(p.services, n)
 	}
+	if err == nil {
+		err = p.err
+	}
 	p.mu.Unlock()
 	return err
 }
 
 const (
+	ErrRunning          errors.Error = "already running"
 	ErrServerRegistered errors.Error = "server already registered"
 )
