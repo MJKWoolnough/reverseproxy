@@ -133,6 +133,14 @@ func (l *listener) Accept() (net.Conn, error) {
 }
 
 func (l *listener) Close() error {
+	buf := make(memio.Buffer, 0, 2)
+	w := &byteio.StickyLittleEndianWriter{
+		Writer: &buf,
+	}
+	w.WriteUint16(l.socket)
+	ucMu.Lock()
+	uc.WriteMsgUnix(buf, nil, nil)
+	ucMu.Unlock()
 	return nil
 }
 
