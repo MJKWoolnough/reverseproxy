@@ -46,29 +46,34 @@ func init() {
 					slr.Reader = memio.Buffer(buf[:n])
 					socketID := <-slr.ReadUint16()
 					if c, ok := sockets[socketID]; ok {
-						data := slr.ReadBytes(n - 2)
-						msg, err := syscall.ParseSocketControlMessage(oob[:oobn])
-						if err != nil || len(msg) != 1 {
-							continue
+						if n == 2 {
+							close(c)
+							delete(sockets, socketID)
+						} else {
+							data := slr.ReadBytes(n - 2)
+							msg, err := syscall.ParseSocketControlMessage(oob[:oobn])
+							if err != nil || len(msg) != 1 {
+								continue
+							}
+							fd, err := syscall.ParseUnixRights(&msg[0])
+							if err != nil || len(fd) != 1 {
+								continue
+							}
+							cn, err := net.FileConn(os.NewFile(uintptr(fd[0]), ""))
+							if err != nil {
+								continue
+							}
+							if ka, ok := cn.(keepAlive); ok {
+								ka.SetKeepAlive(true)
+								ka.SetKeepAlivePeriod(3 * time.Minute)
+							}
+							conn := &conn{
+								Conn: cn,
+								buf:  data,
+							}
+							runtime.SetFinalizer(conn, (*conn).Close)
+							c <- conn
 						}
-						fd, err := syscall.ParseUnixRights(&msg[0])
-						if err != nil || len(fd) != 1 {
-							continue
-						}
-						cn, err := net.FileConn(os.NewFile(uintptr(fd[0]), ""))
-						if err != nil {
-							continue
-						}
-						if ka, ok := cn.(keepAlive); ok {
-							ka.SetKeepAlive(true)
-							ka.SetKeepAlivePeriod(3 * time.Minute)
-						}
-						conn := &conn{
-							Conn: cn,
-							buf:  data,
-						}
-						runtime.SetFinalizer(conn, (*conn).Close)
-						c <- conn
 					} else if n == 2 {
 						sockets[socketID] = make(chan net.Conn)
 						newSocket <- socketID
