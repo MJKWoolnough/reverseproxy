@@ -99,10 +99,9 @@ type conn struct {
 
 func (c *conn) Read(b []byte) (int, error) {
 	if len(c.buf) > 0 {
-		c.buf = c.buf[copy(b, c.buf):]
-		if n > 0 {
-			return n, nil
-		}
+		n := copy(b, c.buf)
+		c.buf = c.buf[n:]
+		return n, nil
 	}
 	return c.Conn.Read(b)
 }
