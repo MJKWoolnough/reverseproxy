@@ -18,6 +18,7 @@ import (
 var (
 	fallback  = true
 	ucMu      sync.Mutex
+	uc        *net.UnixConn
 	newSocket chan uint16
 	sockets   map[uint16]chan net.Conn
 )
@@ -26,9 +27,10 @@ func init() {
 	c, err := net.FileConn(os.NewFile(3, ""))
 	if err == nil {
 		u, ok := c.(*net.UnixConn)
+		uc = u
 		if ok {
 			fallback = false
-			newSocket = make(chan []byte)
+			newSocket = make(chan uint16)
 			sockets = make(map[uint16]chan net.Conn)
 			go func() {
 				var (
@@ -43,8 +45,9 @@ func init() {
 							break
 						}
 					}
-					slr.Reader = memio.Buffer(buf[:n])
-					socketID := <-slr.ReadUint16()
+					b := memio.Buffer(buf[:n])
+					slr.Reader = &b
+					socketID := slr.ReadUint16()
 					if c, ok := sockets[socketID]; ok {
 						if n == 2 {
 							close(c)
@@ -95,7 +98,7 @@ type conn struct {
 }
 
 func (c *conn) Read(b []byte) (int, error) {
-	if len(c.buff) > 0 {
+	if len(c.buf) > 0 {
 		c.buf = c.buf[copy(b, c.buf):]
 		if n > 0 {
 			return n, nil
