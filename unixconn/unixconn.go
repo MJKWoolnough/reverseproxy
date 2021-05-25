@@ -21,7 +21,7 @@ var (
 )
 
 func init() {
-	c, err := net.FileConn(os.NewFile(4, ""))
+	c, err := net.FileConn(os.NewFile(3, ""))
 	if err == nil {
 		u, ok := c.(*net.UnixConn)
 		if ok {
