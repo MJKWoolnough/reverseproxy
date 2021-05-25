@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"sync"
 	"syscall"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 
 var (
 	fallback  = true
+	ucMu      sync.Mutex
 	newSocket chan uint16
 	sockets   map[uint16]chan net.Conn
 )
@@ -112,6 +114,39 @@ func ListenTLS(network, address string, config *tls.Config) (net.Listener, error
 	return tls.NewListener(l, config), nil
 }
 
+type listener struct {
+	socket uint16
+	addr
+}
+
+func (l *listener) Accept() (net.Conn, error) {
+	c, ok := <-sockets[l.socket]
+	if !ok {
+		return nil, errors.New("closed")
+	}
+	return c, nil
+}
+
+func (l *listener) Close() error {
+	return nil
+}
+
+func (l *listener) Addr() net.Addr {
+	return l.addr
+}
+
+type addr struct {
+	network, address string
+}
+
+func (a addr) Network() string {
+	return a.network
+}
+
+func (a addr) String() string {
+	return a.address
+}
+
 func requestListener(network, address string, isTLS bool) (net.Listener, error) {
 	if fallback {
 		return net.Listen(network, address)
@@ -121,17 +156,15 @@ func requestListener(network, address string, isTLS bool) (net.Listener, error) 
 	w.WriteString16(network)
 	w.WriteString16(address)
 	w.WriteBool(isTLS)
-	var (
-		errNum [4]byte
-		oob    [4]byte
-	)
 	ucMu.Lock()
 	uc.WriteMsgUnix(buf, nil, nil)
 	socketID := <-newSocket
 	ucMu.Unlock()
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, nil
+	return &listener{
+		socket: socketID,
+		addr: addr{
+			network: network,
+			address: address,
+		},
+	}, nil
 }
