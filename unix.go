@@ -11,7 +11,9 @@ import (
 
 const maxBufSize = 1<<16 + 1<<16 + 2 + 2 + 1
 
-type UnixServer struct {
+type unixServer chan struct {
+	*socket
+	*conn
 }
 
 func (p *Proxy) createUnixConn(cmd *exec.Cmd) error {
