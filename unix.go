@@ -16,6 +16,10 @@ type unixServer chan struct {
 	*conn
 }
 
+func (u unixServer) Shutdown() {
+	close(u)
+}
+
 func (p *Proxy) createUnixConn(cmd *exec.Cmd) error {
 	fds, err := syscall.Socketpair(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
 	if err != nil {
