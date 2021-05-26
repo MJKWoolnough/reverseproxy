@@ -11,13 +11,22 @@ import (
 
 const maxBufSize = 1<<16 + 1<<16 + 2 + 2 + 1
 
-type unixServer chan struct {
+type unixPacket struct {
 	*socket
 	*conn
 }
 
+type unixServer chan unixPacket
+
 func (u unixServer) Shutdown() {
 	close(u)
+}
+
+func (u unixServer) Transfer(socket *socket, conn *conn) {
+	u <- unixPacket{
+		socket,
+		conn,
+	}
 }
 
 func (p *Proxy) createUnixConn(cmd *exec.Cmd) error {
