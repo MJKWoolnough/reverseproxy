@@ -141,9 +141,9 @@ func (l *listener) Close() error {
 	}
 	w.WriteUint16(l.socket)
 	ucMu.Lock()
-	uc.WriteMsgUnix(buf, nil, nil)
+	_, _, err := uc.WriteMsgUnix(buf, nil, nil)
 	ucMu.Unlock()
-	return nil
+	return err
 }
 
 func (l *listener) Addr() net.Addr {
@@ -172,7 +172,11 @@ func requestListener(network, address string, isTLS bool) (net.Listener, error) 
 	w.WriteString16(address)
 	w.WriteBool(isTLS)
 	ucMu.Lock()
-	uc.WriteMsgUnix(buf, nil, nil)
+	_, _, err := uc.WriteMsgUnix(buf, nil, nil)
+	if err != nil {
+		ucMu.Unlock()
+		return nil, err
+	}
 	socketID := <-newSocket
 	ucMu.Unlock()
 	return &listener{
