@@ -184,11 +184,13 @@ func requestListener(network, address string, isTLS bool) (net.Listener, error) 
 	}
 	socketID := <-newSocket
 	ucMu.Unlock()
-	return &listener{
+	l := &listener{
 		socket: socketID,
 		addr: addr{
 			network: network,
 			address: address,
 		},
-	}, nil
+	}
+	runtime.SetFinalizer(l, (*listener).Close)
+	return l, nil
 }
