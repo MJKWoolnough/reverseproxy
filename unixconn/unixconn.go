@@ -129,7 +129,7 @@ type listener struct {
 func (l *listener) Accept() (net.Conn, error) {
 	c, ok := <-sockets[l.socket]
 	if !ok {
-		return nil, errors.New("closed")
+		return nil, net.ErrClosed
 	}
 	return c, nil
 }
