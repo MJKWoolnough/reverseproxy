@@ -76,7 +76,15 @@ func init() {
 								buf:  data,
 							}
 							runtime.SetFinalizer(conn, (*conn).Close)
-							c <- conn
+							go func() {
+								t := time.NewTimer(time.Minute * 3)
+								select {
+								case <-t.C:
+									conn.Close()
+								case c <- conn:
+								}
+								t.Stop()
+							}()
 						}
 					} else if n == 2 {
 						sockets[socketID] = make(chan net.Conn)
