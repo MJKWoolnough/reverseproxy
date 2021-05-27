@@ -28,9 +28,9 @@ func readHTTPServerName(r io.Reader) (string, []byte, error) {
 			}
 		}
 		h = bytes.Index(buf, host)
-		if h > 0 {
+		if e := bytes.Index(buf, eoh); h > 0 && (e > h || e == -1) {
 			l = bytes.Index(buf[h:], eol)
-		} else if bytes.Index(buf, eoh) >= 0 {
+		} else if e >= 0 {
 			return "", nil, errNoServerHeader
 		}
 		n += m
