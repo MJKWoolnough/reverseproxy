@@ -2,6 +2,7 @@ package reverseproxy
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -29,9 +30,15 @@ func readHTTPServerName(r io.Reader) (string, []byte, error) {
 		h = bytes.Index(buf, host)
 		if h > 0 {
 			l = bytes.Index(buf[h:], eol)
+		} else if bytes.Index(buf, eoh) >= 0 {
+			return "", nil, errNoServerHeader
 		}
 		n += m
 	}
 	sh := h + len(host)
 	return string(buf[sh : sh+l]), buf, nil
 }
+
+var (
+	errNoServerHeader = errors.New("no server header")
+)
