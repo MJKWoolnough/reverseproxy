@@ -21,7 +21,7 @@ func readHTTPServerName(r io.Reader) (string, []byte, error) {
 	l := -1
 	buf := make([]byte, http.DefaultMaxHeaderBytes)
 	for l >= 0 {
-		m, err := c.Read(buf[n:])
+		m, err := r.Read(buf[n:])
 		if err != nil {
 			if terr, ok := err.(net.Error); !ok || !terr.Temporary() {
 				return nil, fmt.Errorf("error reading headers: %w", err)
