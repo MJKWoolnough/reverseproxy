@@ -2,6 +2,7 @@ package reverseproxy
 
 import (
 	"errors"
+	"fmt"
 	"io"
 
 	"vimagination.zapto.org/byteio"
@@ -10,18 +11,18 @@ import (
 
 const maxTLSRead = 5 + 65536
 
-func readTLSServerName(c io.Reader) (uint, []byte, error) {
+func readTLSServerName(c io.Reader) (string, []byte, error) {
 	buf := make([]byte, maxTLSRead)
 	mbuf := memio.Buffer(buf[:5])
-	n, err := io.ReadFull(r, mbuf)
+	n, err := io.ReadFull(c, mbuf)
 	if err != nil {
-		return uint(n), nil, err
+		return "", nil, err
 	}
 	r := byteio.StickyBigEndianReader{
 		Reader: &mbuf,
 	}
 	if r.ReadUint8() != 22 {
-		return uint(n), nil, ErrNoHandshake
+		return "", nil, ErrNoHandshake
 	}
 
 	mbuf = mbuf[1:] // skip major version
@@ -65,7 +66,7 @@ func readTLSServerName(c io.Reader) (uint, []byte, error) {
 	cipherSuiteLength := r.ReadUint16()
 	if cipherSuiteLength == 0 || len(mbuf) < int(cipherSuiteLength) {
 		// invalid length
-		return "", nil, fmt.Errof("error reading cipher suites: %w", ErrInvalidLength)
+		return "", nil, fmt.Errorf("error reading cipher suites: %w", ErrInvalidLength)
 	}
 	mbuf = mbuf[cipherSuiteLength:] // skip cipher suites
 
