@@ -1,11 +1,10 @@
 package reverseproxy
 
-import "net"
-
 type Redirect struct {
-	from, to net.Addr
+	proxy   *Proxy
+	service service
 }
 
-func (p *Proxy) Redirect(from, to net.Addr) (*Redirect, error) {
-	return Redirect{from, to}, nil
+func (p *Proxy) RegisterRedirecter(service service) (*Redirect, error) {
+	return Redirect{proxy: p, service: service}, nil
 }
