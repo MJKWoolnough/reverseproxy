@@ -8,12 +8,10 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
-
-	"vimagination.zapto.org/byteio"
-	"vimagination.zapto.org/memio"
 )
 
 var (
@@ -37,7 +35,6 @@ func init() {
 				var (
 					buf [http.DefaultMaxHeaderBytes]byte
 					oob [4]byte
-					slr byteio.StickyLittleEndianReader
 				)
 				for {
 					n, oobn, _, _, err := u.ReadMsgUnix(buf[:], oob[:])
@@ -45,16 +42,16 @@ func init() {
 						if nerr, ok := err.(net.Error); !ok || !nerr.Temporary() {
 							break
 						}
+					} else if n < 2 {
+						break
 					}
-					b := memio.Buffer(buf[:n])
-					slr.Reader = &b
-					socketID := slr.ReadUint16()
+					socketID := uint16(buf[1]<<8) | uint16(buf[0])
 					if c, ok := sockets[socketID]; ok {
 						if n == 2 {
 							close(c)
 							delete(sockets, socketID)
 						} else {
-							data := slr.ReadBytes(n - 2)
+							data := buf[2:]
 							msg, err := syscall.ParseSocketControlMessage(oob[:oobn])
 							if err != nil || len(msg) != 1 {
 								continue
@@ -86,9 +83,11 @@ func init() {
 								t.Stop()
 							}()
 						}
-					} else if n == 2 {
+					} else if n > 2 {
+						newSocket <- errors.New(string(buf[2:]))
+					} else {
 						sockets[socketID] = make(chan net.Conn)
-						newSocket <- socketID
+						newSocket <- nil
 					}
 				}
 			}()
@@ -148,11 +147,9 @@ func (l *listener) Accept() (net.Conn, error) {
 }
 
 func (l *listener) Close() error {
-	buf := make(memio.Buffer, 0, 2)
-	w := &byteio.StickyLittleEndianWriter{
-		Writer: &buf,
-	}
-	w.WriteUint16(l.socket)
+	var buf [2]byte
+	buf[0] = byte(l.socket)
+	but[1] = byte(l.socket >> 8)
 	ucMu.Lock()
 	_, _, err := uc.WriteMsgUnix(buf, nil, nil)
 	ucMu.Unlock()
@@ -179,21 +176,30 @@ func requestListener(network, address string, isTLS bool) (net.Listener, error) 
 	if fallback {
 		return net.Listen(network, address)
 	}
-	buf := make(memio.Buffer, 0, len(network)+len(address)+5)
-	w := byteio.StickyLittleEndianWriter{Writer: &buf}
-	w.WriteString16(network)
-	w.WriteString16(address)
-	w.WriteBool(isTLS)
+	_, portStr, _ := net.SplitHostPort(address)
+	port, _ := strconv.ParseUint(portStr, 10, 16)
+	if port == 0 {
+		return nil, ErrInvalidAddress
+	}
+	var buf [3]byte
+	buf[0] = byte(port)
+	buf[1] = byte(port >> 8)
+	if isTLS {
+		buf[2] = 1
+	}
 	ucMu.Lock()
-	_, _, err := uc.WriteMsgUnix(buf, nil, nil)
+	_, _, err := uc.WriteMsgUnix(buf[:], nil, nil)
 	if err != nil {
 		ucMu.Unlock()
 		return nil, err
 	}
-	socketID := <-newSocket
+	err := <-newSocket
 	ucMu.Unlock()
+	if err != nil {
+		return nil, err
+	}
 	l := &listener{
-		socket: socketID,
+		socket: port,
 		addr: addr{
 			network: network,
 			address: address,
@@ -202,3 +208,8 @@ func requestListener(network, address string, isTLS bool) (net.Listener, error) 
 	runtime.SetFinalizer(l, (*listener).Close)
 	return l, nil
 }
+
+// Errors
+var (
+	ErrInvalidAddress = errors.New("port must be 0 < port < 2^16")
+)
