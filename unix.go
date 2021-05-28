@@ -5,9 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"syscall"
-
-	"vimagination.zapto.org/byteio"
-	"vimagination.zapto.org/memio"
 )
 
 const maxBufSize = 1<<16 + 1<<16 + 2 + 2 + 1
@@ -31,9 +28,8 @@ func (u unixServer) Transfer(socket *socket, conn *conn) {
 }
 
 type newSocket struct {
-	socketID         uint16
-	network, address string
-	isTLS            bool
+	port  uint16
+	isTLS bool
 }
 
 func (p *Proxy) RegisterCmd(service service, cmd *exec.Cmd) (unixServer, error) {
@@ -51,26 +47,23 @@ func (p *Proxy) RegisterCmd(service service, cmd *exec.Cmd) (unixServer, error) 
 	ns := make(chan newSocket)
 	socket2ID := make(map[*socket]uint16)
 	id2Socket := make(map[uint16]*socket)
-	var lastSocketID uint16
 	go func() {
-		var (
-			buf [maxBufSize]byte
-			r   byteio.StickyLittleEndianReader
-		)
+		var buf [3]byte
 		for {
 			n, _, _, _, err := conn.ReadMsgUnix(buf[:], nil)
-
-			b := memio.Buffer(buf[:n])
-			r.Reader = &b
-			if n == 2 {
+			if n < 2 {
+				continue
+			}
+			port := uint16(byte[1]<<8) | uint16(byte[0])
+			if n == 3 {
+				var isTLS bool
+				if buf[2] == 1 {
+					isTLS = true
+				}
+				ns <- newSocket{port, isTLS}
+			} else {
 				socketID := r.ReadUint16()
 				// close socket
-			} else {
-				network := r.ReadString16()
-				address := r.ReadString16()
-				isTLS := r.ReadBool()
-				lastSocketID++
-				ns <- newSocket{lastSocketID, network, address, isTLS}
 			}
 			// read unix conn, get listen details
 			// read unix conn, get close details
