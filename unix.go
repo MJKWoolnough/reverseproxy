@@ -36,7 +36,7 @@ type newSocket struct {
 	isTLS            bool
 }
 
-func (p *Proxy) createUnixConn(cmd *exec.Cmd) (unixServer, error) {
+func (p *Proxy) RegisterCmd(service service, cmd *exec.Cmd) (unixServer, error) {
 	fds, err := syscall.Socketpair(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
 	if err != nil {
 		return nil, err
