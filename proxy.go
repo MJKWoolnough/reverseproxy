@@ -48,6 +48,11 @@ func registerService(serviceName matchServiceName, transfer transferer) *service
 }
 
 func (s *service) close() {
+	mu.Lock()
+	defer mu.Unlock()
+	for _, p := range s.ports {
+		p.close()
+	}
 }
 
 type port struct {
