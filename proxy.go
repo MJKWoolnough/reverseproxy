@@ -1,6 +1,7 @@
 package reverseproxy // import "vimagination.zapto.org/reverseproxy"
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"sync"
@@ -61,6 +62,9 @@ type port struct {
 }
 
 func (s *service) AddPort(port uint16) (*port, error) {
+	if port == 0 {
+		return nil, ErrInvalidPort
+	}
 	mu.Lock()
 	defer mu.Unlock()
 	if p, ok := s.ports[port]; ok {
@@ -99,3 +103,8 @@ func (p *port) close() {
 		}
 	}
 }
+
+// Errors
+var (
+	ErrInvalidPort = errors.New("cannot register on port 0")
+)
