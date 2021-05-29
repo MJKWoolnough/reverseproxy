@@ -7,8 +7,8 @@ import (
 )
 
 type Redirect struct {
-	proxy   *Proxy
-	service service
+	proxy       *Proxy
+	serviceName matchServiceName
 
 	mu          sync.RWMutex
 	socket2addr map[*socket]net.Addr
@@ -21,7 +21,7 @@ func (r *Redirect) AddRedirect(from uint16, to net.Addr) error {
 		return ErrAddressInUse
 	}
 	r.mu.RUnlock()
-	s, err := r.proxy.addService(r.service, from)
+	s, err := r.proxy.addService(r.serviceName, from)
 	if err != nil {
 		return err
 	}
@@ -32,8 +32,8 @@ func (r *Redirect) AddRedirect(from uint16, to net.Addr) error {
 	return ni
 }
 
-func (p *Proxy) RegisterRedirecter(service service) (*Redirect, error) {
-	return Redirect{proxy: p, service: service}, nil
+func (p *Proxy) RegisterRedirecter(serviceName matchServiceName) (*Redirect, error) {
+	return &Redirect{proxy: p, service: serviceName}, nil
 }
 
 // Errors

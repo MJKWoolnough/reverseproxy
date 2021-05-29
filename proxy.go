@@ -17,7 +17,7 @@ type Proxy struct {
 	Listeners map[uint16]*Listener
 }
 
-func (p *Proxy) addService(s service, port uint16) (*socket, error) {
+func (p *Proxy) addService(s matchServiceName, port uint16) (*socket, error) {
 	l, ok := p.Listeners[port]
 	if !ok {
 		nl, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
