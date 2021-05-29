@@ -21,10 +21,6 @@ func (l *listener) listen() {
 
 }
 
-func (l *listener) close() {
-
-}
-
 type conn struct {
 	buffer []byte
 	conn   net.Conn
@@ -99,7 +95,7 @@ func (p *port) close() {
 		delete(l.ports, p)
 		if len(l.ports) == 0 {
 			delete(listeners, p.port)
-			go l.close()
+			l.Close()
 		}
 	}
 }
