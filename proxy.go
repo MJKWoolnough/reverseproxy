@@ -76,4 +76,15 @@ func (s *service) AddPort(port uint16) (*port, error) {
 }
 
 func (p *port) close() {
+	l, ok := listeners[port]
+	if !ok {
+		return
+	}
+	l.mu.Lock()
+	delete(l.ports, p)
+	if len(l.ports) == 0 {
+		delete(listeners, p.port)
+		go l.close()
+	}
+	l.mu.Unlock()
 }
