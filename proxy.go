@@ -6,12 +6,13 @@ import (
 	"sync"
 )
 
-var listeners = make(map[uint16]*listener)
+var (
+	mu        sync.RWMutex // global lock
+	listeners = make(map[uint16]*listener)
+)
 
 type listener struct {
 	net.Listener
-
-	mu    sync.RWMutex
 	ports map[*port]struct{}
 }
 
@@ -53,6 +54,8 @@ type port struct {
 }
 
 func (s *service) AddPort(port uint16) (*port, error) {
+	mu.Lock()
+	defer mu.Unlock()
 	l, ok := listeners[port]
 	if !ok {
 		nl, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
@@ -69,22 +72,19 @@ func (s *service) AddPort(port uint16) (*port, error) {
 		service: s,
 		port:    uint16,
 	}
-	l.mu.Lock()
 	l.ports[port] = struct{}{}
-	l.mu.Unlock()
 	return port, nil
 }
 
 func (p *port) close() {
+	mu.Lock()
+	defer mu.Unlock()
 	l, ok := listeners[port]
-	if !ok {
-		return
+	if ok {
+		delete(l.ports, p)
+		if len(l.ports) == 0 {
+			delete(listeners, p.port)
+			go l.close()
+		}
 	}
-	l.mu.Lock()
-	delete(l.ports, p)
-	if len(l.ports) == 0 {
-		delete(listeners, p.port)
-		go l.close()
-	}
-	l.mu.Unlock()
 }
