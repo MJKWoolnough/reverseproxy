@@ -1,6 +1,7 @@
 package reverseproxy
 
 import (
+	"errors"
 	"net"
 	"sync"
 )
@@ -15,6 +16,11 @@ type Redirect struct {
 }
 
 func (r *Redirect) AddRedirect(from uint16, to net.Addr) error {
+	r.mu.RLock()
+	if _, ok := r.addr2socket[to]; ok {
+		return ErrAddressInUse
+	}
+	r.mu.RUnlock()
 	s, err := r.proxy.addService(r.service, from)
 	if err != nil {
 		return err
@@ -29,3 +35,8 @@ func (r *Redirect) AddRedirect(from uint16, to net.Addr) error {
 func (p *Proxy) RegisterRedirecter(service service) (*Redirect, error) {
 	return Redirect{proxy: p, service: service}, nil
 }
+
+// Errors
+var (
+	ErrAddressInUse = errors.New("address in use")
+)
