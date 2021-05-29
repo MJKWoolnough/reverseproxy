@@ -18,7 +18,6 @@ type listener struct {
 }
 
 func (l *listener) listen() {
-
 }
 
 type conn struct {
@@ -54,7 +53,8 @@ func (s *service) close() {
 
 type port struct {
 	*service
-	port uint16
+	port   uint16
+	closed bool
 }
 
 func (s *service) AddPort(port uint16) (*port, error) {
@@ -90,6 +90,9 @@ func (s *service) AddPort(port uint16) (*port, error) {
 func (p *port) close() {
 	mu.Lock()
 	defer mu.Unlock()
+	if p.closed {
+		return
+	}
 	l, ok := listeners[port]
 	if ok {
 		delete(l.ports, p)
@@ -98,6 +101,11 @@ func (p *port) close() {
 			l.Close()
 		}
 	}
+	p.closed = true
+}
+
+func (p *port) Closed() bool {
+	return p.closed
 }
 
 // Errors
