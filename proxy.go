@@ -36,12 +36,14 @@ type transfer interface {
 type service struct {
 	matchServiceName
 	transferer
+	ports map[uint16]*port
 }
 
 func registerService(serviceName matchServiceName, transfer transferer) *service {
 	return &service{
 		matchServiceName: serviceName,
 		transferer:       transfer,
+		ports:            make(map[uint16]*port),
 	}
 }
 
@@ -56,6 +58,9 @@ type port struct {
 func (s *service) AddPort(port uint16) (*port, error) {
 	mu.Lock()
 	defer mu.Unlock()
+	if p, ok := s.ports[port]; ok {
+		return p, nil
+	}
 	l, ok := listeners[port]
 	if !ok {
 		nl, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
@@ -68,12 +73,13 @@ func (s *service) AddPort(port uint16) (*port, error) {
 		}
 		go l.listen()
 	}
-	port := &port{
+	p := &port{
 		service: s,
 		port:    uint16,
 	}
-	l.ports[port] = struct{}{}
-	return port, nil
+	s.ports[port] = p
+	l.ports[p] = struct{}{}
+	return p, nil
 }
 
 func (p *port) close() {
