@@ -27,11 +27,6 @@ func (u unixServer) Transfer(socket *socket, conn *conn) {
 	}
 }
 
-type newSocket struct {
-	port  uint16
-	isTLS bool
-}
-
 func RegisterCmd(service service, cmd *exec.Cmd) (unixServer, error) {
 	fds, err := syscall.Socketpair(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
 	if err != nil {
@@ -44,25 +39,22 @@ func RegisterCmd(service service, cmd *exec.Cmd) (unixServer, error) {
 		return nil, err
 	}
 	us := make(unixServer)
-	ns := make(chan newSocket)
+	ns := make(chan uint16)
 	socket2ID := make(map[*socket]uint16)
 	id2Socket := make(map[uint16]*socket)
 	go func() {
-		var buf [3]byte
+		var buf [2]byte
 		for {
 			n, _, _, _, err := conn.ReadMsgUnix(buf[:], nil)
 			if n < 2 {
 				continue
 			}
 			port := uint16(byte[1]<<8) | uint16(byte[0])
-			if n == 3 {
-				var isTLS bool
-				if buf[2] == 1 {
-					isTLS = true
-				}
-				ns <- newSocket{port, isTLS}
+			s, ok := id2Socket[port]
+			if !ok {
+				ns <- port
 			} else {
-				socketID := r.ReadUint16()
+				s.Close()
 				// close socket
 			}
 			// read unix conn, get listen details
