@@ -2,7 +2,6 @@
 package unixconn // import "vimagination.zapto.org/reverseproxy/unixconn"
 
 import (
-	"crypto/tls"
 	"errors"
 	"net"
 	"net/http"
@@ -114,25 +113,6 @@ func (c *conn) Read(b []byte) (int, error) {
 	return c.Conn.Read(b)
 }
 
-// ListenHTTP creates a reverse proxy HTTP connection, falling back to the net
-// package if the reverse proxy is not available
-func ListenHTTP(network, address string) (net.Listener, error) {
-	return requestListener(network, address)
-}
-
-// ListenTLS creates a reverse proxy TLS connection, falling back to the net
-// package if the reverse proxy is not available
-func ListenTLS(network, address string, config *tls.Config) (net.Listener, error) {
-	if config == nil || len(config.Certificates) == 0 && config.GetCertificate == nil && config.GetConfigForClient == nil {
-		return nil, errors.New("need valid tls.Config")
-	}
-	l, err := requestListener(network, address)
-	if err != nil {
-		return nil, err
-	}
-	return tls.NewListener(l, config), nil
-}
-
 type listener struct {
 	socket uint16
 	addr
@@ -172,7 +152,9 @@ func (a addr) String() string {
 	return a.address
 }
 
-func requestListener(network, address string) (net.Listener, error) {
+// Listen creates a reverse proxy connection, falling back to the net package if
+// the reverse proxy is not available
+func Listen(network, address string) (net.Listener, error) {
 	if fallback {
 		return net.Listen(network, address)
 	}
