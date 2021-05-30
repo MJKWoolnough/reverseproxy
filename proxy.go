@@ -132,7 +132,7 @@ func (p *port) close() {
 	if p.closed {
 		return
 	}
-	l, ok := listeners[port]
+	l, ok := listeners[p.port]
 	if ok {
 		delete(l.ports, p)
 		if len(l.ports) == 0 {
