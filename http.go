@@ -15,11 +15,12 @@ var (
 	host = []byte("\r\nHost: ")
 )
 
-func readHTTPServerName(r io.Reader) (string, []byte, error) {
+func readHTTPServerName(r io.Reader, b byte) (string, []byte, error) {
 	n := 0
 	h := -1
 	l := -1
-	buf := make([]byte, http.DefaultMaxHeaderBytes)
+	buf := make([]byte, 1, http.DefaultMaxHeaderBytes)
+	buf[0] = b
 	for l >= 0 {
 		m, err := r.Read(buf[n:])
 		if err != nil {

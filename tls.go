@@ -11,9 +11,10 @@ import (
 
 const maxTLSRead = 5 + 65536
 
-func readTLSServerName(c io.Reader) (string, []byte, error) {
-	buf := make([]byte, maxTLSRead)
-	mbuf := memio.Buffer(buf[:5])
+func readTLSServerName(c io.Reader, b byte) (string, []byte, error) {
+	buf := make([]byte, 1, maxTLSRead)
+	buf[0] = b
+	mbuf := memio.Buffer(buf[1:5])
 	n, err := io.ReadFull(c, mbuf)
 	if err != nil {
 		return "", nil, err
