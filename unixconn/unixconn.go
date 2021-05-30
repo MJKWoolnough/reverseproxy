@@ -50,7 +50,6 @@ func init() {
 							close(c)
 							delete(sockets, socketID)
 						} else {
-							data := buf[2:]
 							msg, err := syscall.ParseSocketControlMessage(oob[:oobn])
 							if err != nil || len(msg) != 1 {
 								continue
@@ -69,7 +68,7 @@ func init() {
 							}
 							conn := &conn{
 								Conn: cn,
-								buf:  data,
+								buf:  append(make([]byte, 0, n-2), data[2:]...),
 							}
 							runtime.SetFinalizer(conn, (*conn).Close)
 							go func() {
