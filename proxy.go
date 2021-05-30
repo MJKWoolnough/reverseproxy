@@ -3,6 +3,7 @@ package reverseproxy // import "vimagination.zapto.org/reverseproxy"
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"sync"
 )
@@ -18,6 +19,44 @@ type listener struct {
 }
 
 func (l *listener) listen() {
+	for {
+		c, err := l.Accept()
+		if errors.Is(err, net.ErrClosed) {
+			return
+		} else if err != nil {
+			continue
+		}
+		var tlsByte [1]byte
+		if n, err := io.ReadFull(c, tlsByte[:]); n != 1 || err != nil {
+			c.Close()
+		}
+		var (
+			name string
+			buf  []byte
+		)
+		if tlsByte[0] == 22 {
+			name, buf, err = readTLSServerName(c, 22)
+			if err != nil {
+				c.Close()
+				continue
+			}
+		} else {
+			name, buf, err = readHTTPServerName(c, tlsByte[0])
+		}
+		var port *port
+		mu.RLock()
+		for p := range l.ports {
+			if p.MatchService(name) {
+				port = p
+				break
+			}
+		}
+		mu.RUnlock()
+		port.transfer(&conn{
+			buffer: buf,
+			conn:   c,
+		}, port)
+	}
 }
 
 type conn struct {
