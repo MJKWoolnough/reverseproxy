@@ -64,7 +64,7 @@ type conn struct {
 	conn   net.Conn
 }
 
-type transfer interface {
+type transferer interface {
 	transfer(*conn, *port)
 }
 
