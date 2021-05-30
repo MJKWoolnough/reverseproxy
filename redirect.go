@@ -28,7 +28,7 @@ func (r *Redirect) AddRedirect(from uint16, to net.Addr) error {
 	r.socket2addr[s] = to
 	r.addr2socket[to] = s
 	r.mu.Unlock()
-	return ni
+	return nil
 }
 
 func (p *Proxy) RegisterRedirecter(serviceName matchServiceName) (*Redirect, error) {
