@@ -96,18 +96,18 @@ type port struct {
 	closed bool
 }
 
-func (s *service) AddPort(port uint16) (*port, error) {
-	if port == 0 {
+func (s *service) AddPort(addPort uint16) (*port, error) {
+	if addPort == 0 {
 		return nil, ErrInvalidPort
 	}
 	mu.Lock()
 	defer mu.Unlock()
-	if p, ok := s.ports[port]; ok {
+	if p, ok := s.ports[addPort]; ok {
 		return p, nil
 	}
-	l, ok := listeners[port]
+	l, ok := listeners[addPort]
 	if !ok {
-		nl, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+		nl, err := net.Listen("tcp", fmt.Sprintf(":%d", addPort))
 		if err != nil {
 			return nil, err
 		}
@@ -119,9 +119,9 @@ func (s *service) AddPort(port uint16) (*port, error) {
 	}
 	p := &port{
 		service: s,
-		port:    uint16,
+		port:    addPort,
 	}
-	s.ports[port] = p
+	s.ports[addPort] = p
 	l.ports[p] = struct{}{}
 	return p, nil
 }
