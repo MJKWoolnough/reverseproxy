@@ -117,7 +117,7 @@ func (c *conn) Read(b []byte) (int, error) {
 // ListenHTTP creates a reverse proxy HTTP connection, falling back to the net
 // package if the reverse proxy is not available
 func ListenHTTP(network, address string) (net.Listener, error) {
-	return requestListener(network, address, false)
+	return requestListener(network, address)
 }
 
 // ListenTLS creates a reverse proxy TLS connection, falling back to the net
@@ -126,7 +126,7 @@ func ListenTLS(network, address string, config *tls.Config) (net.Listener, error
 	if config == nil || len(config.Certificates) == 0 && config.GetCertificate == nil && config.GetConfigForClient == nil {
 		return nil, errors.New("need valid tls.Config")
 	}
-	l, err := requestListener(network, address, true)
+	l, err := requestListener(network, address)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (a addr) String() string {
 	return a.address
 }
 
-func requestListener(network, address string, isTLS bool) (net.Listener, error) {
+func requestListener(network, address string) (net.Listener, error) {
 	if fallback {
 		return net.Listen(network, address)
 	}
@@ -181,12 +181,9 @@ func requestListener(network, address string, isTLS bool) (net.Listener, error) 
 	if port == 0 {
 		return nil, ErrInvalidAddress
 	}
-	var buf [3]byte
+	var buf [2]byte
 	buf[0] = byte(port)
 	buf[1] = byte(port >> 8)
-	if isTLS {
-		buf[2] = 1
-	}
 	ucMu.Lock()
 	_, _, err := uc.WriteMsgUnix(buf[:], nil, nil)
 	if err != nil {
