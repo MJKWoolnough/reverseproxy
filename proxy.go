@@ -64,34 +64,11 @@ type conn struct {
 	conn   net.Conn
 }
 
-type transferer interface {
-	transfer(*conn, *port)
-}
-
 type service struct {
-	matchServiceName
-	transferer
-	ports map[uint16]*port
-}
-
-func registerService(serviceName matchServiceName, transfer transferer) *service {
-	return &service{
-		matchServiceName: serviceName,
-		transferer:       transfer,
-		ports:            make(map[uint16]*port),
-	}
-}
-
-func (s *service) close() {
-	mu.Lock()
-	defer mu.Unlock()
-	for _, p := range s.ports {
-		p.close()
-	}
 }
 
 type port struct {
-	*service
+	service
 	port   uint16
 	closed bool
 }
