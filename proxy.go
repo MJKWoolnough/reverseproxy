@@ -101,21 +101,21 @@ func addPort(port uint16, service service) (*Port, error) {
 	return p, nil
 }
 
-func (p *Port) close() {
+func (p *Port) Close() error {
 	mu.Lock()
-	defer mu.Unlock()
-	if p.closed {
-		return
-	}
-	l, ok := listeners[p.port]
-	if ok {
-		delete(l.ports, p)
-		if len(l.ports) == 0 {
-			delete(listeners, p.port)
-			l.Close()
+	if !p.closed {
+		l, ok := listeners[p.port]
+		if ok {
+			delete(l.ports, p)
+			if len(l.ports) == 0 {
+				delete(listeners, p.port)
+				l.Close()
+			}
 		}
+		p.closed = true
 	}
-	p.closed = true
+	mu.Unlock()
+
 }
 
 func (p *Port) Closed() bool {
