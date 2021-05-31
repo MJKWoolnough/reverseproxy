@@ -2,6 +2,7 @@ package reverseproxy
 
 import (
 	"errors"
+	"io"
 	"net"
 	"sync"
 )
@@ -14,13 +15,42 @@ type Redirect struct {
 	addr2socket map[net.Addr]*socket
 }
 
-func (r *Redirect) AddRedirect(from uint16, to net.Addr) error {
+func NewRedirecter(serviceName matchServiceName) *Redirect {
+	return &Redirect{
+		serviceName: serviceName,
+		socket2addr: make(map[*socket]net.Addr),
+		addr2socket: make(map[net.Addr]*socket),
+	}
+}
+
+type addrService struct {
+	matchServiceName
+	net.Addr
+}
+
+func (a *addrService) Transfer(c *conn) {
+	p, err := net.Dial(a.Network(), a.String())
+	if err != nil {
+		c.conn.Close()
+		return
+	}
+	if _, err := p.Write(c.buffer); err != nil {
+		c.conn.Close()
+		return
+	}
+	io.Copy(p, c.conn)
+}
+
+func (r *Redirect) Add(from uint16, to net.Addr) error {
 	r.mu.RLock()
 	if _, ok := r.addr2socket[to]; ok {
 		return ErrAddressInUse
 	}
 	r.mu.RUnlock()
-	s, err := addService(r.serviceName, from)
+	s, err := addService(from, &addrService{
+		matchServiceName: r.serviceName,
+		Addr:             to,
+	})
 	if err != nil {
 		return err
 	}
