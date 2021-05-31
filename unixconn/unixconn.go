@@ -17,7 +17,7 @@ var (
 	fallback  = true
 	ucMu      sync.Mutex
 	uc        *net.UnixConn
-	newSocket chan uint16
+	newSocket chan error
 	sockets   map[uint16]chan net.Conn
 )
 
@@ -28,7 +28,7 @@ func init() {
 		uc = u
 		if ok {
 			fallback = false
-			newSocket = make(chan uint16)
+			newSocket = make(chan error)
 			sockets = make(map[uint16]chan net.Conn)
 			go func() {
 				var (
@@ -44,7 +44,7 @@ func init() {
 					} else if n < 2 {
 						break
 					}
-					socketID := uint16(buf[1]<<8) | uint16(buf[0])
+					socketID := uint16(buf[1])<<8 | uint16(buf[0])
 					if c, ok := sockets[socketID]; ok {
 						if n == 2 {
 							close(c)
@@ -68,7 +68,7 @@ func init() {
 							}
 							conn := &conn{
 								Conn: cn,
-								buf:  append(make([]byte, 0, n-2), data[2:]...),
+								buf:  append(make([]byte, 0, n-2), buf[2:]...),
 							}
 							runtime.SetFinalizer(conn, (*conn).Close)
 							go func() {
@@ -128,9 +128,9 @@ func (l *listener) Accept() (net.Conn, error) {
 func (l *listener) Close() error {
 	var buf [2]byte
 	buf[0] = byte(l.socket)
-	but[1] = byte(l.socket >> 8)
+	buf[1] = byte(l.socket >> 8)
 	ucMu.Lock()
-	_, _, err := uc.WriteMsgUnix(buf, nil, nil)
+	_, _, err := uc.WriteMsgUnix(buf[:], nil, nil)
 	ucMu.Unlock()
 	return err
 }
@@ -171,13 +171,13 @@ func Listen(network, address string) (net.Listener, error) {
 		ucMu.Unlock()
 		return nil, err
 	}
-	err := <-newSocket
+	err = <-newSocket
 	ucMu.Unlock()
 	if err != nil {
 		return nil, err
 	}
 	l := &listener{
-		socket: port,
+		socket: uint16(port),
 		addr: addr{
 			network: network,
 			address: address,
