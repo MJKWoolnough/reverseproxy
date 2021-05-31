@@ -15,7 +15,7 @@ var (
 
 type listener struct {
 	net.Listener
-	ports map[*port]struct{}
+	ports map[*Port]struct{}
 }
 
 func (l *listener) listen() {
@@ -43,7 +43,7 @@ func (l *listener) listen() {
 		} else {
 			name, buf, err = readHTTPServerName(c, tlsByte[0])
 		}
-		var port *port
+		var port *Port
 		mu.RLock()
 		for p := range l.ports {
 			if p.MatchService(name) {
@@ -52,10 +52,10 @@ func (l *listener) listen() {
 			}
 		}
 		mu.RUnlock()
-		port.transfer(&conn{
+		port.Transfer(&conn{
 			buffer: buf,
 			conn:   c,
-		}, port)
+		})
 	}
 }
 
@@ -64,46 +64,44 @@ type conn struct {
 	conn   net.Conn
 }
 
-type service struct {
+type service interface {
+	MatchService(string) bool
+	Transfer(*conn)
 }
 
-type port struct {
+type Port struct {
 	service
 	port   uint16
 	closed bool
 }
 
-func (s *service) AddPort(addPort uint16) (*port, error) {
-	if addPort == 0 {
+func addPort(port uint16, service service) (*Port, error) {
+	if port == 0 {
 		return nil, ErrInvalidPort
 	}
 	mu.Lock()
 	defer mu.Unlock()
-	if p, ok := s.ports[addPort]; ok {
-		return p, nil
-	}
-	l, ok := listeners[addPort]
+	l, ok := listeners[port]
 	if !ok {
-		nl, err := net.Listen("tcp", fmt.Sprintf(":%d", addPort))
+		nl, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 		if err != nil {
 			return nil, err
 		}
 		l = &listener{
 			Listener: nl,
-			ports:    make(map[*port]struct{}),
+			ports:    make(map[*Port]struct{}),
 		}
 		go l.listen()
 	}
-	p := &port{
-		service: s,
-		port:    addPort,
+	p := &Port{
+		service: service,
+		port:    port,
 	}
-	s.ports[addPort] = p
 	l.ports[p] = struct{}{}
 	return p, nil
 }
 
-func (p *port) close() {
+func (p *Port) close() {
 	mu.Lock()
 	defer mu.Unlock()
 	if p.closed {
@@ -120,7 +118,7 @@ func (p *port) close() {
 	p.closed = true
 }
 
-func (p *port) Closed() bool {
+func (p *Port) Closed() bool {
 	return p.closed
 }
 
