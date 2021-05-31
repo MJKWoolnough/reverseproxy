@@ -102,9 +102,8 @@ func readTLSServerName(c io.Reader, b byte) (string, []byte, error) {
 				return "", nil, fmt.Errorf("error reading server name: %w", errInvalidLength)
 			}
 			return string(mbuf[:nameLength]), buf[:n], nil
-		} else {
-			mbuf = mbuf[extLength:]
 		}
+		mbuf = mbuf[extLength:]
 	}
 	return "", nil, errNoName
 }
