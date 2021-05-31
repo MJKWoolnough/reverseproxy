@@ -8,21 +8,21 @@ type matchServiceName interface {
 
 type HostName string
 
-func (h HostName) MatchServiceName(serviceName string) bool {
+func (h HostName) MatchService(serviceName string) bool {
 	return string(h) == serviceName
 }
 
 type HostNameSuffix string
 
-func (h HostNameSuffix) MatchServiceName(serviceName string) bool {
+func (h HostNameSuffix) MatchService(serviceName string) bool {
 	return strings.HasSuffix(serviceName, string(h))
 }
 
-type Hosts []service
+type Hosts []matchServiceName
 
-func (h Hosts) MatchServiceName(serviceName string) bool {
+func (h Hosts) MatchService(serviceName string) bool {
 	for _, s := range h {
-		if s.MatchServiceName(serviceName) {
+		if s.MatchService(serviceName) {
 			return true
 		}
 	}
