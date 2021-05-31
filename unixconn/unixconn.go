@@ -33,7 +33,7 @@ func init() {
 			go func() {
 				var (
 					buf [http.DefaultMaxHeaderBytes]byte
-					oob [4]byte
+					oob = make([]byte, syscall.CmsgLen(4))
 				)
 				for {
 					n, oobn, _, _, err := u.ReadMsgUnix(buf[:], oob[:])
