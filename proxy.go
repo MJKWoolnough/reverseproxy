@@ -115,7 +115,7 @@ func (p *Port) Close() error {
 		p.closed = true
 	}
 	mu.Unlock()
-
+	return nil
 }
 
 func (p *Port) Closed() bool {
