@@ -198,7 +198,7 @@ func Listen(network, address string) (net.Listener, error) {
 func getPort(address string) uint16 {
 	_, portStr, _ := net.SplitHostPort(address)
 	port, _ := strconv.ParseUint(portStr, 10, 16)
-	return port
+	return uint16(port)
 }
 
 // Errors
