@@ -157,8 +157,7 @@ func Listen(network, address string) (net.Listener, error) {
 	if fallback {
 		return net.Listen(network, address)
 	}
-	_, portStr, _ := net.SplitHostPort(address)
-	port, _ := strconv.ParseUint(portStr, 10, 16)
+	port := getPort(address)
 	if port == 0 {
 		return nil, ErrInvalidAddress
 	}
@@ -185,6 +184,12 @@ func Listen(network, address string) (net.Listener, error) {
 	}
 	runtime.SetFinalizer(l, (*listener).Close)
 	return l, nil
+}
+
+func getPort(address string) uint16 {
+	_, portStr, _ := net.SplitHostPort(address)
+	port, _ := strconv.ParseUint(portStr, 10, 16)
+	return port
 }
 
 // Errors
