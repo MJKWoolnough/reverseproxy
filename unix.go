@@ -55,6 +55,7 @@ func RegisterCmd(msn matchServiceName, cmd *exec.Cmd) error {
 			}
 			port := uint16(buf[1])<<8 | uint16(buf[0])
 			if p, ok := open[port]; ok {
+				delete(open, port)
 				p.Close()
 			} else {
 				p, err = addPort(port, srv)
