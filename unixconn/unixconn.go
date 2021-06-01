@@ -80,8 +80,9 @@ func init() {
 							}
 							conn := &conn{
 								Conn: cn,
-								buf:  append(make([]byte, 0, n), buf[:]...),
+								buf:  make([]byte, 0, n),
 							}
+							copy(conn.buf, buf[:])
 							runtime.SetFinalizer(conn, (*conn).Close)
 							go func() {
 								t := time.NewTimer(time.Minute * 3)
