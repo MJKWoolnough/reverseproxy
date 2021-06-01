@@ -50,6 +50,12 @@ func RegisterCmd(msn matchServiceName, cmd *exec.Cmd) error {
 		)
 		for {
 			n, _, _, _, err := conn.ReadMsgUnix(buf[:], nil)
+			if err != nil {
+				for _, p := range open {
+					p.Close()
+				}
+				break
+			}
 			if n < 2 {
 				continue
 			}
