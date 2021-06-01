@@ -10,17 +10,17 @@ type addrService struct {
 	net.Addr
 }
 
-func (a *addrService) Transfer(c *conn) {
+func (a *addrService) Transfer(buf []byte, conn net.Conn) {
 	p, err := net.Dial(a.Network(), a.String())
 	if err != nil {
-		c.conn.Close()
+		conn.Close()
 		return
 	}
-	if _, err := p.Write(c.buffer); err != nil {
-		c.conn.Close()
+	if _, err := p.Write(buf); err != nil {
+		conn.Close()
 		return
 	}
-	io.Copy(p, c.conn)
+	io.Copy(p, conn)
 }
 
 func AddRedirect(serviceName matchServiceName, port uint16, to net.Addr) (*Port, error) {

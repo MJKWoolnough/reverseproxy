@@ -52,21 +52,13 @@ func (l *listener) listen() {
 			}
 		}
 		mu.RUnlock()
-		port.Transfer(&conn{
-			buffer: buf,
-			conn:   c,
-		})
+		port.Transfer(buf, c)
 	}
-}
-
-type conn struct {
-	buffer []byte
-	conn   net.Conn
 }
 
 type service interface {
 	MatchService(string) bool
-	Transfer(*conn)
+	Transfer([]byte, net.Conn)
 }
 
 type Port struct {
