@@ -41,34 +41,46 @@ func init() {
 						if nerr, ok := err.(net.Error); !ok || !nerr.Temporary() {
 							break
 						}
-					} else if n < 2 {
-						break
 					}
-					socketID := uint16(buf[1])<<8 | uint16(buf[0])
-					if c, ok := sockets[socketID]; ok {
-						if n == 2 {
-							close(c)
-							delete(sockets, socketID)
+					if oobn == 0 {
+						if n >= 2 {
+							port := uint16(buf[1])<<8 | uint16(buf[0])
+							sockets[port] = make(chan net.Conn)
+							if n == 2 {
+								newSocket <- nil
+							} else {
+								newSocket <- errors.New(string(buf[2:]))
+							}
 						} else {
-							msg, err := syscall.ParseSocketControlMessage(oob[:oobn])
-							if err != nil || len(msg) != 1 {
-								continue
-							}
-							fd, err := syscall.ParseUnixRights(&msg[0])
-							if err != nil || len(fd) != 1 {
-								continue
-							}
-							cn, err := net.FileConn(os.NewFile(uintptr(fd[0]), ""))
-							if err != nil {
-								continue
-							}
+							continue
+						}
+					} else {
+						msg, err := syscall.ParseSocketControlMessage(oob[:oobn])
+						if err != nil || len(msg) != 1 {
+							continue
+						}
+						fd, err := syscall.ParseUnixRights(&msg[0])
+						if err != nil || len(fd) != 1 {
+							continue
+						}
+						cn, err := net.FileConn(os.NewFile(uintptr(fd[0]), ""))
+						if err != nil {
+							continue
+						}
+						var port uint16
+						if tcpaddr, ok := cn.LocalAddr().(*net.TCPAddr); ok {
+							port = uint16(tcpaddr.Port)
+						} else {
+							port = getPort(cn.LocalAddr().String())
+						}
+						if c, ok := sockets[port]; ok {
 							if ka, ok := cn.(keepAlive); ok {
 								ka.SetKeepAlive(true)
 								ka.SetKeepAlivePeriod(3 * time.Minute)
 							}
 							conn := &conn{
 								Conn: cn,
-								buf:  append(make([]byte, 0, n-2), buf[2:]...),
+								buf:  append(make([]byte, 0, n), buf[:]...),
 							}
 							runtime.SetFinalizer(conn, (*conn).Close)
 							go func() {
@@ -80,12 +92,9 @@ func init() {
 								}
 								t.Stop()
 							}()
+						} else {
+							cn.Close()
 						}
-					} else if n > 2 {
-						newSocket <- errors.New(string(buf[2:]))
-					} else {
-						sockets[socketID] = make(chan net.Conn)
-						newSocket <- nil
 					}
 				}
 			}()
