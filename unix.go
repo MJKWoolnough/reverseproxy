@@ -14,20 +14,7 @@ type unixPacket struct {
 	*conn
 }
 
-type unixServer chan unixPacket
-
-func (u unixServer) Shutdown() {
-	close(u)
-}
-
-func (u unixServer) Transfer(socket *socket, conn *conn) {
-	u <- unixPacket{
-		socket,
-		conn,
-	}
-}
-
-func RegisterCmd(service service, cmd *exec.Cmd) (unixServer, error) {
+func RegisterCmd(service service, cmd *exec.Cmd) error {
 	fds, err := syscall.Socketpair(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
 	if err != nil {
 		return nil, err
@@ -81,5 +68,5 @@ func RegisterCmd(service service, cmd *exec.Cmd) (unixServer, error) {
 			}
 		}
 	}()
-	return us, err
+	return err
 }
