@@ -15,17 +15,13 @@ type unixService struct {
 }
 
 func (u *unixService) Transfer(buf []byte, conn net.Conn) {
-	cf, ok := conn.(interface{ File() (*os.File, error) })
-	if !ok {
-		conn.Close()
-		return
+	if cf, ok := conn.(interface{ File() (*os.File, error) }); ok {
+		if f, err := cf.File(); err == nil {
+			u.conn.WriteMsgUnix(buf, syscall.UnixRights(int(f.Fd())), nil)
+			return
+		}
 	}
-	f, err := cf.File()
-	if err != nil {
-		conn.Close()
-		return
-	}
-	u.conn.WriteMsgUnix(buf, syscall.UnixRights(int(f.Fd())), nil)
+	conn.Close()
 }
 
 func RegisterCmd(msn matchServiceName, cmd *exec.Cmd) error {
