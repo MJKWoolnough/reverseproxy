@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"sync"
 )
 
@@ -17,6 +18,21 @@ type listener struct {
 	net.Listener
 	ports map[*Port]struct{}
 }
+
+var (
+	httpPool = sync.Pool{
+		New: func() interface{} {
+			return new([http.DefaultMaxHeaderBytes]byte)
+		},
+	}
+	tlsPool = sync.Pool{
+		New: func() interface{} {
+			buf := new([maxTLSRead]byte)
+			buf[0] = 22
+			return buf
+		},
+	}
+)
 
 func (l *listener) listen() {
 	for {
@@ -31,17 +47,26 @@ func (l *listener) listen() {
 			c.Close()
 		}
 		var (
-			name string
-			buf  []byte
+			name   string
+			buf    []byte
+			bufRef interface{}
+			pool   *sync.Pool
 		)
 		if tlsByte[0] == 22 {
-			name, buf, err = readTLSServerName(c, 22)
+			bufRef = tlsPool.Get()
+			buf = bufRef.(*[maxTLSRead]byte)[:1]
+			pool = &tlsPool
+			name, buf, err = readTLSServerName(c, buf)
 			if err != nil {
 				c.Close()
 				continue
 			}
 		} else {
-			name, buf, err = readHTTPServerName(c, tlsByte[0])
+			bufRef = httpPool.Get()
+			buf = bufRef.(*[http.DefaultMaxHeaderBytes]byte)[:1]
+			pool = &httpPool
+			buf[0] = tlsByte[0]
+			name, buf, err = readHTTPServerName(c, buf)
 		}
 		var port *Port
 		mu.RLock()
@@ -52,8 +77,13 @@ func (l *listener) listen() {
 			}
 		}
 		mu.RUnlock()
-		go port.Transfer(buf, c)
+		go transfer(port, buf, c, pool, bufRef)
 	}
+}
+
+func transfer(port *Port, buf []byte, c net.Conn, pool *sync.Pool, bufRef interface{}) {
+	port.Transfer(buf, c)
+	pool.Put(bufRef)
 }
 
 type service interface {
