@@ -56,8 +56,7 @@ func (l *listener) listen() {
 			pool = &httpPool
 			readServerName = readHTTPServerName
 		}
-		bufRef := pool.Get()
-		buf := bufRef.([]byte)[:1]
+		buf := pool.Get().([]byte)[:1]
 		name, buf, err = readServerName(c, buf)
 		if err != nil {
 			c.Close()
@@ -72,13 +71,13 @@ func (l *listener) listen() {
 			}
 		}
 		mu.RUnlock()
-		go transfer(port, buf, c, pool, bufRef)
+		go transfer(port, buf, c, pool)
 	}
 }
 
-func transfer(port *Port, buf []byte, c net.Conn, pool *sync.Pool, bufRef interface{}) {
+func transfer(port *Port, buf []byte, c net.Conn, pool *sync.Pool) {
 	port.Transfer(buf, c)
-	pool.Put(bufRef)
+	pool.Put(buf)
 }
 
 type service interface {
