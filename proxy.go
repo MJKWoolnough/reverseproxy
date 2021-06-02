@@ -22,14 +22,12 @@ type listener struct {
 var (
 	httpPool = sync.Pool{
 		New: func() interface{} {
-			return new([http.DefaultMaxHeaderBytes]byte)
+			return make([]byte, http.DefaultMaxHeaderBytes)
 		},
 	}
 	tlsPool = sync.Pool{
 		New: func() interface{} {
-			buf := new([maxTLSRead]byte)
-			buf[0] = 22
-			return buf
+			return make([]byte, maxTLSRead)
 		},
 	}
 )
@@ -47,23 +45,20 @@ func (l *listener) listen() {
 			c.Close()
 		}
 		var (
-			name   string
-			buf    []byte
-			bufRef interface{}
-			pool   *sync.Pool
+			name           string
+			pool           *sync.Pool
+			readServerName func(io.Reader, []byte) (string, []byte, error)
 		)
 		if tlsByte[0] == 22 {
-			bufRef = tlsPool.Get()
-			buf = bufRef.(*[maxTLSRead]byte)[:1]
 			pool = &tlsPool
-			name, buf, err = readTLSServerName(c, buf)
+			readServerName = readTLSServerName
 		} else {
-			bufRef = httpPool.Get()
-			buf = bufRef.(*[http.DefaultMaxHeaderBytes]byte)[:1]
 			pool = &httpPool
-			buf[0] = tlsByte[0]
-			name, buf, err = readHTTPServerName(c, buf)
+			readServerName = readHTTPServerName
 		}
+		bufRef := pool.Get()
+		buf := bufRef.([]byte)[:1]
+		name, buf, err = readServerName(c, buf)
 		if err != nil {
 			c.Close()
 			continue
