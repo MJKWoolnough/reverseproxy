@@ -52,7 +52,7 @@ func (l *listener) listen() {
 			}
 		}
 		mu.RUnlock()
-		port.Transfer(buf, c)
+		go port.Transfer(buf, c)
 	}
 }
 
