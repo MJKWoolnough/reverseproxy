@@ -57,16 +57,16 @@ func (l *listener) listen() {
 			buf = bufRef.(*[maxTLSRead]byte)[:1]
 			pool = &tlsPool
 			name, buf, err = readTLSServerName(c, buf)
-			if err != nil {
-				c.Close()
-				continue
-			}
 		} else {
 			bufRef = httpPool.Get()
 			buf = bufRef.(*[http.DefaultMaxHeaderBytes]byte)[:1]
 			pool = &httpPool
 			buf[0] = tlsByte[0]
 			name, buf, err = readHTTPServerName(c, buf)
+		}
+		if err != nil {
+			c.Close()
+			continue
 		}
 		var port *Port
 		mu.RLock()
