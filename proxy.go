@@ -57,6 +57,7 @@ func (l *listener) listen() {
 			readServerName = readHTTPServerName
 		}
 		buf := pool.Get().([]byte)[:1]
+		buf[0] = tlsByte[0]
 		name, buf, err = readServerName(c, buf)
 		if err != nil {
 			c.Close()
