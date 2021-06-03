@@ -6,7 +6,7 @@ import (
 )
 
 type addrService struct {
-	matchServiceName
+	MatchServiceName
 	net.Addr
 }
 
@@ -23,9 +23,9 @@ func (a *addrService) Transfer(buf []byte, conn net.Conn) {
 	io.Copy(p, conn)
 }
 
-func AddRedirect(serviceName matchServiceName, port uint16, to net.Addr) (*Port, error) {
+func AddRedirect(serviceName MatchServiceName, port uint16, to net.Addr) (*Port, error) {
 	return addPort(port, &addrService{
-		matchServiceName: serviceName,
+		MatchServiceName: serviceName,
 		Addr:             to,
 	})
 }

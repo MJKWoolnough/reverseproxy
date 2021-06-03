@@ -66,7 +66,7 @@ func (l *listener) listen() {
 		var port *Port
 		mu.RLock()
 		for p := range l.ports {
-			if p.MatchService(name) {
+			if p.matchService(name) {
 				port = p
 				break
 			}
@@ -82,7 +82,7 @@ func transfer(port *Port, buf []byte, c net.Conn, pool *sync.Pool) {
 }
 
 type service interface {
-	MatchService(string) bool
+	matchService(string) bool
 	Transfer([]byte, net.Conn)
 }
 

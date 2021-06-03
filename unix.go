@@ -10,7 +10,7 @@ import (
 const maxBufSize = 1<<16 + 1<<16 + 2 + 2 + 1
 
 type unixService struct {
-	matchServiceName
+	MatchServiceName
 	conn *net.UnixConn
 }
 
@@ -24,7 +24,7 @@ func (u *unixService) Transfer(buf []byte, conn net.Conn) {
 	conn.Close()
 }
 
-func RegisterCmd(msn matchServiceName, cmd *exec.Cmd) error {
+func RegisterCmd(msn MatchServiceName, cmd *exec.Cmd) error {
 	fds, err := syscall.Socketpair(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func RegisterCmd(msn matchServiceName, cmd *exec.Cmd) error {
 			buf  [2]byte
 			open = make(map[uint16]*Port)
 			srv  = &unixService{
-				matchServiceName: msn,
+				MatchServiceName: msn,
 				conn:             conn,
 			}
 		)
