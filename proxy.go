@@ -86,6 +86,7 @@ type service interface {
 	Transfer([]byte, net.Conn)
 }
 
+// Port represents a service waiting on a port
 type Port struct {
 	service
 	port   uint16
@@ -119,6 +120,7 @@ func addPort(port uint16, service service) (*Port, error) {
 	return p, nil
 }
 
+// Close closes this port connection
 func (p *Port) Close() error {
 	mu.Lock()
 	if !p.closed {
@@ -136,6 +138,7 @@ func (p *Port) Close() error {
 	return nil
 }
 
+// Closed returns whether the port has been closed or not
 func (p *Port) Closed() bool {
 	return p.closed
 }
