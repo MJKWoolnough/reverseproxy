@@ -78,6 +78,7 @@ func (l *listener) listen() {
 
 func transfer(port *Port, buf []byte, c net.Conn, pool *sync.Pool) {
 	port.Transfer(buf, c)
+	c.Close()
 	pool.Put(buf)
 }
 
