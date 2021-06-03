@@ -2,6 +2,7 @@ package reverseproxy
 
 import "strings"
 
+// MatchServiceName allows differing ways of matching a service name to a service
 type MatchServiceName interface {
 	matchService(string) bool
 }
