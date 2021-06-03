@@ -83,7 +83,7 @@ func transfer(port *Port, buf []byte, c net.Conn, pool *sync.Pool) {
 
 type service interface {
 	matchService(string) bool
-	Transfer([]byte, net.Conn)
+	Transfer([]byte, net.Conn) error
 }
 
 // Port represents a service waiting on a port

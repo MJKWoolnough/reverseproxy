@@ -10,17 +10,14 @@ type addrService struct {
 	net.Addr
 }
 
-func (a *addrService) Transfer(buf []byte, conn net.Conn) {
+func (a *addrService) Transfer(buf []byte, conn net.Conn) error {
 	p, err := net.Dial(a.Network(), a.String())
-	if err != nil {
-		conn.Close()
-		return
+	if err == nil {
+		if _, err = p.Write(buf); err == nil {
+			_, err = io.Copy(p, conn)
+		}
 	}
-	if _, err := p.Write(buf); err != nil {
-		conn.Close()
-		return
-	}
-	io.Copy(p, conn)
+	return err
 }
 
 // AddRedirect sets a port to be redirected to an external service
