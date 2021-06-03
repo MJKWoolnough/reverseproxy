@@ -24,6 +24,7 @@ func (u *unixService) Transfer(buf []byte, conn net.Conn) {
 	conn.Close()
 }
 
+// RegisterCmd runs the given command and waits for incoming listeners from it
 func RegisterCmd(msn MatchServiceName, cmd *exec.Cmd) error {
 	fds, err := syscall.Socketpair(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
 	if err != nil {
