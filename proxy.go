@@ -97,11 +97,11 @@ func addPort(port uint16, service service) (*Port, error) {
 		return nil, ErrInvalidPort
 	}
 	mu.Lock()
-	defer mu.Unlock()
 	l, ok := listeners[port]
 	if !ok {
 		nl, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 		if err != nil {
+			mu.Unlock()
 			return nil, err
 		}
 		l = &listener{
@@ -115,6 +115,7 @@ func addPort(port uint16, service service) (*Port, error) {
 		port:    port,
 	}
 	l.ports[p] = struct{}{}
+	mu.Unlock()
 	return p, nil
 }
 
