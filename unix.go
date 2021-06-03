@@ -7,8 +7,6 @@ import (
 	"syscall"
 )
 
-const maxBufSize = 1<<16 + 1<<16 + 2 + 2 + 1
-
 type unixService struct {
 	MatchServiceName
 	conn *net.UnixConn
