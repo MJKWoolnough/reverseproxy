@@ -23,6 +23,7 @@ func (a *addrService) Transfer(buf []byte, conn net.Conn) {
 	io.Copy(p, conn)
 }
 
+// AddRedirect sets a port to be redirected to an external service
 func AddRedirect(serviceName MatchServiceName, port uint16, to net.Addr) (*Port, error) {
 	return addPort(port, &addrService{
 		MatchServiceName: serviceName,
