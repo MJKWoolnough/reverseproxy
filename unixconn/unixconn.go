@@ -75,8 +75,9 @@ func init() {
 						}
 						if c, ok := sockets[port]; ok {
 							if ka, ok := cn.(keepAlive); ok {
-								ka.SetKeepAlive(true)
-								ka.SetKeepAlivePeriod(3 * time.Minute)
+								if err := ka.SetKeepAlive(true); err != nil {
+									ka.SetKeepAlivePeriod(3 * time.Minute)
+								}
 							}
 							conn := &conn{
 								Conn: cn,
@@ -88,7 +89,6 @@ func init() {
 								t := time.NewTimer(time.Minute * 3)
 								select {
 								case <-t.C:
-									conn.Close()
 								case c <- conn:
 								}
 								t.Stop()
