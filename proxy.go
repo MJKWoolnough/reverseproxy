@@ -38,6 +38,16 @@ func (l *listener) listen() {
 		if errors.Is(err, net.ErrClosed) {
 			return
 		} else if err != nil {
+			if nerr, ok := err.(net.Error); !ok || !nerr.Temporary() {
+				l.Close()
+				mu.Lock()
+				for p := range l.ports {
+					p.closed = true
+					delete(l.ports, p)
+				}
+				mu.Unlock()
+				return
+			}
 			continue
 		}
 		var tlsByte [1]byte
