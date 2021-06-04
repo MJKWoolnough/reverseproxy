@@ -53,7 +53,8 @@ func RegisterCmd(msn MatchServiceName, cmd *exec.Cmd) error {
 				for _, p := range open {
 					p.Close()
 				}
-				break
+				conn.Close()
+				return
 			}
 			if n < 2 {
 				continue
