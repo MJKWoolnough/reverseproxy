@@ -79,5 +79,5 @@ func RegisterCmd(msn MatchServiceName, cmd *exec.Cmd) error {
 			}
 		}
 	}()
-	return err
+	return nil
 }
