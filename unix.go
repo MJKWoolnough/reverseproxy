@@ -31,8 +31,11 @@ func RegisterCmd(msn MatchServiceName, cmd *exec.Cmd) error {
 	}
 	fconn, _ := net.FileConn(os.NewFile(uintptr(fds[0]), ""))
 	conn := fconn.(*net.UnixConn)
-	cmd.ExtraFiles = append([]*os.File{}, os.NewFile(uintptr(fds[1]), ""))
-	if err := cmd.Start(); err != nil {
+	f := os.NewFile(uintptr(fds[1]), "")
+	cmd.ExtraFiles = append([]*os.File{}, f)
+	err := cmd.Start()
+	f.Close()
+	if err != nil {
 		return err
 	}
 	go func() {
