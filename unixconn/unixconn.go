@@ -186,7 +186,7 @@ func Listen(network, address string) (net.Listener, error) {
 		return nil, err
 	}
 	l := &listener{
-		socket: uint16(port),
+		socket: port,
 		addr: addr{
 			network: network,
 			address: address,
