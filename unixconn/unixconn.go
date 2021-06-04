@@ -90,19 +90,21 @@ func runListenLoop() {
 				}
 				copy(conn.buf, buf[:])
 				runtime.SetFinalizer(conn, (*conn).Close)
-				go func() {
-					t := time.NewTimer(time.Minute * 3)
-					select {
-					case <-t.C:
-					case c <- conn:
-					}
-					t.Stop()
-				}()
+				go sendConn(c, conn)
 			} else {
 				cn.Close()
 			}
 		}
 	}
+}
+
+func sendConn(c chan net.Conn, conn *conn) {
+	t := time.NewTimer(time.Minute * 3)
+	select {
+	case <-t.C:
+	case c <- conn:
+	}
+	t.Stop()
 }
 
 type keepAlive interface {
