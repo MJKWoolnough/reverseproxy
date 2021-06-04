@@ -30,75 +30,77 @@ func init() {
 			fallback = false
 			newSocket = make(chan error)
 			sockets = make(map[uint16]chan net.Conn)
-			go func() {
-				var (
-					buf [http.DefaultMaxHeaderBytes]byte
-					oob = make([]byte, syscall.CmsgLen(4))
-				)
-				for {
-					n, oobn, _, _, err := u.ReadMsgUnix(buf[:], oob[:])
-					if err != nil {
-						if nerr, ok := err.(net.Error); !ok || !nerr.Temporary() {
-							break
-						}
-					}
-					if oobn == 0 {
-						if n >= 2 {
-							port := uint16(buf[1])<<8 | uint16(buf[0])
-							sockets[port] = make(chan net.Conn)
-							if n == 2 {
-								newSocket <- nil
-							} else {
-								newSocket <- errors.New(string(buf[2:]))
-							}
-						} else {
-							continue
-						}
-					} else {
-						msg, err := syscall.ParseSocketControlMessage(oob[:oobn])
-						if err != nil || len(msg) != 1 {
-							continue
-						}
-						fd, err := syscall.ParseUnixRights(&msg[0])
-						if err != nil || len(fd) != 1 {
-							continue
-						}
-						cn, err := net.FileConn(os.NewFile(uintptr(fd[0]), ""))
-						if err != nil {
-							continue
-						}
-						var port uint16
-						if tcpaddr, ok := cn.LocalAddr().(*net.TCPAddr); ok {
-							port = uint16(tcpaddr.Port)
-						} else {
-							port = getPort(cn.LocalAddr().String())
-						}
-						if c, ok := sockets[port]; ok {
-							if ka, ok := cn.(keepAlive); ok {
-								if err := ka.SetKeepAlive(true); err != nil {
-									ka.SetKeepAlivePeriod(3 * time.Minute)
-								}
-							}
-							conn := &conn{
-								Conn: cn,
-								buf:  make([]byte, 0, n),
-							}
-							copy(conn.buf, buf[:])
-							runtime.SetFinalizer(conn, (*conn).Close)
-							go func() {
-								t := time.NewTimer(time.Minute * 3)
-								select {
-								case <-t.C:
-								case c <- conn:
-								}
-								t.Stop()
-							}()
-						} else {
-							cn.Close()
-						}
+			go runListenLoop()
+		}
+	}
+}
+
+func runListenLoop() {
+	var (
+		buf [http.DefaultMaxHeaderBytes]byte
+		oob = make([]byte, syscall.CmsgLen(4))
+	)
+	for {
+		n, oobn, _, _, err := uc.ReadMsgUnix(buf[:], oob[:])
+		if err != nil {
+			if nerr, ok := err.(net.Error); !ok || !nerr.Temporary() {
+				break
+			}
+		}
+		if oobn == 0 {
+			if n >= 2 {
+				port := uint16(buf[1])<<8 | uint16(buf[0])
+				sockets[port] = make(chan net.Conn)
+				if n == 2 {
+					newSocket <- nil
+				} else {
+					newSocket <- errors.New(string(buf[2:]))
+				}
+			} else {
+				continue
+			}
+		} else {
+			msg, err := syscall.ParseSocketControlMessage(oob[:oobn])
+			if err != nil || len(msg) != 1 {
+				continue
+			}
+			fd, err := syscall.ParseUnixRights(&msg[0])
+			if err != nil || len(fd) != 1 {
+				continue
+			}
+			cn, err := net.FileConn(os.NewFile(uintptr(fd[0]), ""))
+			if err != nil {
+				continue
+			}
+			var port uint16
+			if tcpaddr, ok := cn.LocalAddr().(*net.TCPAddr); ok {
+				port = uint16(tcpaddr.Port)
+			} else {
+				port = getPort(cn.LocalAddr().String())
+			}
+			if c, ok := sockets[port]; ok {
+				if ka, ok := cn.(keepAlive); ok {
+					if err := ka.SetKeepAlive(true); err != nil {
+						ka.SetKeepAlivePeriod(3 * time.Minute)
 					}
 				}
-			}()
+				conn := &conn{
+					Conn: cn,
+					buf:  make([]byte, 0, n),
+				}
+				copy(conn.buf, buf[:])
+				runtime.SetFinalizer(conn, (*conn).Close)
+				go func() {
+					t := time.NewTimer(time.Minute * 3)
+					select {
+					case <-t.C:
+					case c <- conn:
+					}
+					t.Stop()
+				}()
+			} else {
+				cn.Close()
+			}
 		}
 	}
 }
