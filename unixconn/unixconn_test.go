@@ -45,11 +45,20 @@ func TestUnixConn(t *testing.T) {
 		t.Errorf("expecting ErrInvalidAddress, got: %x", err)
 		return
 	}
+	l, err = Listen("tcp", ":80")
+	if l == nil {
+		t.Errorf("expecting non-nil Listener")
+		return
+	} else if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
 	buf := [...]byte{0, 0, 'e', 'r', 'r', 'o', 'r'}
 	conn.ReadMsgUnix(buf[:2], nil)
 	conn.WriteMsgUnix(buf[:], nil, nil)
+	conn.ReadMsgUnix(buf[:2], nil)
+	conn.WriteMsgUnix(buf[:2], nil, nil)
 	conn.Close()
 }
