@@ -57,6 +57,10 @@ func TestUnixConn(t *testing.T) {
 func testServerLoop(conn *net.UnixConn) {
 	buf := [...]byte{0, 0, 'e', 'r', 'r', 'o', 'r'}
 	conn.ReadMsgUnix(buf[:2], nil)
+	if buf[0] != 0x90 || buf[1] != 0x1f {
+		conn.WriteMsgUnix(buf[:5], nil, nil)
+		return
+	}
 	conn.WriteMsgUnix(buf[:], nil, nil)
 	conn.ReadMsgUnix(buf[:2], nil)
 	conn.WriteMsgUnix(buf[:2], nil, nil)
