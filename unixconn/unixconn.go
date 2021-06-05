@@ -54,7 +54,7 @@ func runListenLoop() {
 				if n == 2 {
 					newSocket <- nil
 				} else {
-					newSocket <- errors.New(string(buf[2:]))
+					newSocket <- errors.New(string(buf[2:n]))
 				}
 			} else {
 				continue
