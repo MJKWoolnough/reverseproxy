@@ -31,7 +31,7 @@ func TestUnixConn(t *testing.T) {
 		t.Errorf("expecting 'error', got: nil")
 		return
 	} else if err.Error() != "error" {
-		t.Errorf("expecting 'error', got: %x", err)
+		t.Errorf("expecting 'error', got: %q", err)
 		return
 	}
 	l, err = Listen("tcp", "80")
@@ -42,7 +42,7 @@ func TestUnixConn(t *testing.T) {
 		t.Errorf("expecting 'error', got: nil")
 		return
 	} else if !errors.Is(err, ErrInvalidAddress) {
-		t.Errorf("expecting ErrInvalidAddress, got: %x", err)
+		t.Errorf("expecting ErrInvalidAddress, got: %q", err)
 		return
 	}
 	l, err = Listen("tcp", ":80")
