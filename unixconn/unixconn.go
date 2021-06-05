@@ -126,6 +126,11 @@ func (c *conn) Read(b []byte) (int, error) {
 	return c.Conn.Read(b)
 }
 
+func (c *conn) Close() error {
+	c.buf = nil
+	return c.Conn.Close()
+}
+
 type listener struct {
 	socket uint16
 	addr
