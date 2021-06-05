@@ -63,6 +63,10 @@ func testServerLoop(conn *net.UnixConn) {
 	}
 	conn.WriteMsgUnix(buf[:], nil, nil)
 	conn.ReadMsgUnix(buf[:2], nil)
+	if buf[0] != 0x50 || buf[1] != 0 {
+		conn.WriteMsgUnix(buf[:5], nil, nil)
+		return
+	}
 	conn.WriteMsgUnix(buf[:2], nil, nil)
 	conn.Close()
 }
