@@ -1,6 +1,7 @@
 package unixconn
 
 import (
+	"errors"
 	"net"
 	"os"
 	"syscall"
@@ -26,12 +27,22 @@ func TestUnixConn(t *testing.T) {
 	if l != nil {
 		t.Error("expecting nil listener")
 		return
-	}
-	if err == nil {
+	} else if err == nil {
 		t.Errorf("expecting 'error', got: nil")
 		return
 	} else if err.Error() != "error" {
 		t.Errorf("expecting 'error', got: %x", err)
+		return
+	}
+	l, err = Listen("tcp", "80")
+	if l != nil {
+		t.Error("expecting nil listener")
+		return
+	} else if err == nil {
+		t.Errorf("expecting 'error', got: nil")
+		return
+	} else if !errors.Is(err, ErrInvalidAddress) {
+		t.Errorf("expecting ErrInvalidAddress, got: %x", err)
 		return
 	}
 }
