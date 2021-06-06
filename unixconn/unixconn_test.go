@@ -2,11 +2,36 @@ package unixconn
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"syscall"
 	"testing"
 )
+
+var (
+	lone, ltwo *net.TCPListener
+	pone, ptwo uint16
+)
+
+func TestMain(m *testing.T) {
+	addr := new(net.TCPAddr)
+	var err error
+	lone, err = net.ListenTCP("tcp", addr)
+	if err != nil {
+		m.Fatalf("unexpected error during setup: %q", err)
+	}
+	ltwo, err = net.ListenTCP("tcp", addr)
+	if err != nil {
+		m.Fatalf("unexpected error during setup: %q", err)
+	}
+	if pone = getPort(lone.Addr().String()); pone == 0 {
+		m.Fatalf("invalid port number: %d", pone)
+	}
+	if ptwo = getPort(ltwo.Addr().String()); ptwo == 0 {
+		m.Fatalf("invalid port number: %d", ptwo)
+	}
+}
 
 func TestUnixConn(t *testing.T) {
 	fds, err := syscall.Socketpair(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
@@ -45,7 +70,8 @@ func TestUnixConn(t *testing.T) {
 		t.Error("test 2: expecting nil listener")
 		return
 	}
-	l, err = Listen("tcp", ":80")
+	pstr := fmt.Sprintf(":%d", pone)
+	l, err = Listen("tcp", pstr)
 	if err != nil {
 		t.Errorf("test 3: unexpected error: %s", err)
 		return
@@ -56,8 +82,8 @@ func TestUnixConn(t *testing.T) {
 	if net := l.Addr().Network(); net != "tcp" {
 		t.Errorf("test 4: expecting network \"tcp\", got: %q", net)
 		return
-	} else if addr := l.Addr().String(); addr != ":80" {
-		t.Errorf("test 4: expecting address \":80\", got %q", addr)
+	} else if addr := l.Addr().String(); addr != pstr {
+		t.Errorf("test 4: expecting address %q, got %q", pstr, addr)
 		return
 	}
 }
@@ -71,7 +97,8 @@ func testServerLoop(conn *net.UnixConn) {
 	}
 	conn.WriteMsgUnix(buf[:], nil, nil)
 	conn.ReadMsgUnix(buf[:2], nil)
-	if buf[0] != 0x50 || buf[1] != 0 {
+	p := uint16(buf[1])<<8 | uint16(buf[0])
+	if p != pone {
 		conn.WriteMsgUnix(buf[:5], nil, nil)
 		return
 	}
