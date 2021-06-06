@@ -52,6 +52,11 @@ func TestUnixConn(t *testing.T) {
 	} else if err != nil {
 		t.Errorf("test 3: unexpected error: %s", err)
 	}
+	if net := l.Addr().Network(); net != "tcp" {
+		t.Errorf("test 4: expecting network \"tcp\", got: %q", net)
+	} else if addr := l.Addr().String(); addr != ":80" {
+		t.Errorf("test 4: expecting address \":80\", got %q", addr)
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
