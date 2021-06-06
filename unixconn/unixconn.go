@@ -56,43 +56,33 @@ func runListenLoop() {
 				} else {
 					newSocket <- errors.New(string(buf[2:n]))
 				}
-			} else {
-				continue
 			}
-		} else {
-			msg, err := syscall.ParseSocketControlMessage(oob[:oobn])
-			if err != nil || len(msg) != 1 {
-				continue
-			}
-			fd, err := syscall.ParseUnixRights(&msg[0])
-			if err != nil || len(fd) != 1 {
-				continue
-			}
-			cn, err := net.FileConn(os.NewFile(uintptr(fd[0]), ""))
-			if err != nil {
-				continue
-			}
-			var port uint16
-			if tcpaddr, ok := cn.LocalAddr().(*net.TCPAddr); ok {
-				port = uint16(tcpaddr.Port)
-			} else {
-				port = getPort(cn.LocalAddr().String())
-			}
-			if c, ok := sockets[port]; ok {
-				if ka, ok := cn.(keepAlive); ok {
-					if err := ka.SetKeepAlive(true); err != nil {
-						ka.SetKeepAlivePeriod(3 * time.Minute)
+		} else if msg, err := syscall.ParseSocketControlMessage(oob[:oobn]); err == nil && len(msg) == 1 {
+			if fd, err := syscall.ParseUnixRights(&msg[0]); err == nil && len(fd) == 1 {
+				if cn, err := net.FileConn(os.NewFile(uintptr(fd[0]), "")); err == nil {
+					var port uint16
+					if tcpaddr, ok := cn.LocalAddr().(*net.TCPAddr); ok {
+						port = uint16(tcpaddr.Port)
+					} else {
+						port = getPort(cn.LocalAddr().String())
+					}
+					if c, ok := sockets[port]; ok {
+						if ka, ok := cn.(keepAlive); ok {
+							if err := ka.SetKeepAlive(true); err != nil {
+								ka.SetKeepAlivePeriod(3 * time.Minute)
+							}
+						}
+						conn := &conn{
+							Conn: cn,
+							buf:  make([]byte, 0, n),
+						}
+						copy(conn.buf, buf[:])
+						runtime.SetFinalizer(conn, (*conn).Close)
+						go sendConn(c, conn)
+					} else {
+						cn.Close()
 					}
 				}
-				conn := &conn{
-					Conn: cn,
-					buf:  make([]byte, 0, n),
-				}
-				copy(conn.buf, buf[:])
-				runtime.SetFinalizer(conn, (*conn).Close)
-				go sendConn(c, conn)
-			} else {
-				cn.Close()
 			}
 		}
 	}
