@@ -17,19 +17,17 @@ var (
 func TestMain(m *testing.T) {
 	addr := new(net.TCPAddr)
 	var err error
-	lone, err = net.ListenTCP("tcp", addr)
-	if err != nil {
-		m.Fatalf("unexpected error during setup: %q", err)
+	if lone, err = net.ListenTCP("tcp", addr); err != nil {
+		m.Fatalf("unexpected error during setup (1): %q", err)
 	}
-	ltwo, err = net.ListenTCP("tcp", addr)
-	if err != nil {
-		m.Fatalf("unexpected error during setup: %q", err)
+	if ltwo, err = net.ListenTCP("tcp", addr); err != nil {
+		m.Fatalf("unexpected error during setup (2): %q", err)
 	}
 	if pone = getPort(lone.Addr().String()); pone == 0 {
-		m.Fatalf("invalid port number: %d", pone)
+		m.Fatalf("invalid port number (1): %d", pone)
 	}
 	if ptwo = getPort(ltwo.Addr().String()); ptwo == 0 {
-		m.Fatalf("invalid port number: %d", ptwo)
+		m.Fatalf("invalid port number (2): %d", ptwo)
 	}
 }
 
