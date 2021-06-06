@@ -77,14 +77,14 @@ func runListenLoop() {
 								ka.SetKeepAlivePeriod(3 * time.Minute)
 							}
 						}
-						conn := &conn{
+						cc := &conn{
 							Conn:   cn,
 							buf:    buf,
 							length: n,
 						}
 						buf = bufPool.Get().(*buffer)
-						runtime.SetFinalizer(conn, (*conn).Close)
-						go sendConn(c, conn)
+						runtime.SetFinalizer(cc, (*conn).Close)
+						go sendConn(c, cc)
 					} else {
 						cn.Close()
 					}
