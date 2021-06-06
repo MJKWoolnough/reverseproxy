@@ -10,7 +10,7 @@ type addrService struct {
 	net.Addr
 }
 
-func (a *addrService) Transfer(buf []byte, conn net.Conn) error {
+func (a *addrService) Transfer(buf []byte, conn *net.TCPConn) error {
 	p, err := net.Dial(a.Network(), a.String())
 	if err == nil {
 		if _, err = p.Write(buf); err == nil {

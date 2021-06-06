@@ -2,7 +2,6 @@ package reverseproxy // import "vimagination.zapto.org/reverseproxy"
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -15,7 +14,7 @@ var (
 )
 
 type listener struct {
-	net.Listener
+	*net.TCPListener
 	ports map[*Port]struct{}
 }
 
@@ -34,7 +33,7 @@ var (
 
 func (l *listener) listen() {
 	for {
-		c, err := l.Accept()
+		c, err := l.AcceptTCP()
 		if errors.Is(err, net.ErrClosed) {
 			return
 		} else if err != nil {
@@ -86,7 +85,7 @@ func (l *listener) listen() {
 	}
 }
 
-func transfer(port *Port, buf []byte, c net.Conn, pool *sync.Pool) {
+func transfer(port *Port, buf []byte, c *net.TCPConn, pool *sync.Pool) {
 	port.Transfer(buf, c)
 	c.Close()
 	pool.Put(buf)
@@ -94,7 +93,7 @@ func transfer(port *Port, buf []byte, c net.Conn, pool *sync.Pool) {
 
 type service interface {
 	matchService(string) bool
-	Transfer([]byte, net.Conn) error
+	Transfer([]byte, *net.TCPConn) error
 }
 
 // Port represents a service waiting on a port
@@ -111,14 +110,14 @@ func addPort(port uint16, service service) (*Port, error) {
 	mu.Lock()
 	l, ok := listeners[port]
 	if !ok {
-		nl, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+		nl, err := net.ListenTCP("tcp", &net.TCPAddr{Port: int(port)})
 		if err != nil {
 			mu.Unlock()
 			return nil, err
 		}
 		l = &listener{
-			Listener: nl,
-			ports:    make(map[*Port]struct{}),
+			TCPListener: nl,
+			ports:       make(map[*Port]struct{}),
 		}
 		go l.listen()
 	}
