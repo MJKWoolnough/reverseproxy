@@ -24,38 +24,41 @@ func TestUnixConn(t *testing.T) {
 	sockets = make(map[uint16]chan net.Conn)
 	go runListenLoop()
 	l, err := Listen("tcp", ":8080")
-	if l != nil {
-		t.Error("test 1: expecting nil listener")
-		return
-	} else if err == nil {
+	if err == nil {
 		t.Errorf("test 1: expecting \"error\", got: nil")
 		return
 	} else if err.Error() != "error" {
 		t.Errorf("test 1: expecting \"error\", got: %q", err)
 		return
+	} else if l != nil {
+		t.Error("test 1: expecting nil listener")
+		return
 	}
 	l, err = Listen("tcp", "80")
-	if l != nil {
-		t.Error("test 2: expecting nil listener")
-		return
-	} else if err == nil {
+	if err == nil {
 		t.Errorf("test 2: expecting \"error\", got: nil")
 		return
 	} else if !errors.Is(err, ErrInvalidAddress) {
 		t.Errorf("test 2: expecting ErrInvalidAddress, got: %q", err)
 		return
+	} else if l != nil {
+		t.Error("test 2: expecting nil listener")
+		return
 	}
 	l, err = Listen("tcp", ":80")
-	if l == nil {
+	if err != nil {
+		t.Errorf("test 3: unexpected error: %s", err)
+		return
+	} else if l == nil {
 		t.Errorf("test 3: expecting non-nil Listener")
 		return
-	} else if err != nil {
-		t.Errorf("test 3: unexpected error: %s", err)
 	}
 	if net := l.Addr().Network(); net != "tcp" {
 		t.Errorf("test 4: expecting network \"tcp\", got: %q", net)
+		return
 	} else if addr := l.Addr().String(); addr != ":80" {
 		t.Errorf("test 4: expecting address \":80\", got %q", addr)
+		return
 	}
 }
 
