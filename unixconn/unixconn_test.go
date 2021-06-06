@@ -25,32 +25,32 @@ func TestUnixConn(t *testing.T) {
 	go runListenLoop()
 	l, err := Listen("tcp", ":8080")
 	if l != nil {
-		t.Error("expecting nil listener")
+		t.Error("test 1: expecting nil listener")
 		return
 	} else if err == nil {
-		t.Errorf("expecting 'error', got: nil")
+		t.Errorf("test 1: expecting \"error\", got: nil")
 		return
 	} else if err.Error() != "error" {
-		t.Errorf("expecting 'error', got: %q", err)
+		t.Errorf("test 1: expecting \"error\", got: %q", err)
 		return
 	}
 	l, err = Listen("tcp", "80")
 	if l != nil {
-		t.Error("expecting nil listener")
+		t.Error("test 2: expecting nil listener")
 		return
 	} else if err == nil {
-		t.Errorf("expecting 'error', got: nil")
+		t.Errorf("test 2: expecting \"error\", got: nil")
 		return
 	} else if !errors.Is(err, ErrInvalidAddress) {
-		t.Errorf("expecting ErrInvalidAddress, got: %q", err)
+		t.Errorf("test 2: expecting ErrInvalidAddress, got: %q", err)
 		return
 	}
 	l, err = Listen("tcp", ":80")
 	if l == nil {
-		t.Errorf("expecting non-nil Listener")
+		t.Errorf("test 3: expecting non-nil Listener")
 		return
 	} else if err != nil {
-		t.Errorf("unexpected error: %s", err)
+		t.Errorf("test 3: unexpected error: %s", err)
 	}
 }
 
