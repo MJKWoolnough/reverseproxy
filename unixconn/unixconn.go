@@ -13,12 +13,19 @@ import (
 	"time"
 )
 
+type buffer [http.DefaultMaxHeaderBytes]byte
+
 var (
 	fallback  = true
 	ucMu      sync.Mutex
 	uc        *net.UnixConn
 	newSocket chan error
 	sockets   map[uint16]chan net.Conn
+	bufPool   = sync.Pool{
+		New: func() interface{} {
+			return new(buffer)
+		},
+	}
 )
 
 func init() {
@@ -36,10 +43,8 @@ func init() {
 }
 
 func runListenLoop() {
-	var (
-		buf [http.DefaultMaxHeaderBytes]byte
-		oob = make([]byte, syscall.CmsgLen(4))
-	)
+	buf := bufPool.Get().(*buffer)
+	oob := make([]byte, syscall.CmsgLen(4))
 	for {
 		n, oobn, _, _, err := uc.ReadMsgUnix(buf[:], oob[:])
 		if err != nil {
@@ -73,10 +78,11 @@ func runListenLoop() {
 							}
 						}
 						conn := &conn{
-							Conn: cn,
-							buf:  make([]byte, 0, n),
+							Conn:   cn,
+							buf:    buf,
+							length: n,
 						}
-						copy(conn.buf, buf[:])
+						buf = bufPool.Get().(*buffer)
 						runtime.SetFinalizer(conn, (*conn).Close)
 						go sendConn(c, conn)
 					} else {
@@ -104,20 +110,29 @@ type keepAlive interface {
 
 type conn struct {
 	net.Conn
-	buf []byte
+	buf    *buffer
+	pos    int
+	length int
 }
 
 func (c *conn) Read(b []byte) (int, error) {
-	if len(c.buf) > 0 {
-		n := copy(b, c.buf)
-		c.buf = c.buf[n:]
+	if c.buf != nil {
+		n := copy(b, c.buf[c.pos:c.length])
+		c.pos += n
+		if c.pos == c.length {
+			bufPool.Put(c.buf)
+			c.buf = nil
+		}
 		return n, nil
 	}
 	return c.Conn.Read(b)
 }
 
 func (c *conn) Close() error {
-	c.buf = nil
+	if c.buf != nil {
+		bufPool.Put(c.buf)
+		c.buf = nil
+	}
 	return c.Conn.Close()
 }
 
