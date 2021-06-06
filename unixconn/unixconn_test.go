@@ -84,6 +84,13 @@ func TestUnixConn(t *testing.T) {
 		t.Errorf("test 4: expecting address %q, got %q", pstr, addr)
 		return
 	}
+	c, err := l.Accept()
+	if err != nil {
+		t.Errorf("test 5: unexpected error: %s", err)
+		return
+	} else if c == nil {
+		t.Error("test 5: conn should not be nil")
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
@@ -101,5 +108,17 @@ func testServerLoop(conn *net.UnixConn) {
 		return
 	}
 	conn.WriteMsgUnix(buf[:2], nil, nil)
+	go func() {
+		c, _ := net.DialTCP("tcp", nil, &net.TCPAddr{Port: int(pone)})
+		c.Write([]byte("data"))
+		c.Close()
+	}()
+	c, _ := lone.AcceptTCP()
+	transfer(conn, c, []byte("BIG"))
 	conn.Close()
+}
+
+func transfer(conn *net.UnixConn, c *net.TCPConn, data []byte) {
+	f, _ := c.File()
+	conn.WriteMsgUnix(data, syscall.UnixRights(int(f.Fd())), nil)
 }
