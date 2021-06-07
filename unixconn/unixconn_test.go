@@ -126,13 +126,18 @@ func TestUnixConn(t *testing.T) {
 }
 
 func testServerLoop(conn *net.UnixConn) {
+	defer conn.Close()
 	buf := [...]byte{0, 0, 'e', 'r', 'r', 'o', 'r'}
+
+	// test 1
 	conn.ReadMsgUnix(buf[:2], nil)
 	if buf[0] != 0x90 || buf[1] != 0x1f {
 		conn.WriteMsgUnix(buf[:5], nil, nil)
 		return
 	}
 	conn.WriteMsgUnix(buf[:], nil, nil)
+
+	// test 3
 	conn.ReadMsgUnix(buf[:2], nil)
 	p := uint16(buf[1])<<8 | uint16(buf[0])
 	if p != pone {
@@ -140,14 +145,15 @@ func testServerLoop(conn *net.UnixConn) {
 		return
 	}
 	conn.WriteMsgUnix(buf[:2], nil, nil)
+
 	go func() {
 		c, _ := net.DialTCP("tcp", nil, &net.TCPAddr{Port: int(pone)})
-		c.Write([]byte("data"))
+		c.Write([]byte("data")) // test 7
 		c.Close()
 	}()
-	c, _ := lone.AcceptTCP()
-	transfer(conn, c, []byte("BIG"))
-	conn.Close()
+
+	c, _ := lone.AcceptTCP()         // test 5
+	transfer(conn, c, []byte("BIG")) // test 6
 }
 
 func transfer(conn *net.UnixConn, c *net.TCPConn, data []byte) {
