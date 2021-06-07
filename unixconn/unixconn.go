@@ -15,12 +15,16 @@ import (
 
 type buffer [http.DefaultMaxHeaderBytes]byte
 
+type ns struct {
+	c   chan net.Conn
+	err error
+}
+
 var (
 	fallback  = true
 	ucMu      sync.Mutex
 	uc        *net.UnixConn
-	newSocket chan error
-	sockets   map[uint16]chan net.Conn
+	newSocket chan ns
 	bufPool   = sync.Pool{
 		New: func() interface{} {
 			return new(buffer)
@@ -35,8 +39,7 @@ func init() {
 		uc = u
 		if ok {
 			fallback = false
-			newSocket = make(chan error)
-			sockets = make(map[uint16]chan net.Conn)
+			newSocket = make(chan ns)
 			go runListenLoop()
 		}
 	}
@@ -45,6 +48,7 @@ func init() {
 func runListenLoop() {
 	buf := bufPool.Get().(*buffer)
 	oob := make([]byte, syscall.CmsgLen(4))
+	sockets := make(map[uint16]chan net.Conn)
 	for {
 		n, oobn, _, _, err := uc.ReadMsgUnix(buf[:], oob[:])
 		if err != nil {
@@ -52,15 +56,15 @@ func runListenLoop() {
 				break
 			}
 		}
+
 		if oobn == 0 {
-			if n >= 2 {
+			if n == 2 {
 				port := uint16(buf[1])<<8 | uint16(buf[0])
-				sockets[port] = make(chan net.Conn)
-				if n == 2 {
-					newSocket <- nil
-				} else {
-					newSocket <- errors.New(string(buf[2:n]))
-				}
+				c := make(chan net.Conn)
+				sockets[port] = c
+				newSocket <- ns{c: c}
+			} else if n > 2 {
+				newSocket <- ns{err: errors.New(string(buf[2:n]))}
 			}
 		} else if msg, err := syscall.ParseSocketControlMessage(oob[:oobn]); err == nil && len(msg) == 1 {
 			if fd, err := syscall.ParseUnixRights(&msg[0]); err == nil && len(fd) == 1 {
@@ -71,7 +75,8 @@ func runListenLoop() {
 					} else {
 						port = getPort(cn.LocalAddr().String())
 					}
-					if c, ok := sockets[port]; ok {
+					c, ok := sockets[port]
+					if ok {
 						if ka, ok := cn.(keepAlive); ok {
 							if err := ka.SetKeepAlive(true); err != nil {
 								ka.SetKeepAlivePeriod(3 * time.Minute)
@@ -138,11 +143,12 @@ func (c *conn) Close() error {
 
 type listener struct {
 	socket uint16
+	c      chan net.Conn
 	addr
 }
 
 func (l *listener) Accept() (net.Conn, error) {
-	c, ok := <-sockets[l.socket]
+	c, ok := <-l.c
 	if !ok {
 		return nil, net.ErrClosed
 	}
@@ -198,13 +204,14 @@ func Listen(network, address string) (net.Listener, error) {
 		ucMu.Unlock()
 		return nil, err
 	}
-	err = <-newSocket
+	ns := <-newSocket
 	ucMu.Unlock()
-	if err != nil {
-		return nil, err
+	if ns.err != nil {
+		return nil, ns.err
 	}
 	l := &listener{
 		socket: port,
+		c:      ns.c,
 		addr: addr{
 			network: network,
 			address: address,
