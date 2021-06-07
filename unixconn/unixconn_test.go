@@ -90,6 +90,29 @@ func TestUnixConn(t *testing.T) {
 		return
 	} else if c == nil {
 		t.Error("test 5: conn should not be nil")
+		return
+	}
+	var buf [32]byte
+	n, err := c.Read(buf[:])
+	if err != nil {
+		t.Errorf("test 6: unexpected error: %s", err)
+		return
+	} else if n != 3 {
+		t.Errorf("test 6: expecting to read 3 bytes, read %d: ", n)
+		return
+	} else if string(buf[:3]) != "BIG" {
+		t.Errorf("test 6: expecting to read \"BIG\", read: %q", buf[:3])
+	}
+	n, err = c.Read(buf[:])
+	if err != nil {
+		t.Errorf("test 7: unexpected error: %s", err)
+		return
+	} else if n != 4 {
+		t.Errorf("test 7: expecting to read 4 bytes, read %d: ", n)
+		return
+	} else if string(buf[:4]) != "data" {
+		t.Errorf("test 7: expecting to read \"data\", read: %q", buf[:3])
+		return
 	}
 }
 
