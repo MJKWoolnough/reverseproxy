@@ -123,6 +123,16 @@ func TestUnixConn(t *testing.T) {
 		t.Errorf("test 8: expecting to EOF, got: %s", err)
 		return
 	}
+	var l2 net.Listener
+	pstr = fmt.Sprintf(":%d", ptwo)
+	l2, err = Listen("tcp", pstr)
+	if err != nil {
+		t.Errorf("test 9: unexpected error: %s", err)
+		return
+	} else if l2 == nil {
+		t.Errorf("test 9: expecting non-nil Listener")
+		return
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
@@ -154,6 +164,15 @@ func testServerLoop(conn *net.UnixConn) {
 
 	c, _ := lone.AcceptTCP()         // test 5
 	transfer(conn, c, []byte("BIG")) // test 6
+
+	// test 9
+	conn.ReadMsgUnix(buf[:2], nil)
+	p = uint16(buf[1])<<8 | uint16(buf[0])
+	if p != ptwo {
+		conn.WriteMsgUnix(buf[:5], nil, nil)
+		return
+	}
+	conn.WriteMsgUnix(buf[:2], nil, nil)
 }
 
 func transfer(conn *net.UnixConn, c *net.TCPConn, data []byte) {
