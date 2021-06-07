@@ -90,11 +90,15 @@ func runListenLoop() {
 						buf = bufPool.Get().(*buffer)
 						runtime.SetFinalizer(cc, (*conn).Close)
 						go sendConn(c, cc)
+						continue
 					} else {
 						cn.Close()
 					}
 				}
 			}
+		}
+		for n := range buf[:n] {
+			buf[n] = 0
 		}
 	}
 }
@@ -125,18 +129,24 @@ func (c *conn) Read(b []byte) (int, error) {
 		n := copy(b, c.buf[c.pos:c.length])
 		c.pos += n
 		if c.pos == c.length {
-			bufPool.Put(c.buf)
-			c.buf = nil
+			c.clearBuffer()
 		}
 		return n, nil
 	}
 	return c.Conn.Read(b)
 }
 
+func (c *conn) clearBuffer() {
+	for n := range c.buf[:c.length] {
+		c.buf[n] = 0
+	}
+	bufPool.Put(c.buf)
+	c.buf = nil
+}
+
 func (c *conn) Close() error {
 	if c.buf != nil {
-		bufPool.Put(c.buf)
-		c.buf = nil
+		c.clearBuffer()
 	}
 	return c.Conn.Close()
 }
