@@ -60,9 +60,14 @@ func runListenLoop() {
 		if oobn == 0 {
 			if n == 2 {
 				port := uint16(buf[1])<<8 | uint16(buf[0])
-				c := make(chan net.Conn)
-				sockets[port] = c
-				newSocket <- ns{c: c}
+				if s, ok := sockets[port]; ok {
+					close(s)
+					delete(sockets, port)
+				} else {
+					c := make(chan net.Conn)
+					sockets[port] = c
+					newSocket <- ns{c: c}
+				}
 			} else if n > 2 {
 				newSocket <- ns{err: errors.New(string(buf[2:n]))}
 			}
