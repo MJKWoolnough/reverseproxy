@@ -3,6 +3,7 @@ package unixconn
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"syscall"
@@ -112,6 +113,14 @@ func TestUnixConn(t *testing.T) {
 		return
 	} else if string(buf[:4]) != "data" {
 		t.Errorf("test 7: expecting to read \"data\", read: %q", buf[:3])
+		return
+	}
+	n, err = c.Read(buf[:])
+	if n != 0 {
+		t.Errorf("test 8: expecting to read no data, read: %q", buf[:n])
+		return
+	} else if !errors.Is(err, io.EOF) {
+		t.Errorf("test 8: expecting to EOF, got: %s", err)
 		return
 	}
 }
