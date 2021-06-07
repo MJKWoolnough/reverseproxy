@@ -42,6 +42,7 @@ func TestUnixConn(t *testing.T) {
 	go testServerLoop(fconn.(*net.UnixConn))
 	fconn, _ = net.FileConn(os.NewFile(uintptr(fds[1]), ""))
 	uc = fconn.(*net.UnixConn)
+	listeningSockets = make(map[uint16]struct{})
 	defer uc.Close()
 	fallback = false
 	newSocket = make(chan ns)

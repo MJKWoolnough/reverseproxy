@@ -21,11 +21,12 @@ type ns struct {
 }
 
 var (
-	fallback  = true
-	ucMu      sync.Mutex
-	uc        *net.UnixConn
-	newSocket chan ns
-	bufPool   = sync.Pool{
+	fallback         = true
+	ucMu             sync.Mutex
+	uc               *net.UnixConn
+	listeningSockets map[uint16]struct{}
+	newSocket        chan ns
+	bufPool          = sync.Pool{
 		New: func() interface{} {
 			return new(buffer)
 		},
@@ -40,6 +41,7 @@ func init() {
 		if ok {
 			fallback = false
 			newSocket = make(chan ns)
+			listeningSockets = make(map[uint16]struct{})
 			go runListenLoop()
 		}
 	}
@@ -63,7 +65,9 @@ func runListenLoop() {
 				if s, ok := sockets[port]; ok {
 					close(s)
 					delete(sockets, port)
+					delete(listeningSockets, port)
 				} else {
+					listeningSockets[port] = struct{}{}
 					c := make(chan net.Conn)
 					sockets[port] = c
 					newSocket <- ns{c: c}
@@ -214,6 +218,10 @@ func Listen(network, address string) (net.Listener, error) {
 	buf[0] = byte(port)
 	buf[1] = byte(port >> 8)
 	ucMu.Lock()
+	if _, ok := listeningSockets[port]; ok {
+		ucMu.Unlock()
+		return nil, ErrAlreadyListening
+	}
 	_, _, err := uc.WriteMsgUnix(buf[:], nil, nil)
 	if err != nil {
 		ucMu.Unlock()
@@ -244,5 +252,6 @@ func getPort(address string) uint16 {
 
 // Errors
 var (
-	ErrInvalidAddress = errors.New("port must be 0 < port < 2^16")
+	ErrInvalidAddress   = errors.New("port must be 0 < port < 2^16")
+	ErrAlreadyListening = errors.New("port already being listened on")
 )
