@@ -169,10 +169,10 @@ func (l *listener) Close() error {
 	if l.socket == 0 {
 		return net.ErrClosed
 	}
-	l.socket = 0
 	var buf [2]byte
 	buf[0] = byte(l.socket)
 	buf[1] = byte(l.socket >> 8)
+	l.socket = 0
 	ucMu.Lock()
 	_, _, err := uc.WriteMsgUnix(buf[:], nil, nil)
 	ucMu.Unlock()
