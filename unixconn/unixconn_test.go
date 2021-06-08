@@ -148,6 +148,10 @@ func TestUnixConn(t *testing.T) {
 		t.Error("test 11: conn should not be nil")
 		return
 	}
+	err = l2.Close()
+	if err != nil {
+		t.Errorf("test 12: expecting nil error, got: %s", err)
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
