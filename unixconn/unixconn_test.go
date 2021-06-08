@@ -140,6 +140,14 @@ func TestUnixConn(t *testing.T) {
 		t.Errorf("test 10: expecting address %q, got %q", pstr, addr)
 		return
 	}
+	c, err = l2.Accept()
+	if err != nil {
+		t.Errorf("test 11: unexpected error: %s", err)
+		return
+	} else if c == nil {
+		t.Error("test 11: conn should not be nil")
+		return
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
