@@ -230,6 +230,10 @@ func TestUnixConn(t *testing.T) {
 		t.Errorf("test 22: expecting to EOF, got: %s", err)
 		return
 	}
+	err = ct.Close()
+	if !errors.Is(err, net.ErrClosed) {
+		t.Errorf("test 23: expecting net.ErrClosed, got: %s", err)
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
