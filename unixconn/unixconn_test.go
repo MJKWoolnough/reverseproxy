@@ -222,6 +222,14 @@ func TestUnixConn(t *testing.T) {
 	if err != nil {
 		t.Errorf("test 21: expecting nil error, got: %s", err)
 	}
+	n, err = ct.Read(buf[:])
+	if n != 0 {
+		t.Errorf("test 22: expecting to read no data, read: %q", buf[:n])
+		return
+	} else if !errors.Is(err, net.ErrClosed) {
+		t.Errorf("test 22: expecting to EOF, got: %s", err)
+		return
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
