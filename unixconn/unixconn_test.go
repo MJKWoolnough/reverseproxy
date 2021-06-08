@@ -169,6 +169,16 @@ func TestUnixConn(t *testing.T) {
 	} else if ct == nil {
 		t.Error("test 15: recieved nil conn when conn expected")
 	}
+	n, err = c.Read(buf[:])
+	if err != nil {
+		t.Errorf("test 16: unexpected error: %s", err)
+		return
+	} else if n != 5 {
+		t.Errorf("test 16: expecting to read 3 bytes, read %d: ", n)
+		return
+	} else if string(buf[:5]) != "HELLO" {
+		t.Errorf("test 16: expecting to read \"HELLO\", read: %q", buf[:5])
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
