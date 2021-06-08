@@ -133,6 +133,13 @@ func TestUnixConn(t *testing.T) {
 		t.Errorf("test 9: expecting non-nil Listener")
 		return
 	}
+	if net := l2.Addr().Network(); net != "tcp" {
+		t.Errorf("test 10: expecting network \"tcp\", got: %q", net)
+		return
+	} else if addr := l2.Addr().String(); addr != pstr {
+		t.Errorf("test 10: expecting address %q, got %q", pstr, addr)
+		return
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
