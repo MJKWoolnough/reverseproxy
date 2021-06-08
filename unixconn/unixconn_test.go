@@ -200,6 +200,16 @@ func TestUnixConn(t *testing.T) {
 		t.Errorf("test 18: expecting to read \"world\", read: %q", buf[:5])
 		return
 	}
+	n, err = ct.Read(buf[:])
+	if err != nil {
+		t.Errorf("test 19: unexpected error: %s", err)
+		return
+	} else if n != 10 {
+		t.Errorf("test 19: expecting to read 10 bytes, read %d: ", n)
+		return
+	} else if string(buf[:10]) != "0987654321" {
+		t.Errorf("test 19: expecting to read \"0987654321\", read: %q", buf[:3])
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
