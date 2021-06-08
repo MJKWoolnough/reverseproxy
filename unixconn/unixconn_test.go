@@ -152,6 +152,10 @@ func TestUnixConn(t *testing.T) {
 	if err != nil {
 		t.Errorf("test 12: expecting nil error, got: %s", err)
 	}
+	err = l2.Close()
+	if !errors.Is(err, net.ErrClosed) {
+		t.Errorf("test 13: expecting net.ErrClosed, got: %s", err)
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
