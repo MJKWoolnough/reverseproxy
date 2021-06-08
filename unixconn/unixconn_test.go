@@ -210,6 +210,14 @@ func TestUnixConn(t *testing.T) {
 	} else if string(buf[:10]) != "0987654321" {
 		t.Errorf("test 19: expecting to read \"0987654321\", read: %q", buf[:3])
 	}
+	n, err = c.Read(buf[:])
+	if n != 0 {
+		t.Errorf("test 20: expecting to read no data, read: %q", buf[:n])
+		return
+	} else if !errors.Is(err, io.EOF) {
+		t.Errorf("test 20: expecting to EOF, got: %s", err)
+		return
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
