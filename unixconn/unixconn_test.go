@@ -163,6 +163,12 @@ func TestUnixConn(t *testing.T) {
 	} else if ct != nil {
 		t.Errorf("test 14: expecting nil conn, got: %v", ct)
 	}
+	ct, err = l.Accept()
+	if err != nil {
+		t.Errorf("test 15: unexpected error: %s", err)
+	} else if ct == nil {
+		t.Error("test 15: recieved nil conn when conn expected")
+	}
 }
 
 func testServerLoop(conn *net.UnixConn) {
