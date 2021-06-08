@@ -180,6 +180,28 @@ func testServerLoop(conn *net.UnixConn) {
 		return
 	}
 	conn.WriteMsgUnix(buf[:2], nil, nil)
+
+	// test 11
+	go func() {
+		c, _ := net.DialTCP("tcp", nil, &net.TCPAddr{Port: int(ptwo)})
+		c.Write([]byte("world")) // test 18
+		c.Close()                // test 20
+	}()
+	c, _ = ltwo.AcceptTCP()
+	transfer(conn, c, []byte("HELLO")) // test 16
+
+	// test 12
+	conn.ReadMsgUnix(buf[:2], nil)
+	conn.WriteMsgUnix(buf[:2], nil, nil)
+
+	// test 15
+	go func() {
+		c, _ := net.DialTCP("tcp", nil, &net.TCPAddr{Port: int(pone)})
+		c.Write([]byte("0987654321")) // test 19
+		c.Close()
+	}()
+	c, _ = lone.AcceptTCP()
+	transfer(conn, c, []byte("1234567890")) // test 17
 }
 
 func transfer(conn *net.UnixConn, c *net.TCPConn, data []byte) {
