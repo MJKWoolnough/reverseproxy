@@ -57,6 +57,7 @@ func transfer(c *net.TCPConn) {
 	var tlsByte [1]byte
 	if n, err := io.ReadFull(c, tlsByte[:]); n != 1 || err != nil {
 		c.Close()
+		return
 	}
 	var (
 		name           string
