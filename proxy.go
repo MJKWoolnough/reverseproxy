@@ -49,42 +49,44 @@ func (l *listener) listen() {
 			}
 			continue
 		}
-		go func(c *net.TCPConn) {
-			var tlsByte [1]byte
-			if n, err := io.ReadFull(c, tlsByte[:]); n != 1 || err != nil {
-				c.Close()
-			}
-			var (
-				name           string
-				pool           *sync.Pool
-				readServerName func(io.Reader, []byte) (string, []byte, error)
-			)
-			if tlsByte[0] == 22 {
-				pool = &tlsPool
-				readServerName = readTLSServerName
-			} else {
-				pool = &httpPool
-				readServerName = readHTTPServerName
-			}
-			buf := pool.Get().([]byte)[:1]
-			buf[0] = tlsByte[0]
-			name, buf, err = readServerName(c, buf)
-			if err != nil {
-				c.Close()
-				return
-			}
-			var port *Port
-			mu.RLock()
-			for p := range l.ports {
-				if p.matchService(name) {
-					port = p
-					break
-				}
-			}
-			mu.RUnlock()
-			go transfer(port, buf, c, pool)
-		}(c)
+		go preTransfer(c)
 	}
+}
+
+func preTransfer(c *net.TCPConn) {
+	var tlsByte [1]byte
+	if n, err := io.ReadFull(c, tlsByte[:]); n != 1 || err != nil {
+		c.Close()
+	}
+	var (
+		name           string
+		pool           *sync.Pool
+		readServerName func(io.Reader, []byte) (string, []byte, error)
+	)
+	if tlsByte[0] == 22 {
+		pool = &tlsPool
+		readServerName = readTLSServerName
+	} else {
+		pool = &httpPool
+		readServerName = readHTTPServerName
+	}
+	buf := pool.Get().([]byte)[:1]
+	buf[0] = tlsByte[0]
+	name, buf, err = readServerName(c, buf)
+	if err != nil {
+		c.Close()
+		return
+	}
+	var port *Port
+	mu.RLock()
+	for p := range l.ports {
+		if p.matchService(name) {
+			port = p
+			break
+		}
+	}
+	mu.RUnlock()
+	go transfer(port, buf, c, pool)
 }
 
 func transfer(port *Port, buf []byte, c *net.TCPConn, pool *sync.Pool) {
