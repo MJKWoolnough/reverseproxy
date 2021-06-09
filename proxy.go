@@ -49,11 +49,11 @@ func (l *listener) listen() {
 			}
 			continue
 		}
-		go transfer(c)
+		go l.transfer(c)
 	}
 }
 
-func transfer(c *net.TCPConn) {
+func (l *listener) transfer(c *net.TCPConn) {
 	var tlsByte [1]byte
 	if n, err := io.ReadFull(c, tlsByte[:]); n == 1 && err == nil {
 		var (
