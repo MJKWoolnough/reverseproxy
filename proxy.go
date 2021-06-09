@@ -55,41 +55,37 @@ func (l *listener) listen() {
 
 func transfer(c *net.TCPConn) {
 	var tlsByte [1]byte
-	if n, err := io.ReadFull(c, tlsByte[:]); n != 1 || err != nil {
-		c.Close()
-		return
-	}
-	var (
-		name           string
-		pool           *sync.Pool
-		readServerName func(io.Reader, []byte) (string, []byte, error)
-	)
-	if tlsByte[0] == 22 {
-		pool = &tlsPool
-		readServerName = readTLSServerName
-	} else {
-		pool = &httpPool
-		readServerName = readHTTPServerName
-	}
-	buf := pool.Get().([]byte)[:1]
-	buf[0] = tlsByte[0]
-	name, buf, err = readServerName(c, buf)
-	if err != nil {
-		c.Close()
-		return
-	}
-	var port *Port
-	mu.RLock()
-	for p := range l.ports {
-		if p.matchService(name) {
-			port = p
-			break
+	if n, err := io.ReadFull(c, tlsByte[:]); n == 1 && err == nil {
+		var (
+			name           string
+			pool           *sync.Pool
+			readServerName func(io.Reader, []byte) (string, []byte, error)
+		)
+		if tlsByte[0] == 22 {
+			pool = &tlsPool
+			readServerName = readTLSServerName
+		} else {
+			pool = &httpPool
+			readServerName = readHTTPServerName
+		}
+		buf := pool.Get().([]byte)[:1]
+		buf[0] = tlsByte[0]
+		name, buf, err = readServerName(c, buf)
+		if err == nil {
+			var port *Port
+			mu.RLock()
+			for p := range l.ports {
+				if p.matchService(name) {
+					port = p
+					break
+				}
+			}
+			mu.RUnlock()
+			port.Transfer(buf, c)
+			pool.Put(buf)
 		}
 	}
-	mu.RUnlock()
-	port.Transfer(buf, c)
 	c.Close()
-	pool.Put(buf)
 }
 
 type service interface {
