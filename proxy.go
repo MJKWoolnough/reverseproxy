@@ -9,12 +9,14 @@ import (
 )
 
 var (
-	mu        sync.RWMutex // global lock
+	lMu       sync.RWMutex
 	listeners = make(map[uint16]*listener)
 )
 
 type listener struct {
 	*net.TCPListener
+
+	mu    sync.RWMutex
 	ports map[*Port]struct{}
 }
 
@@ -39,12 +41,12 @@ func (l *listener) listen() {
 		} else if err != nil {
 			if nerr, ok := err.(net.Error); !ok || !nerr.Temporary() {
 				l.Close()
-				mu.Lock()
+				l.mu.Lock()
 				for p := range l.ports {
 					p.closed = true
 					delete(l.ports, p)
 				}
-				mu.Unlock()
+				l.mu.Unlock()
 				return
 			}
 			continue
@@ -73,14 +75,14 @@ func (l *listener) transfer(c *net.TCPConn) {
 		name, buf, err = readServerName(c, buf)
 		if err == nil {
 			var port *Port
-			mu.RLock()
+			l.mu.RLock()
 			for p := range l.ports {
 				if p.matchService(name) {
 					port = p
 					break
 				}
 			}
-			mu.RUnlock()
+			l.mu.RUnlock()
 			port.Transfer(buf, c)
 			pool.Put(buf)
 		}
@@ -104,12 +106,11 @@ func addPort(port uint16, service service) (*Port, error) {
 	if port == 0 {
 		return nil, ErrInvalidPort
 	}
-	mu.Lock()
+	lMu.Lock()
 	l, ok := listeners[port]
 	if !ok {
 		nl, err := net.ListenTCP("tcp", &net.TCPAddr{Port: int(port)})
 		if err != nil {
-			mu.Unlock()
 			return nil, err
 		}
 		l = &listener{
@@ -118,30 +119,34 @@ func addPort(port uint16, service service) (*Port, error) {
 		}
 		go l.listen()
 	}
+	lMu.Unlock()
 	p := &Port{
 		service: service,
 		port:    port,
 	}
+	l.mu.Lock()
 	l.ports[p] = struct{}{}
-	mu.Unlock()
+	l.mu.Unlock()
 	return p, nil
 }
 
 // Close closes this port connection
 func (p *Port) Close() error {
-	mu.Lock()
+	lMu.Lock()
 	if !p.closed {
 		l, ok := listeners[p.port]
 		if ok {
+			l.mu.Lock()
 			delete(l.ports, p)
 			if len(l.ports) == 0 {
 				delete(listeners, p.port)
 				l.Close()
 			}
+			l.mu.Unlock()
 		}
 		p.closed = true
 	}
-	mu.Unlock()
+	lMu.Unlock()
 	return nil
 }
 
