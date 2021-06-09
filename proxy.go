@@ -118,6 +118,7 @@ func addPort(port uint16, service service) (*Port, error) {
 			ports:       make(map[*Port]struct{}),
 		}
 		go l.listen()
+		listeners[port] = l
 	}
 	lMu.Unlock()
 	p := &Port{
