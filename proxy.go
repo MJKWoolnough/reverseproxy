@@ -49,11 +49,11 @@ func (l *listener) listen() {
 			}
 			continue
 		}
-		go preTransfer(c)
+		go transfer(c)
 	}
 }
 
-func preTransfer(c *net.TCPConn) {
+func transfer(c *net.TCPConn) {
 	var tlsByte [1]byte
 	if n, err := io.ReadFull(c, tlsByte[:]); n != 1 || err != nil {
 		c.Close()
@@ -86,10 +86,6 @@ func preTransfer(c *net.TCPConn) {
 		}
 	}
 	mu.RUnlock()
-	go transfer(port, buf, c, pool)
-}
-
-func transfer(port *Port, buf []byte, c *net.TCPConn, pool *sync.Pool) {
 	port.Transfer(buf, c)
 	c.Close()
 	pool.Put(buf)
