@@ -24,19 +24,37 @@ func (u *unixService) Transfer(buf []byte, conn *net.TCPConn) error {
 	return err
 }
 
-// RegisterCmd runs the given command and waits for incoming listeners from it
-func RegisterCmd(msn MatchServiceName, cmd *exec.Cmd) error {
-	fds, err := syscall.Socketpair(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
+// UnixCmd holds the information required to control (close) a server and its
+// resources
+type UnixCmd struct {
+	cmd  *exec.Cmd
+	conn *net.UnixConn
+}
+
+// Close closes all ports for the server and sends a signal to the server to
+// close
+func (u *UnixCmd) Close() error {
+	err := u.conn.Close()
+	errr := u.cmd.Process.Signal(os.Interrupt)
 	if err != nil {
 		return err
+	}
+	return errr
+}
+
+// RegisterCmd runs the given command and waits for incoming listeners from it
+func RegisterCmd(msn MatchServiceName, cmd *exec.Cmd) (*UnixCmd, error) {
+	fds, err := syscall.Socketpair(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
+	if err != nil {
+		return nil, err
 	}
 	nf := os.NewFile(uintptr(fds[0]), "")
 	fconn, err := net.FileConn(nf)
 	if err := nf.Close(); err != nil {
-		return err
+		return nil, err
 	}
 	if err != nil {
-		return err
+		return nil, err
 	}
 	conn := fconn.(*net.UnixConn)
 	f := os.NewFile(uintptr(fds[1]), "")
@@ -44,10 +62,13 @@ func RegisterCmd(msn MatchServiceName, cmd *exec.Cmd) error {
 	err = cmd.Start()
 	f.Close()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	go runCmdLoop(msn, conn)
-	return nil
+	return &UnixCmd{
+		cmd:  cmd,
+		conn: conn,
+	}, nil
 }
 
 func runCmdLoop(msn MatchServiceName, conn *net.UnixConn) {
