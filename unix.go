@@ -4,6 +4,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"sync"
 	"syscall"
 )
 
@@ -29,6 +30,9 @@ func (u *unixService) Transfer(buf []byte, conn *net.TCPConn) error {
 type UnixCmd struct {
 	cmd  *exec.Cmd
 	conn *net.UnixConn
+
+	mu   sync.RWMutex
+	open map[uint16]*Port
 }
 
 // Close closes all ports for the server and sends a signal to the server to
@@ -64,37 +68,39 @@ func RegisterCmd(msn MatchServiceName, cmd *exec.Cmd) (*UnixCmd, error) {
 	if err != nil {
 		return nil, err
 	}
-	go runCmdLoop(msn, conn)
-	return &UnixCmd{
+	u := &UnixCmd{
 		cmd:  cmd,
 		conn: conn,
-	}, nil
+		open: make(map[uint16]*Port),
+	}
+	go u.runCmdLoop(msn)
+	return u, nil
 }
 
-func runCmdLoop(msn MatchServiceName, conn *net.UnixConn) {
+func (u *UnixCmd) runCmdLoop(msn MatchServiceName) {
 	var (
-		buf  [2]byte
-		open = make(map[uint16]*Port)
-		srv  = &unixService{
+		buf [2]byte
+		srv = &unixService{
 			MatchServiceName: msn,
-			conn:             conn,
+			conn:             u.conn,
 		}
 	)
 	for {
-		n, _, _, _, err := conn.ReadMsgUnix(buf[:], nil)
+		n, _, _, _, err := u.conn.ReadMsgUnix(buf[:], nil)
 		if err != nil {
-			for _, p := range open {
+			for _, p := range u.open {
 				p.Close()
 			}
-			conn.Close()
+			u.conn.Close()
 			return
 		}
 		if n < 2 {
 			continue
 		}
+		u.mu.Lock()
 		port := uint16(buf[1])<<8 | uint16(buf[0])
-		if p, ok := open[port]; ok {
-			delete(open, port)
+		if p, ok := u.open[port]; ok {
+			delete(u.open, port)
 			p.Close()
 		} else {
 			p, err = addPort(port, srv)
@@ -104,11 +110,12 @@ func runCmdLoop(msn MatchServiceName, conn *net.UnixConn) {
 				b[0] = buf[0]
 				b[1] = buf[1]
 				b = append(b, errStr...)
-				conn.WriteMsgUnix(b, nil, nil)
-				continue
+				u.conn.WriteMsgUnix(b, nil, nil)
+			} else {
+				u.open[port] = p
+				u.conn.WriteMsgUnix(buf[:], nil, nil)
 			}
-			open[port] = p
-			conn.WriteMsgUnix(buf[:], nil, nil)
 		}
+		u.mu.Unlock()
 	}
 }
