@@ -57,6 +57,7 @@ func runListenLoop() {
 			for _, c := range sockets {
 				close(c)
 			}
+			fallback = false
 			break
 		}
 
