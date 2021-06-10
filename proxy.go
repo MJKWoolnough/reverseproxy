@@ -36,9 +36,10 @@ var (
 func (l *listener) listen() {
 	for {
 		c, err := l.AcceptTCP()
-		if errors.Is(err, net.ErrClosed) {
-			return
-		} else if err != nil {
+		if err != nil {
+			if errors.Is(err, net.ErrClosed) {
+				return
+			}
 			if nerr, ok := err.(net.Error); !ok || !nerr.Temporary() {
 				l.Close()
 				l.mu.Lock()
