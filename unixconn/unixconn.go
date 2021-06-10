@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 )
@@ -21,7 +22,7 @@ type ns struct {
 }
 
 var (
-	fallback         = true
+	fallback         = uint32(0)
 	ucMu             sync.Mutex
 	uc               *net.UnixConn
 	listeningSockets map[uint16]struct{}
@@ -39,7 +40,7 @@ func init() {
 		u, ok := c.(*net.UnixConn)
 		uc = u
 		if ok {
-			fallback = false
+			fallback = 1
 			newSocket = make(chan ns)
 			listeningSockets = make(map[uint16]struct{})
 			go runListenLoop()
@@ -57,7 +58,7 @@ func runListenLoop() {
 			for _, c := range sockets {
 				close(c)
 			}
-			fallback = false
+			atomic.StoreUint32(&fallback, 1)
 			break
 		}
 
@@ -209,7 +210,7 @@ func (a addr) String() string {
 // Listen creates a reverse proxy connection, falling back to the net package if
 // the reverse proxy is not available
 func Listen(network, address string) (net.Listener, error) {
-	if fallback {
+	if atomic.LoadUint32(&fallback) == 1 {
 		return net.Listen(network, address)
 	}
 	port := getPort(address)

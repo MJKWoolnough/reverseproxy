@@ -44,7 +44,6 @@ func TestUnixConn(t *testing.T) {
 	uc = fconn.(*net.UnixConn)
 	listeningSockets = make(map[uint16]struct{})
 	defer uc.Close()
-	fallback = false
 	newSocket = make(chan ns)
 	go runListenLoop()
 	l, err := Listen("tcp", ":8080")
