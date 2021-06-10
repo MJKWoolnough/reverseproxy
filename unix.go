@@ -31,15 +31,21 @@ type UnixCmd struct {
 	cmd  *exec.Cmd
 	conn *net.UnixConn
 
-	mu   sync.RWMutex
+	mu   sync.Mutex
 	open map[uint16]*Port
 }
 
 // Close closes all ports for the server and sends a signal to the server to
 // close
 func (u *UnixCmd) Close() error {
+	u.mu.Lock()
+	for port, p := range u.open {
+		delete(u.open, port)
+		p.Close()
+	}
 	err := u.conn.Close()
 	errr := u.cmd.Process.Signal(os.Interrupt)
+	u.mu.Unlock()
 	if err != nil {
 		return err
 	}
@@ -88,10 +94,13 @@ func (u *UnixCmd) runCmdLoop(msn MatchServiceName) {
 	for {
 		n, _, _, _, err := u.conn.ReadMsgUnix(buf[:], nil)
 		if err != nil {
-			for _, p := range u.open {
+			u.mu.Lock()
+			for port, p := range u.open {
+				delete(u.open, port)
 				p.Close()
 			}
 			u.conn.Close()
+			u.mu.Unlock()
 			return
 		}
 		if n < 2 {
