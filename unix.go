@@ -28,8 +28,13 @@ func RegisterCmd(msn MatchServiceName, cmd *exec.Cmd) error {
 		return err
 	}
 	nf := os.NewFile(uintptr(fds[0]), "")
-	fconn, _ := net.FileConn(nf)
-	nf.Close()
+	fconn, err := net.FileConn(nf)
+	if err := nf.Close(); err != nil {
+		return err
+	}
+	if err != nil {
+		return err
+	}
 	conn := fconn.(*net.UnixConn)
 	f := os.NewFile(uintptr(fds[1]), "")
 	cmd.ExtraFiles = append([]*os.File{}, f)
