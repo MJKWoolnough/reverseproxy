@@ -16,7 +16,10 @@ func (u *unixService) Transfer(buf []byte, conn *net.TCPConn) error {
 	f, err := conn.File()
 	if err == nil {
 		_, _, err = u.conn.WriteMsgUnix(buf, syscall.UnixRights(int(f.Fd())), nil)
-		f.Close()
+		errr := f.Close()
+		if err == nil {
+			err = errr
+		}
 	}
 	return err
 }
