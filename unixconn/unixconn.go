@@ -54,12 +54,10 @@ func runListenLoop() {
 	for {
 		n, oobn, _, _, err := uc.ReadMsgUnix(buf[:], oob[:])
 		if err != nil {
-			if nerr, ok := err.(net.Error); !ok || !nerr.Temporary() {
-				for _, c := range sockets {
-					close(c)
-				}
-				break
+			for _, c := range sockets {
+				close(c)
 			}
+			break
 		}
 
 		if oobn == 0 {
