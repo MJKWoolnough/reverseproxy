@@ -33,8 +33,9 @@ type testData struct {
 
 type testService chan testData
 
-func (t testService) Transfer(buf []byte, conn *net.TCPConn) {
+func (t testService) Transfer(buf []byte, conn *net.TCPConn) error {
 	t <- testData{buf, conn}
+	return nil
 }
 
 type testServiceA struct {
