@@ -1,6 +1,7 @@
 package reverseproxy
 
 import (
+	"errors"
 	"net"
 	"os"
 	"os/exec"
@@ -139,3 +140,8 @@ func (u *UnixCmd) runCmdLoop(msn MatchServiceName) {
 		u.mu.Unlock()
 	}
 }
+
+// Error
+var (
+	ErrClosed = errors.New("closed")
+)
