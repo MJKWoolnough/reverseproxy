@@ -27,14 +27,14 @@ func readHTTPServerName(r io.Reader, buf []byte) (string, []byte, error) {
 		}
 		h = bytes.Index(buf, host)
 		if e := bytes.Index(buf, eoh); h > 0 && (e > h || e == -1) {
+			h += len(host)
 			l = bytes.Index(buf[h:], eol)
 		} else if e >= 0 {
 			return "", nil, errNoServerHeader
 		}
 		n += m
 	}
-	sh := h + len(host)
-	return string(buf[sh : sh+l]), buf[:n], nil
+	return string(buf[h : h+l]), buf[:n], nil
 }
 
 var (
