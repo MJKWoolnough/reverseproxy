@@ -18,7 +18,7 @@ func readHTTPServerName(r io.Reader, buf []byte) (string, []byte, error) {
 	n := 0
 	h := -1
 	l := -1
-	for l >= 0 {
+	for l < 0 {
 		m, err := r.Read(buf[n:])
 		if err != nil {
 			if terr, ok := err.(net.Error); !ok || !terr.Temporary() {
