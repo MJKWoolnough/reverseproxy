@@ -31,20 +31,26 @@ type UnixCmd struct {
 	cmd  *exec.Cmd
 	conn *net.UnixConn
 
-	mu   sync.Mutex
-	open map[uint16]*Port
+	mu     sync.Mutex
+	open   map[uint16]*Port
+	closed bool
 }
 
 // Close closes all ports for the server and sends a signal to the server to
 // close
 func (u *UnixCmd) Close() error {
 	u.mu.Lock()
+	if u.closed {
+		u.mu.Unlock()
+		return ErrClosed
+	}
 	for port, p := range u.open {
 		delete(u.open, port)
 		p.Close()
 	}
 	err := u.conn.Close()
 	errr := u.cmd.Process.Signal(os.Interrupt)
+	u.closed = true
 	u.mu.Unlock()
 	if err != nil {
 		return err
@@ -95,11 +101,14 @@ func (u *UnixCmd) runCmdLoop(msn MatchServiceName) {
 		n, _, _, _, err := u.conn.ReadMsgUnix(buf[:], nil)
 		if err != nil {
 			u.mu.Lock()
-			for port, p := range u.open {
-				delete(u.open, port)
-				p.Close()
+			if !u.closed {
+				for port, p := range u.open {
+					delete(u.open, port)
+					p.Close()
+				}
+				u.conn.Close()
+				u.closed = true
 			}
-			u.conn.Close()
 			u.mu.Unlock()
 			return
 		}
@@ -107,22 +116,24 @@ func (u *UnixCmd) runCmdLoop(msn MatchServiceName) {
 			continue
 		}
 		u.mu.Lock()
-		port := uint16(buf[1])<<8 | uint16(buf[0])
-		if p, ok := u.open[port]; ok {
-			delete(u.open, port)
-			p.Close()
-		} else {
-			p, err = addPort(port, srv)
-			if err != nil {
-				errStr := err.Error()
-				b := make([]byte, 2, 2+len(errStr))
-				b[0] = buf[0]
-				b[1] = buf[1]
-				b = append(b, errStr...)
-				u.conn.WriteMsgUnix(b, nil, nil)
+		if !u.closed {
+			port := uint16(buf[1])<<8 | uint16(buf[0])
+			if p, ok := u.open[port]; ok {
+				delete(u.open, port)
+				p.Close()
 			} else {
-				u.open[port] = p
-				u.conn.WriteMsgUnix(buf[:], nil, nil)
+				p, err = addPort(port, srv)
+				if err != nil {
+					errStr := err.Error()
+					b := make([]byte, 2, 2+len(errStr))
+					b[0] = buf[0]
+					b[1] = buf[1]
+					b = append(b, errStr...)
+					u.conn.WriteMsgUnix(b, nil, nil)
+				} else {
+					u.open[port] = p
+					u.conn.WriteMsgUnix(buf[:], nil, nil)
+				}
 			}
 		}
 		u.mu.Unlock()
