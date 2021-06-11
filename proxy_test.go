@@ -53,6 +53,16 @@ func (testServiceB) matchService(service string) bool {
 	return service == "bbb.com"
 }
 
+func getUnusedPort() uint16 {
+	l, err := net.ListenTCP("tcp", &net.TCPAddr{})
+	if err != nil {
+		return 0
+	}
+	p := uint16(l.Addr().(*net.TCPAddr).Port)
+	l.Close()
+	return p
+}
+
 func TestListener(t *testing.T) {
 
 }
