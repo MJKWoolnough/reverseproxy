@@ -43,7 +43,7 @@ type testServiceA struct {
 }
 
 func (testServiceA) matchService(service string) bool {
-	return service == "aaa.com"
+	return service == aDomain
 }
 
 type testServiceB struct {
@@ -51,7 +51,7 @@ type testServiceB struct {
 }
 
 func (testServiceB) matchService(service string) bool {
-	return service == "bbb.com"
+	return service == bDomain
 }
 
 func getUnusedPort() uint16 {
