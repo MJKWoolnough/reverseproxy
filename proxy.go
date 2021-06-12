@@ -71,7 +71,7 @@ func (l *listener) transfer(c *net.TCPConn) {
 			pool = &httpPool
 			readServerName = readHTTPServerName
 		}
-		buf := pool.Get().([]byte)[:1]
+		buf := pool.Get().([]byte)
 		buf[0] = tlsByte[0]
 		name, buf, err = readServerName(c, buf)
 		if err == nil {
@@ -87,7 +87,7 @@ func (l *listener) transfer(c *net.TCPConn) {
 			if port != nil {
 				port.Transfer(buf, c)
 			}
-			pool.Put(buf)
+			pool.Put(buf[:cap(buf)])
 		}
 	}
 	c.Close()
