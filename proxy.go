@@ -87,8 +87,8 @@ func (l *listener) transfer(c *net.TCPConn) {
 			if port != nil {
 				port.Transfer(buf, c)
 			}
-			pool.Put(buf[:cap(buf)])
 		}
+		pool.Put(buf[:cap(buf)])
 	}
 	c.Close()
 }
