@@ -1,3 +1,4 @@
+// Package reverseproxy implements a basic HTTP/TLS connection forwarder based either the passed Host header or SNI extension
 package reverseproxy // import "vimagination.zapto.org/reverseproxy"
 
 import (
