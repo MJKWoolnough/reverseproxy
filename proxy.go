@@ -84,7 +84,9 @@ func (l *listener) transfer(c *net.TCPConn) {
 				}
 			}
 			l.mu.RUnlock()
-			port.Transfer(buf, c)
+			if port != nil {
+				port.Transfer(buf, c)
+			}
 			pool.Put(buf)
 		}
 	}
