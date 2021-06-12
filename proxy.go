@@ -88,6 +88,9 @@ func (l *listener) transfer(c *net.TCPConn) {
 				port.Transfer(buf, c)
 			}
 		}
+		for n := range buf {
+			buf[n] = 0
+		}
 		pool.Put(buf[:cap(buf)])
 	}
 	c.Close()
