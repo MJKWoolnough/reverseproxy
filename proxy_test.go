@@ -18,7 +18,10 @@ type testData struct {
 type testService chan testData
 
 func (t testService) Transfer(buf []byte, conn *net.TCPConn) error {
-	t <- testData{append(make([]byte, 0, len(buf)), buf...), conn}
+	f, _ := conn.File()
+	fc, _ := net.FileConn(f)
+	f.Close()
+	t <- testData{append(make([]byte, 0, len(buf)), buf...), fc.(*net.TCPConn)}
 	return nil
 }
 
