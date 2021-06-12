@@ -54,6 +54,7 @@ func getUnusedPort() uint16 {
 }
 
 func TestListener(t *testing.T) {
+	sync := make(chan struct{})
 	pa := getUnusedPort()
 	sa := make(testService)
 	p, err := addPort(pa, testServiceA{sa})
@@ -69,11 +70,26 @@ func TestListener(t *testing.T) {
 			os.Exit(1)
 		}
 		c.Write([]byte(firstSend))
+		<-sync
+		c.Write([]byte{127})
 		c.Close()
 	}()
 	data := <-sa
+	sync <- struct{}{}
 	if string(data.buf) != firstSend {
 		t.Errorf("test 1: expecting buf to equal %q, got %q", firstSend, data.buf)
+		return
+	}
+	var buf [32]byte
+	n, err := data.conn.Read(buf[:])
+	if err != nil {
+		t.Errorf("test 2: unexpected error: %s", err)
+		return
+	} else if n != 1 {
+		t.Errorf("test 2: expecting to read 1 byte, read %d", n)
+		return
+	} else if buf[0] != 127 {
+		t.Errorf("test 2: expecting to read 127, read %d", buf[0])
 		return
 	}
 	p.Close()
