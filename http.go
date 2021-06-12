@@ -15,7 +15,7 @@ var (
 )
 
 func readHTTPServerName(r io.Reader, buf []byte) (string, []byte, error) {
-	n := 0
+	n := 1
 	h := -1
 	l := -1
 	for l < 0 {
