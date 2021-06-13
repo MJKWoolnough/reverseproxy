@@ -14,23 +14,17 @@ func (a *addrService) Transfer(buf []byte, conn *net.TCPConn) error {
 	p, err := net.Dial(a.Network(), a.String())
 	if err == nil {
 		if _, err = p.Write(buf); err == nil {
-			go func() {
-				c := make(chan struct{})
-				go copyConn(p, conn, c)
-				go copyConn(conn, p, c)
-				<-c
-				p.Close()
-				conn.Close()
-				<-c
-			}()
+			go copyConn(p, conn)
+			go copyConn(conn, p)
 		}
 	}
 	return err
 }
 
-func copyConn(a, b net.Conn, c chan struct{}) {
+func copyConn(a, b net.Conn) {
 	io.Copy(a, b)
-	c <- struct{}{}
+	a.Close()
+	b.Close()
 }
 
 // AddRedirect sets a port to be redirected to an external service
