@@ -89,5 +89,9 @@ func TestListener(t *testing.T) {
 		t.Errorf("test 2: expecting to read 127, read %d", buf[0])
 		return
 	}
+	err = data.conn.Close()
+	if err != nil {
+		t.Errorf("test 3: unexpected error: %s", err)
+	}
 	p.Close()
 }
