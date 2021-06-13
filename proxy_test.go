@@ -93,5 +93,41 @@ func TestListener(t *testing.T) {
 	if err != nil {
 		t.Errorf("test 3: unexpected error: %s", err)
 	}
+	sb := make(testService)
+	q, err := addPort(pa, testServiceB{sb})
+	const secondSend = "GET / HTTP/1.1\r\nHost: " + bDomain + "\r\n\r\n"
+	go func() {
+		c, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", pa))
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		c.Write([]byte(secondSend))
+		<-sync
+		c.Write([]byte{255, 127})
+		c.Close()
+	}()
+	data = <-sb
+	sync <- struct{}{}
+	if string(data.buf) != secondSend {
+		t.Errorf("test 4: expecting buf to equal %q, got %q", secondSend, data.buf)
+		return
+	}
+	n, err = data.conn.Read(buf[:])
+	if err != nil {
+		t.Errorf("test 5: unexpected error: %s", err)
+		return
+	} else if n != 2 {
+		t.Errorf("test 5: expecting to read 1 byte, read %d", n)
+		return
+	} else if buf[0] != 255 || buf[1] != 127 {
+		t.Errorf("test 5: expecting to read 255, 127, read %v", buf[:2])
+		return
+	}
+	err = data.conn.Close()
+	if err != nil {
+		t.Errorf("test 6: unexpected error: %s", err)
+	}
 	p.Close()
+	q.Close()
 }
