@@ -197,4 +197,9 @@ func TestListener(t *testing.T) {
 	}
 	p.Close()
 	q.Close()
+	l, err := net.ListenTCP("tcp", &net.TCPAddr{Port: int(pa)})
+	if err != nil {
+		t.Errorf("test 13: unexpected error: %s", err)
+	}
+	l.Close()
 }
