@@ -16,6 +16,7 @@ type unixService struct {
 
 func (u *unixService) Transfer(buf []byte, conn *net.TCPConn) error {
 	f, err := conn.File()
+	conn.Close()
 	if err == nil {
 		_, _, err = u.conn.WriteMsgUnix(buf, syscall.UnixRights(int(f.Fd())), nil)
 		errr := f.Close()

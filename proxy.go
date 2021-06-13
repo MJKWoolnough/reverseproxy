@@ -88,13 +88,16 @@ func (l *listener) transfer(c *net.TCPConn) {
 			if port != nil {
 				port.Transfer(buf, c)
 			}
+		} else {
+			c.Close()
 		}
 		for n := range buf {
 			buf[n] = 0
 		}
 		pool.Put(buf[:cap(buf)])
+	} else {
+		c.Close()
 	}
-	c.Close()
 }
 
 type service interface {
