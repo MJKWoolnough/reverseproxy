@@ -1,6 +1,7 @@
 package reverseproxy
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"os"
@@ -127,6 +128,72 @@ func TestListener(t *testing.T) {
 	err = data.conn.Close()
 	if err != nil {
 		t.Errorf("test 6: unexpected error: %s", err)
+	}
+	go func() {
+		c, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", pa))
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		c.Write([]byte(firstSend))
+		<-sync
+		c.Write([]byte{1, 2, 3})
+		c.Close()
+	}()
+	go func() {
+		<-sync
+		c, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", pa))
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		c.Write([]byte(secondSend))
+		<-sync
+		c.Write([]byte{4, 5, 6, 7})
+		c.Close()
+	}()
+	data = <-sa
+	sync <- struct{}{}
+	sync <- struct{}{}
+	dataB := <-sb
+	sync <- struct{}{}
+	if string(data.buf) != firstSend {
+		t.Errorf("test 7: expecting buf to equal %q, got %q", firstSend, data.buf)
+		return
+	}
+	if string(dataB.buf) != secondSend {
+		t.Errorf("test 8: expecting buf to equal %q, got %q", secondSend, dataB.buf)
+		return
+	}
+	n, err = data.conn.Read(buf[:])
+	if err != nil {
+		t.Errorf("test 9: unexpected error: %s", err)
+		return
+	} else if n != 3 {
+		t.Errorf("test 9: expecting to read 1 byte, read %d", n)
+		return
+	} else if !bytes.Equal(buf[:3], []byte{1, 2, 3}) {
+		t.Errorf("test 9: expecting to read 1, 2, 3, read %v", buf[:3])
+		return
+	}
+	n, err = dataB.conn.Read(buf[:])
+	if err != nil {
+		t.Errorf("test 10: unexpected error: %s", err)
+		return
+	} else if n != 4 {
+		t.Errorf("test 10: expecting to read 1 byte, read %d", n)
+		return
+	} else if !bytes.Equal(buf[:4], []byte{4, 5, 6, 7}) {
+		t.Errorf("test 10: expecting to read 4, 5, 6, 7, read %v", buf[:4])
+		return
+	}
+	err = data.conn.Close()
+	if err != nil {
+		t.Errorf("test 11: unexpected error: %s", err)
+	}
+	err = dataB.conn.Close()
+	if err != nil {
+		t.Errorf("test 12: unexpected error: %s", err)
 	}
 	p.Close()
 	q.Close()
