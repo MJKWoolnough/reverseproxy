@@ -93,6 +93,7 @@ func TestListener(t *testing.T) {
 	err = data.conn.Close()
 	if err != nil {
 		t.Errorf("test 3: unexpected error: %s", err)
+		return
 	}
 	sb := make(testService)
 	q, err := addPort(pa, testServiceB{sb})
@@ -128,6 +129,7 @@ func TestListener(t *testing.T) {
 	err = data.conn.Close()
 	if err != nil {
 		t.Errorf("test 6: unexpected error: %s", err)
+		return
 	}
 	go func() {
 		c, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", pa))
@@ -190,16 +192,19 @@ func TestListener(t *testing.T) {
 	err = data.conn.Close()
 	if err != nil {
 		t.Errorf("test 11: unexpected error: %s", err)
+		return
 	}
 	err = dataB.conn.Close()
 	if err != nil {
 		t.Errorf("test 12: unexpected error: %s", err)
+		return
 	}
 	p.Close()
 	q.Close()
 	l, err := net.ListenTCP("tcp", &net.TCPAddr{Port: int(pa)})
 	if err != nil {
 		t.Errorf("test 13: unexpected error: %s", err)
+		return
 	}
 	l.Close()
 }
