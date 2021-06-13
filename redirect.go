@@ -18,6 +18,7 @@ func (a *addrService) Transfer(buf []byte, conn *net.TCPConn) error {
 			go copyConn(p, conn, c)
 			go copyConn(conn, p, c)
 			err = <-c
+			p.Close()
 			if err == nil {
 				err = <-c
 			} else {
@@ -31,8 +32,6 @@ func (a *addrService) Transfer(buf []byte, conn *net.TCPConn) error {
 func copyConn(a, b net.Conn, c chan error) {
 	_, err := io.Copy(a, b)
 	c <- err
-	a.Close()
-	b.Close()
 }
 
 // AddRedirect sets a port to be redirected to an external service
