@@ -42,7 +42,7 @@ func (testServiceB) matchService(service string) bool {
 }
 
 func getUnusedPort() uint16 {
-	l, err := net.ListenTCP("tcp", &net.TCPAddr{})
+	l, err := net.ListenTCP("tcp", nil)
 	if err != nil {
 		return 0
 	}
