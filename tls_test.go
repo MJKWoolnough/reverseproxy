@@ -53,7 +53,6 @@ func TestTLS(t *testing.T) {
 		return
 	}
 	buf = tlsServerName("example.com")
-	rBuf[0] = buf[0]
 	aBuf = memio.Buffer(buf[1:])
 	name, b, err = readTLSServerName(&aBuf, rBuf)
 	if err != nil {
@@ -70,7 +69,6 @@ func TestTLS(t *testing.T) {
 	}
 	buf = tlsServerName("")
 	buf[52] = 1
-	rBuf[0] = buf[0]
 	aBuf = memio.Buffer(buf[1:])
 	name, b, err = readTLSServerName(&aBuf, rBuf)
 	if !errors.Is(err, errNoName) {
