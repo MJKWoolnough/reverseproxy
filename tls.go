@@ -68,7 +68,7 @@ func readTLSServerName(c io.Reader, buf []byte) (string, []byte, error) {
 
 	compressionMethodLength := r.ReadUint8()
 	if compressionMethodLength < 1 || len(mbuf) < int(compressionMethodLength) {
-		return "", nil, fmt.Errorf("error reading compressions: %e", errInvalidLength)
+		return "", nil, fmt.Errorf("error reading compressions: %w", errInvalidLength)
 	}
 	mbuf = mbuf[compressionMethodLength:] // skip compression methods
 
