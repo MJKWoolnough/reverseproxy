@@ -2,6 +2,7 @@ package reverseproxy
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"vimagination.zapto.org/memio"
@@ -65,6 +66,15 @@ func TestTLS(t *testing.T) {
 	}
 	if !bytes.Equal(buf, b) {
 		t.Errorf("test 2: expecting bytes %v, got %v", buf, b)
+		return
+	}
+	buf = tlsServerName("")
+	buf[52] = 1
+	rBuf[0] = buf[0]
+	aBuf = memio.Buffer(buf[1:])
+	name, b, err = readTLSServerName(&aBuf, rBuf)
+	if !errors.Is(err, errNoName) {
+		t.Errorf("test 2: expecting error errNoName, got, %s", err)
 		return
 	}
 }
