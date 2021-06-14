@@ -20,9 +20,6 @@ func readTLSServerName(c io.Reader, buf []byte) (string, []byte, error) {
 	r := byteio.StickyBigEndianReader{
 		Reader: &mbuf,
 	}
-	if r.ReadUint8() != 22 {
-		return "", nil, errNoHandshake
-	}
 
 	mbuf = mbuf[1:] // skip major version
 	mbuf = mbuf[1:] // skip minor version
