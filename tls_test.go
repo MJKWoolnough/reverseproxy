@@ -1,5 +1,12 @@
 package reverseproxy
 
+import (
+	"bytes"
+	"testing"
+
+	"vimagination.zapto.org/memio"
+)
+
 var tlsBase = [...]byte{
 	22,   // TLS Handshake
 	3, 3, // Version
@@ -24,4 +31,24 @@ func tlsServerName(name string) []byte {
 	buf[7] = byte((52 + l) >> 8)
 	buf[8] = byte(52 + l)
 	return append(append(buf, byte((l+9)>>8), byte(l+9), 0, 0, byte((l+5)>>8), byte(l+5), byte((l+3)>>8), byte(l+3), 0, byte(l>>8), byte(l)), name...)
+}
+
+func TestTLS(t *testing.T) {
+	buf := tlsServerName("aaa.com")
+	rBuf := make([]byte, 100)
+	rBuf[0] = buf[0]
+	aBuf := memio.Buffer(buf[1:])
+	name, b, err := readTLSServerName(&aBuf, rBuf)
+	if err != nil {
+		t.Errorf("test 1: unexpected error, %s", err)
+		return
+	}
+	if name != "aaa.com" {
+		t.Errorf("test 1: expecting name \"aaa.com\", got %q", name)
+		return
+	}
+	if !bytes.Equal(buf, b) {
+		t.Errorf("test 1: expecting bytes %v, got %v", buf, b)
+		return
+	}
 }
