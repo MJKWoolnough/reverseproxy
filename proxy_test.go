@@ -200,6 +200,40 @@ func TestListener(t *testing.T) {
 		return
 	}
 	p.Close()
+	tlsData := tlsServerName(bDomain)
+	go func() {
+		c, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", pa))
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		c.Write(tlsData)
+		<-sync
+		c.Write([]byte{3, 2, 1, 0})
+		c.Close()
+	}()
+	dataB = <-sb
+	sync <- struct{}{}
+	if !bytes.Equal(dataB.buf, tlsData) {
+		t.Errorf("test 13: expected to read TLS Header, read %v", dataB.buf)
+		return
+	}
+	n, err = dataB.conn.Read(buf[:])
+	if err != nil {
+		t.Errorf("test 14: unexpected error: %s", err)
+		return
+	} else if n != 4 {
+		t.Errorf("test 14: expecting to read 1 byte, read %d", n)
+		return
+	} else if !bytes.Equal(buf[:4], []byte{3, 2, 1, 0}) {
+		t.Errorf("test 14: expecting to read 3, 2, 1, 0, read %v", buf[:4])
+		return
+	}
+	err = dataB.conn.Close()
+	if err != nil {
+		t.Errorf("test 15: unexpected error: %s", err)
+		return
+	}
 	q.Close()
 	l, err := net.ListenTCP("tcp", &net.TCPAddr{Port: int(pa)})
 	if err != nil {
