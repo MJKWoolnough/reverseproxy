@@ -51,4 +51,20 @@ func TestTLS(t *testing.T) {
 		t.Errorf("test 1: expecting bytes %v, got %v", buf, b)
 		return
 	}
+	buf = tlsServerName("example.com")
+	rBuf[0] = buf[0]
+	aBuf = memio.Buffer(buf[1:])
+	name, b, err = readTLSServerName(&aBuf, rBuf)
+	if err != nil {
+		t.Errorf("test 2: unexpected error, %s", err)
+		return
+	}
+	if name != "example.com" {
+		t.Errorf("test 2: expecting name \"example.com\", got %q", name)
+		return
+	}
+	if !bytes.Equal(buf, b) {
+		t.Errorf("test 2: expecting bytes %v, got %v", buf, b)
+		return
+	}
 }
