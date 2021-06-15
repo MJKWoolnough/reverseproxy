@@ -101,7 +101,7 @@ func (l *listener) transfer(c *net.TCPConn) {
 }
 
 type service interface {
-	matchService(string) bool
+	MatchServiceName
 	Transfer([]byte, *net.TCPConn) error
 }
 
