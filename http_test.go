@@ -1,6 +1,7 @@
 package reverseproxy
 
 import (
+	"errors"
 	"io"
 	"testing"
 )
@@ -31,5 +32,11 @@ func TestHTTP(t *testing.T) {
 	} else if name != "example.com" {
 		t.Errorf("test 1: expected hostname \"example.com\", got %q", name)
 		return
+	}
+	strb := "0000000011111111222222233333344444455555\r\n6666666777777888888999999\r\n\r\nHost: example.com\r\n"
+	data = delayReader(strb[1:])
+	name, b, err = readHTTPServerName(&data, buf)
+	if !errors.Is(err, errNoServerHeader) {
+		t.Errorf("test 2: expected error errNoServerHeader, got: %s", err)
 	}
 }
