@@ -1,6 +1,7 @@
 package reverseproxy
 
 import (
+	"io"
 	"net"
 	"testing"
 )
@@ -23,7 +24,26 @@ func TestRedirect(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
-
+	go func() {
+		c, _ := net.DialTCP("tcp", nil, &net.TCPAddr{Port: int(pna)})
+		c.Write([]byte("GET / HTTP/1.1\r\nHost: " + aDomain + "\r\n\r\nDATA"))
+		c.Close()
+	}()
+	c, err := la.Accept()
+	if err != nil {
+		t.Errorf("test 1: unexpected error: %s", err)
+		return
+	}
+	buf, err := io.ReadAll(c)
+	n := len(buf)
+	if err != nil {
+		t.Errorf("test 2: unexpected error: %s", err)
+		return
+	} else if string(buf[n-4:n]) != "DATA" {
+		t.Errorf("test 2: expecting \"DATA\", got %q", buf[n-4:n])
+		return
+	}
+	c.Close()
 	pa.Close()
 	pb.Close()
 }
