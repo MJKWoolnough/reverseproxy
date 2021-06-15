@@ -29,21 +29,42 @@ func TestRedirect(t *testing.T) {
 		c.Write([]byte("GET / HTTP/1.1\r\nHost: " + aDomain + "\r\n\r\nDATA"))
 		c.Close()
 	}()
+	go func() {
+		c, _ := net.DialTCP("tcp", nil, &net.TCPAddr{Port: int(pna)})
+		c.Write(tlsServerName(bDomain))
+		c.Write([]byte("ATAD"))
+		c.Close()
+	}()
 	c, err := la.Accept()
 	if err != nil {
 		t.Errorf("test 1: unexpected error: %s", err)
 		return
 	}
-	buf, err := io.ReadAll(c)
-	n := len(buf)
+	d, err := lb.Accept()
 	if err != nil {
 		t.Errorf("test 2: unexpected error: %s", err)
 		return
+	}
+	buf, err := io.ReadAll(c)
+	n := len(buf)
+	if err != nil {
+		t.Errorf("test 3: unexpected error: %s", err)
+		return
 	} else if string(buf[n-4:n]) != "DATA" {
-		t.Errorf("test 2: expecting \"DATA\", got %q", buf[n-4:n])
+		t.Errorf("test 3: expecting \"DATA\", got %q", buf[n-4:n])
 		return
 	}
 	c.Close()
+	buf, err = io.ReadAll(d)
+	n = len(buf)
+	if err != nil {
+		t.Errorf("test 4: unexpected error: %s", err)
+		return
+	} else if string(buf[n-4:n]) != "ATAD" {
+		t.Errorf("test 4: expecting \"ATAD\", got %q", buf[n-4:n])
+		return
+	}
+	d.Close()
 	pa.Close()
 	pb.Close()
 }
