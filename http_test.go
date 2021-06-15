@@ -4,6 +4,8 @@ import (
 	"errors"
 	"io"
 	"testing"
+
+	"vimagination.zapto.org/memio"
 )
 
 type delayReader []byte
@@ -35,8 +37,15 @@ func TestHTTP(t *testing.T) {
 	}
 	strb := "0000000011111111222222233333344444455555\r\n6666666777777888888999999\r\n\r\nHost: example.com\r\n"
 	data = delayReader(strb[1:])
-	name, b, err = readHTTPServerName(&data, buf)
+	_, _, err = readHTTPServerName(&data, buf)
 	if !errors.Is(err, errNoServerHeader) {
 		t.Errorf("test 2: expected error errNoServerHeader, got: %s", err)
+		return
+	}
+	datab := memio.Buffer(strb)
+	_, _, err = readHTTPServerName(&datab, buf)
+	if !errors.Is(err, errNoServerHeader) {
+		t.Errorf("test 3: expected error errNoServerHeader, got: %s", err)
+		return
 	}
 }
