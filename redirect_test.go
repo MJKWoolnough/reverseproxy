@@ -67,4 +67,6 @@ func TestRedirect(t *testing.T) {
 	d.Close()
 	pa.Close()
 	pb.Close()
+	la.Close()
+	lb.Close()
 }
