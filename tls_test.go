@@ -72,7 +72,7 @@ func TestTLS(t *testing.T) {
 	aBuf = memio.Buffer(buf[1:])
 	name, b, err = readTLSServerName(&aBuf, rBuf)
 	if !errors.Is(err, errNoName) {
-		t.Errorf("test 2: expecting error errNoName, got, %s", err)
+		t.Errorf("test 3: expecting error errNoName, got, %s", err)
 		return
 	}
 }
