@@ -34,5 +34,16 @@ func TestUnix(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	conn := fconn.(*net.UnixConn)
-	_ = conn
+	pa := getUnusedPort()
+	var buf [1024]byte
+	buf[0] = uint8(pa >> 8)
+	buf[1] = uint8(pa)
+	n, err := conn.Write(buf[:2])
+	if err != nil {
+		t.Errorf("test 1: unexpected error: %s", err)
+		return
+	} else if n != 2 {
+		t.Errorf("test 1: expecting to write 2 bytes, wrote %d", n)
+		return
+	}
 }
