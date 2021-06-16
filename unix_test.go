@@ -34,13 +34,10 @@ func TestUnix(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	conn := fconn.(*net.UnixConn)
-	pa := getUnusedPort()
 	var (
 		buf [1024]byte
 		oob = make([]byte, syscall.CmsgLen(4))
 	)
-	buf[0] = uint8(pa)
-	buf[1] = uint8(pa >> 8)
 	n, _, err := conn.WriteMsgUnix(buf[:2], nil, nil)
 	if err != nil {
 		t.Errorf("test 1: unexpected error: %s", err)
@@ -53,10 +50,34 @@ func TestUnix(t *testing.T) {
 	if err != nil {
 		t.Errorf("test 2: unexpected error: %s", err)
 		return
+	} else if n <= 2 {
+		t.Errorf("test 2: expecting to read more than 2 bytes, read %d", n)
+	} else if pr := uint16(buf[0]) | (uint16(buf[1]) << 8); pr != 0 {
+		t.Errorf("test 2: expecting to read port 0, got %d", pr)
+		return
+	} else if string(buf[2:n]) != "cannot register on port 0" {
+		t.Errorf("test 2: expecting ErrInvalidPort, got %q", buf[2:n])
+		return
+	}
+	pa := getUnusedPort()
+	buf[0] = uint8(pa)
+	buf[1] = uint8(pa >> 8)
+	n, _, err = conn.WriteMsgUnix(buf[:2], nil, nil)
+	if err != nil {
+		t.Errorf("test 3: unexpected error: %s", err)
+		return
 	} else if n != 2 {
-		t.Errorf("test 2: expecting to read 2 bytes, read %d", n)
+		t.Errorf("test 3: expecting to write 2 bytes, wrote %d", n)
+		return
+	}
+	n, _, _, _, err = conn.ReadMsgUnix(buf[:], oob)
+	if err != nil {
+		t.Errorf("test 4: unexpected error: %s", err)
+		return
+	} else if n != 2 {
+		t.Errorf("test 4: expecting to read 2 bytes, read %d", n)
 	} else if pr := uint16(buf[0]) | (uint16(buf[1]) << 8); pr != pa {
-		t.Errorf("test 2: expecting to read port %d, got %d", pa, pr)
+		t.Errorf("test 4: expecting to read port %d, got %d", pa, pr)
 		return
 	}
 }
