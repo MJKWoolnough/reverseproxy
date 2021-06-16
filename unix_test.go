@@ -95,4 +95,14 @@ func TestUnix(t *testing.T) {
 		t.Errorf("test 5: expecting to read TLS header %v, got %v", data, buf[:n])
 		return
 	}
+	msg, _ := syscall.ParseSocketControlMessage(oob[:oobn])
+	fd, _ := syscall.ParseUnixRights(&msg[0])
+	nf = os.NewFile(uintptr(fd[0]), "")
+	cn, err := net.FileConn(nf)
+	nf.Close()
+	addr := cn.LocalAddr().(*net.TCPAddr)
+	if addr.Port != int(pa) {
+		t.Errorf("test 6: expecting port %d, got %d", pa, addr.Port)
+		return
+	}
 }
