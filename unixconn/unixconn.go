@@ -80,7 +80,8 @@ func runListenLoop() {
 			}
 		} else if msg, err := syscall.ParseSocketControlMessage(oob[:oobn]); err == nil && len(msg) == 1 {
 			if fd, err := syscall.ParseUnixRights(&msg[0]); err == nil && len(fd) == 1 {
-				if cn, err := net.FileConn(os.NewFile(uintptr(fd[0]), "")); err == nil {
+				nf := os.NewFile(uintptr(fd[0]), "")
+				if cn, err := net.FileConn(nf); err == nil {
 					var port uint16
 					if tcpaddr, ok := cn.LocalAddr().(*net.TCPAddr); ok {
 						port = uint16(tcpaddr.Port)
@@ -107,6 +108,7 @@ func runListenLoop() {
 						cn.Close()
 					}
 				}
+				nf.Close()
 			}
 		}
 		for n := range buf[:n] {
