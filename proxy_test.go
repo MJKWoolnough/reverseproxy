@@ -29,7 +29,7 @@ type testServiceA struct {
 	testService
 }
 
-func (testServiceA) matchService(service string) bool {
+func (testServiceA) MatchService(service string) bool {
 	return service == aDomain
 }
 
@@ -37,7 +37,7 @@ type testServiceB struct {
 	testService
 }
 
-func (testServiceB) matchService(service string) bool {
+func (testServiceB) MatchService(service string) bool {
 	return service == bDomain
 }
 

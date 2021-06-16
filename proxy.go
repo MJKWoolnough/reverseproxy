@@ -79,7 +79,7 @@ func (l *listener) transfer(c *net.TCPConn) {
 			var port *Port
 			l.mu.RLock()
 			for p := range l.ports {
-				if p.matchService(name) {
+				if p.MatchService(name) {
 					port = p
 					break
 				}
