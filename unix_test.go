@@ -1,6 +1,7 @@
 package reverseproxy
 
 import (
+	"bytes"
 	"net"
 	"os"
 	"syscall"
@@ -78,6 +79,20 @@ func TestUnix(t *testing.T) {
 		t.Errorf("test 4: expecting to read 2 bytes, read %d", n)
 	} else if pr := uint16(buf[0]) | (uint16(buf[1]) << 8); pr != pa {
 		t.Errorf("test 4: expecting to read port %d, got %d", pa, pr)
+		return
+	}
+	nc, err := net.DialTCP("tcp", nil, &net.TCPAddr{Port: int(pa)})
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	data := tlsServerName(aDomain)
+	nc.Write(data)
+	n, oobn, _, _, err := conn.ReadMsgUnix(buf[:], oob)
+	if err != nil {
+		t.Errorf("test 5: unexpected error: %s", err)
+		return
+	} else if !bytes.Equal(buf[:n], data) {
+		t.Errorf("test 5: expecting to read TLS header %v, got %v", data, buf[:n])
 		return
 	}
 }
