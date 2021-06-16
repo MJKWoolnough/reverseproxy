@@ -10,6 +10,7 @@ type MatchServiceName interface {
 // HostName represents an exact hostname to match on
 type HostName string
 
+// MatchService implements the MatchServiceName interface
 func (h HostName) MatchService(serviceName string) bool {
 	return string(h) == serviceName
 }
@@ -17,6 +18,7 @@ func (h HostName) MatchService(serviceName string) bool {
 // HostNameSuffix represents a partial hostname to match the end on
 type HostNameSuffix string
 
+// MatchService implements the MatchServiceName interface
 func (h HostNameSuffix) MatchService(serviceName string) bool {
 	return strings.HasSuffix(serviceName, string(h))
 }
@@ -24,6 +26,7 @@ func (h HostNameSuffix) MatchService(serviceName string) bool {
 // Hosts represents a list of servicenames to match against
 type Hosts []MatchServiceName
 
+// MatchService implements the MatchServiceName interface
 func (h Hosts) MatchService(serviceName string) bool {
 	for _, s := range h {
 		if s.MatchService(serviceName) {
