@@ -35,15 +35,28 @@ func TestUnix(t *testing.T) {
 	}
 	conn := fconn.(*net.UnixConn)
 	pa := getUnusedPort()
-	var buf [1024]byte
-	buf[0] = uint8(pa >> 8)
-	buf[1] = uint8(pa)
-	n, err := conn.Write(buf[:2])
+	var (
+		buf [1024]byte
+		oob = make([]byte, syscall.CmsgLen(4))
+	)
+	buf[0] = uint8(pa)
+	buf[1] = uint8(pa >> 8)
+	n, _, err := conn.WriteMsgUnix(buf[:2], nil, nil)
 	if err != nil {
 		t.Errorf("test 1: unexpected error: %s", err)
 		return
 	} else if n != 2 {
 		t.Errorf("test 1: expecting to write 2 bytes, wrote %d", n)
+		return
+	}
+	n, _, _, _, err = conn.ReadMsgUnix(buf[:], oob)
+	if err != nil {
+		t.Errorf("test 2: unexpected error: %s", err)
+		return
+	} else if n != 2 {
+		t.Errorf("test 2: expecting to read 2 bytes, read %d", n)
+	} else if pr := uint16(buf[0]) | (uint16(buf[1]) << 8); pr != pa {
+		t.Errorf("test 2: expecting to read port %d, got %d", pa, pr)
 		return
 	}
 }
