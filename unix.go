@@ -74,7 +74,6 @@ func RegisterCmd(msn MatchServiceName, cmd *exec.Cmd) (*UnixCmd, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn := fconn.(*net.UnixConn)
 	f := os.NewFile(uintptr(fds[1]), "")
 	cmd.ExtraFiles = append([]*os.File{}, f)
 	err = cmd.Start()
@@ -84,7 +83,7 @@ func RegisterCmd(msn MatchServiceName, cmd *exec.Cmd) (*UnixCmd, error) {
 	}
 	u := &UnixCmd{
 		cmd:  cmd,
-		conn: conn,
+		conn: fconn.(*net.UnixConn),
 		open: make(map[uint16]*Port),
 	}
 	go u.runCmdLoop(msn)
