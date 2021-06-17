@@ -105,4 +105,13 @@ func TestUnix(t *testing.T) {
 		t.Errorf("test 6: expecting port %d, got %d", pa, addr.Port)
 		return
 	}
+	nc.Write([]byte("TEST"))
+	nc.Close()
+	if n, err := cn.Read(buf[:]); err != nil {
+		t.Errorf("test 7: unexpected error: %s", err)
+		return
+	} else if string(buf[:n]) != "TEST" {
+		t.Errorf("test 7: expecting to read \"TEST\", read %q", buf[:n])
+		return
+	}
 }
