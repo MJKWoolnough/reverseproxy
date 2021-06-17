@@ -6,6 +6,7 @@ import (
 	"os"
 	"syscall"
 	"testing"
+	"time"
 )
 
 func TestUnix(t *testing.T) {
@@ -124,4 +125,11 @@ func TestUnix(t *testing.T) {
 		t.Errorf("test 8: expecting to write 2 bytes, wrote %d", n)
 		return
 	}
+	time.Sleep(time.Second)
+	l, err := net.ListenTCP("tcp", &net.TCPAddr{Port: int(pa)})
+	if err != nil {
+		t.Errorf("test 9: unexpected error: %s", err)
+		return
+	}
+	l.Close()
 }
