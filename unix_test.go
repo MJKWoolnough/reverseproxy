@@ -114,4 +114,14 @@ func TestUnix(t *testing.T) {
 		t.Errorf("test 7: expecting to read \"TEST\", read %q", buf[:n])
 		return
 	}
+	buf[0] = uint8(pa)
+	buf[1] = uint8(pa >> 8)
+	n, _, err = conn.WriteMsgUnix(buf[:2], nil, nil)
+	if err != nil {
+		t.Errorf("test 8: unexpected error: %s", err)
+		return
+	} else if n != 2 {
+		t.Errorf("test 8: expecting to write 2 bytes, wrote %d", n)
+		return
+	}
 }
