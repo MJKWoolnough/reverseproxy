@@ -6,25 +6,33 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"sync/atomic"
 	"syscall"
 )
 
 type unixService struct {
 	MatchServiceName
-	conn *net.UnixConn
+	conn         *net.UnixConn
+	transferring uint64
 }
 
 func (u *unixService) Transfer(buf []byte, conn *net.TCPConn) error {
 	f, err := conn.File()
 	conn.Close()
 	if err == nil {
+		atomic.AddUint64(&u.transferring, 1)
 		_, _, err = u.conn.WriteMsgUnix(buf, syscall.UnixRights(int(f.Fd())), nil)
+		atomic.AddUint64(&u.transferring, -1)
 		errr := f.Close()
 		if err == nil {
 			err = errr
 		}
 	}
 	return err
+}
+
+func (u *unixService) Active() bool {
+	return atomic.LoadUint64(&u.transferring) > 0
 }
 
 // UnixCmd holds the information required to control (close) a server and its
