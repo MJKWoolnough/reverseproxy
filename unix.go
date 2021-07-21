@@ -22,7 +22,7 @@ func (u *unixService) Transfer(buf []byte, conn *net.TCPConn) error {
 	if err == nil {
 		atomic.AddUint64(&u.transferring, 1)
 		_, _, err = u.conn.WriteMsgUnix(buf, syscall.UnixRights(int(f.Fd())), nil)
-		atomic.AddUint64(&u.transferring, -1)
+		atomic.AddUint64(&u.transferring, ^uint64(0))
 		errr := f.Close()
 		if err == nil {
 			err = errr

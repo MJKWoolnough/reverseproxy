@@ -32,7 +32,7 @@ func copyConn(a, b net.Conn, c *uint64) {
 	io.Copy(a, b)
 	a.Close()
 	b.Close()
-	atomic.AddUint64(c, -1)
+	atomic.AddUint64(c, ^uint64(0))
 }
 
 // AddRedirect sets a port to be redirected to an external service
