@@ -68,6 +68,22 @@ func (u *UnixCmd) Close() error {
 	return errr
 }
 
+// Status retrieves the Status of the UnixCmd
+func (u *UnixCmd) Status() Status {
+	u.mu.Lock()
+	closed := u.closed
+	ports := make([]uint16, 0, len(u.open))
+	for p := range u.open {
+		ports = append(ports, p)
+	}
+	u.mu.Unlock()
+	return Status{
+		Ports:   ports,
+		Closing: closed,
+		Active:  !u.cmd.ProcessState.Exited(),
+	}
+}
+
 // RegisterCmd runs the given command and waits for incoming listeners from it
 func RegisterCmd(msn MatchServiceName, cmd *exec.Cmd) (*UnixCmd, error) {
 	fds, err := syscall.Socketpair(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
