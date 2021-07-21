@@ -25,7 +25,7 @@ func (a *addrService) Transfer(buf []byte, conn *net.TCPConn) error {
 }
 
 func (a *addrService) Active() bool {
-	return atomic.LoadUint64(*a.copying) > 0
+	return atomic.LoadUint64(&a.copying) > 0
 }
 
 func copyConn(a, b net.Conn, c *uint64) {
