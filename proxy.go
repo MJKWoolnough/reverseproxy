@@ -103,6 +103,7 @@ func (l *listener) transfer(c *net.TCPConn) {
 type service interface {
 	MatchServiceName
 	Transfer([]byte, *net.TCPConn) error
+	Active() bool
 }
 
 // Port represents a service waiting on a port
@@ -164,6 +165,24 @@ func (p *Port) Close() error {
 // Closed returns whether the port has been closed or not
 func (p *Port) Closed() bool {
 	return p.closed
+}
+
+// Status constains the status of a Port
+type Status struct {
+	Ports           []uint16
+	Closing, Active bool
+}
+
+// Status retrieves the status of a Port
+func (p *Port) Status() Status {
+	lMu.RLock()
+	closed := p.closed
+	lMu.RUnlock()
+	return Status{
+		Ports:   []uint16{p.port},
+		Closing: closed,
+		Active:  p.service.Active(),
+	}
 }
 
 // Errors

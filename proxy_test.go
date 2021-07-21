@@ -25,6 +25,10 @@ func (t testService) Transfer(buf []byte, conn *net.TCPConn) error {
 	return nil
 }
 
+func (t testService) Active() bool {
+	return false
+}
+
 type testServiceA struct {
 	testService
 }
