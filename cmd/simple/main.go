@@ -66,18 +66,8 @@ type contact struct {
 
 type values struct {
 	Name, Email, Phone, Subject, Message string
-	Errors                               form.Errors
+	Errors                               form.ErrorMap
 	Done                                 bool
-}
-
-func (v *values) ParserList() form.ParserList {
-	return form.ParserList{
-		"name":    form.RequiredString{&v.Name},
-		"email":   form.RequiredString{&v.Email},
-		"phone":   form.String{&v.Phone},
-		"subject": form.String{&v.Subject},
-		"message": form.String{&v.Message},
-	}
 }
 
 func (c *contact) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -86,12 +76,12 @@ func (c *contact) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		r.ParseForm()
 		if r.Form.Get("submit") != "" {
-			err := form.Parse(&v, r.PostForm)
+			err := form.Process(r, &v)
 			if err == nil {
 				go smtp.SendMail(c.Host, c.Auth, c.From, []string{c.To}, []byte(fmt.Sprintf("To: %s\r\nFrom: %s\r\nSubject: Message Received\r\n\r\nName: %s\nEmail: %s\nPhone: %s\nSubject: %s\nMessage: %s", c.To, c.From, v.Name, v.Email, v.Phone, v.Subject, v.Message)))
 				v.Done = true
 			} else {
-				v.Errors = err.(form.Errors)
+				v.Errors = err.(form.ErrorMap)
 			}
 		}
 	}
