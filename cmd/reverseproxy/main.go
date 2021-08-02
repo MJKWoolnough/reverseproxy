@@ -23,13 +23,13 @@ func main() {
 
 func run() error {
 	var configFile, logFile string
-	flag.StringVar(&config, "c", "", "config file")
-	flag.StringVar(&config, "l", "-", "log file")
+	flag.StringVar(&configFile, "c", "", "config file")
+	flag.StringVar(&logFile, "l", "-", "log file")
 	flag.Parse()
 	if configFile == "" {
 		return errors.New("no config file specified")
 	}
-	var config config
+	var c config
 	f, err := os.Open(configFile)
 	if err != nil {
 		return fmt.Errorf("error while opening config file: %w", err)
