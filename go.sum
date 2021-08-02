@@ -16,6 +16,8 @@ vimagination.zapto.org/httpencoding v1.0.0 h1:sSibnPq1pKROK4IBTNNCAKRPCijIZAaMQU
 vimagination.zapto.org/httpencoding v1.0.0/go.mod h1:J2hxhPn3VjWestQQ036OYpDwwerfvIHmbtmTqpKVe0w=
 vimagination.zapto.org/httpgzip v1.0.0 h1:MWO7vEnU0qyDZ4YOS+OAXjUmIeZP7uggW6fNd7OOjd4=
 vimagination.zapto.org/httpgzip v1.0.0/go.mod h1:4/pyxYYHgAgP4V0u+lbqbvKiM+XlQdSkiSxty0EJl2I=
+vimagination.zapto.org/jsonrpc v1.0.0 h1:4+0vmKCGGHKQv6/3W9q7rkxZ7myig7LCIqJwgok9pOY=
+vimagination.zapto.org/jsonrpc v1.0.0/go.mod h1:CEbi2Dg3ZtGWqEzqfj9HG/7XIuOxRoSBzeqVz2iLG5E=
 vimagination.zapto.org/memio v0.0.0-20200222190306-588ebc67b97d/go.mod h1:zHGDKp2tyvF4IAfLti4pKYqCJucXYmmKMb3UMrCHK/4=
 vimagination.zapto.org/memio v1.0.0 h1:r0GDf430aNuGpOAV57UTvbUzAf82UclRyGG/pBp1uvU=
 vimagination.zapto.org/memio v1.0.0/go.mod h1:zHGDKp2tyvF4IAfLti4pKYqCJucXYmmKMb3UMrCHK/4=
