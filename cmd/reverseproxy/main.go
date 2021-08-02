@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -14,7 +15,32 @@ import (
 type config struct {
 	Port     uint16
 	Username string
-	Password string
+	Password [sha256.Size]byte
+}
+
+type auth struct {
+	Config *config
+	Mux    *http.ServeMux
+}
+
+var unauthorised = []byte(`<html>
+	<head>
+		<title>Unauthorised</title>
+	</head>
+	<body>
+		<h1>Not Authorised</h1>
+	</body>
+</html>
+`)
+
+func (a *auth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if u, p, ok := r.BasicAuth(); ok && u == a.Config.Username && sha256.Sum256([]byte(p)) == a.Config.Password {
+		a.Mux.ServeHTTP(w, r)
+		return
+	}
+	w.Header().Set("WWW-Authenticate", "Basic realm=\"Enter Credentials\"")
+	w.WriteHeader(http.StatusUnauthorized)
+	w.Write(unauthorised)
 }
 
 func main() {
@@ -45,7 +71,12 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("error opening management interface port: %w", err)
 	}
-	var s http.Server
+	var (
+		m http.ServeMux
+		s = http.Server{
+			Handler: &auth{Config: &c, Mux: &m},
+		}
+	)
 	go s.Serve(l)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, os.Interrupt)
