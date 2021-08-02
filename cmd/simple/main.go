@@ -155,7 +155,7 @@ func run() error {
 			GetCertificate: leManager.GetCertificate,
 			NextProtos:     []string{"h2", "http/1.1"},
 		}
-		go server.ServeTLS(l)
+		go server.ServeTLS(l, "", "")
 	}
 	go server.Serve(l)
 
