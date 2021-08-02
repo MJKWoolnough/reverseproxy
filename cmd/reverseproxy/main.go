@@ -10,17 +10,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+
+	"golang.org/x/net/websocket"
 )
 
 type config struct {
 	Port     uint16
 	Username string
 	Password [sha256.Size]byte
-}
-
-type auth struct {
-	Config *config
-	Mux    *http.ServeMux
 }
 
 var unauthorised = []byte(`<html>
@@ -33,9 +30,16 @@ var unauthorised = []byte(`<html>
 </html>
 `)
 
-func (a *auth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if u, p, ok := r.BasicAuth(); ok && u == a.Config.Username && sha256.Sum256([]byte(p)) == a.Config.Password {
-		a.Mux.ServeHTTP(w, r)
+func (c *config) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if u, p, ok := r.BasicAuth(); ok && u == c.Username && sha256.Sum256([]byte(p)) == c.Password {
+		switch r.URL.Path {
+		case "/":
+			index(w, r)
+		case "/socket":
+			websocket.Handler(NewConn).ServeHTTP(w, r)
+		default:
+			http.NotFound(w, r)
+		}
 		return
 	}
 	w.Header().Set("WWW-Authenticate", "Basic realm=\"Enter Credentials\"")
@@ -71,12 +75,9 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("error opening management interface port: %w", err)
 	}
-	var (
-		m http.ServeMux
-		s = http.Server{
-			Handler: &auth{Config: &c, Mux: &m},
-		}
-	)
+	var s = http.Server{
+		Handler: &c,
+	}
 	go s.Serve(l)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, os.Interrupt)
