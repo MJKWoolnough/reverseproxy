@@ -67,6 +67,7 @@ type config struct {
 	Port     uint16
 	Username string
 	Password hash
+	Servers  servers
 }
 
 var unauthorised = []byte(`<html>
