@@ -43,10 +43,15 @@ func NewConn(conn *websocket.Conn) {
 func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, error) {
 	switch method {
 	case "add":
+		return add(data)
 	case "modify":
+		return modify(data)
 	case "start":
+		return start(data)
 	case "stop":
+		return stop(data)
 	case "remove":
+		return remove(data)
 	}
 	return nil, nil
 }
@@ -72,4 +77,24 @@ func broadcast(id int, data json.RawMessage, except ID) {
 		}
 	}
 	connMu.RUnlock()
+}
+
+func add(data json.RawMessage) (interface{}, error) {
+	return nil, nil
+}
+
+func modify(data json.RawMessage) (interface{}, error) {
+	return nil, nil
+}
+
+func start(data json.RawMessage) (interface{}, error) {
+	return nil, nil
+}
+
+func stop(data json.RawMessage) (interface{}, error) {
+	return nil, nil
+}
+
+func remove(data json.RawMessage) (interface{}, error) {
+	return nil, nil
 }
