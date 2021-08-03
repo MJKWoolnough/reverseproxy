@@ -8,6 +8,10 @@ import (
 	"vimagination.zapto.org/jsonrpc"
 )
 
+const (
+	broadcastList = -1 - iota
+)
+
 type socket struct {
 	*jsonrpc.Server
 	id uint64
@@ -45,4 +49,27 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 	case "remove":
 	}
 	return nil, nil
+}
+
+const broadcastStart = "{\"id\": -0,\"result\":"
+
+func broadcast(id int, data json.RawMessage, except ID) {
+	l := len(broadcastStart) + len(data) + 1
+	dat := make([]byte, l)
+	copy(dat, broadcastStart)
+	copy(dat[len(broadcastStart):], data)
+	id = -id
+	if id > 9 {
+		dat[6] = '-'
+		dat[7] = byte('0' + id/10)
+	}
+	dat[8] = byte('0' + id%10)
+	dat[l-1] = '}'
+	connMu.RLock()
+	for c := range conns {
+		if c.ID != except {
+			go c.SendData(dat)
+		}
+	}
+	connMu.RUnlock()
 }
