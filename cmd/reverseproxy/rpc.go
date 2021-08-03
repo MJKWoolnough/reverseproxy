@@ -58,7 +58,7 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 
 const broadcastStart = "{\"id\": -0,\"result\":"
 
-func broadcast(id int, data json.RawMessage, except ID) {
+func broadcast(id int, data json.RawMessage, except uint64) {
 	l := len(broadcastStart) + len(data) + 1
 	dat := make([]byte, l)
 	copy(dat, broadcastStart)
@@ -72,7 +72,7 @@ func broadcast(id int, data json.RawMessage, except ID) {
 	dat[l-1] = '}'
 	connMu.RLock()
 	for c := range conns {
-		if c.ID != except {
+		if c.id != except {
 			go c.SendData(dat)
 		}
 	}
