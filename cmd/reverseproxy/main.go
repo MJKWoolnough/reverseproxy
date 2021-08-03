@@ -14,10 +14,57 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+type hash [sha256.Size]byte
+
+func (h *hash) MarshalJSON() ([]byte, error) {
+	r := make([]byte, sha256.Size<<1+2)
+	r[0] = '"'
+	r[sha256.Size<<1+1] = '"'
+	for n, b := range *h {
+		if t := b >> 4; t > 9 {
+			r[n<<1] = 'A' - 10 + t
+		} else {
+			r[n<<1] = '0' + t
+		}
+		if t := b & 15; t > 9 {
+			r[n<<1+1] = 'A' - 10 + t
+		} else {
+			r[n<<1+1] = '0' + t
+		}
+	}
+	return r, nil
+}
+
+var ErrInvalidPasswordHash = errors.New("invalid password hash")
+
+func (h *hash) UnmarshalJSON(data []byte) error {
+	if len(data) != sha256.Size<<1+2 || data[0] != '"' || data[sha256.Size<<1+1] != '"' {
+		return ErrInvalidPasswordHash
+	}
+	for n, b := range data[1 : sha256.Size<<1+1] {
+		var v byte
+		if b >= '0' && b <= '9' {
+			v = b - '0'
+		} else if b >= 'A' && b <= 'F' {
+			v = b - 'A' + 10
+		} else if b >= 'a' && b <= 'f' {
+			v = b - 'a' + 10
+		} else {
+			return ErrInvalidPasswordHash
+		}
+		if n&1 == 0 {
+			(*h)[n>>1] = v << 4
+		} else {
+			(*h)[n>>1] |= v
+		}
+	}
+	return nil
+}
+
 type config struct {
 	Port     uint16
 	Username string
-	Password [sha256.Size]byte
+	Password hash
 }
 
 var unauthorised = []byte(`<html>
