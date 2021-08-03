@@ -18,5 +18,12 @@ func NewConn(conn *websocket.Conn) {
 }
 
 func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, error) {
+	switch method {
+	case "add":
+	case "modify":
+	case "start":
+	case "stop":
+	case "remove":
+	}
 	return nil, nil
 }
