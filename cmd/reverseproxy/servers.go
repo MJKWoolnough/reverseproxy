@@ -64,13 +64,23 @@ func (s *server) addCommand(exe string, params []string, env map[string]string) 
 
 type redirect struct {
 	From             uint16  `json:"from"`
-	To               uint16  `json:"to"`
+	To               string  `json:"to"`
 	Match            []match `json:"match"`
 	matchServiceName reverseproxy.MatchServiceName
+	Start            bool `json:"start"`
+	port             *reverseproxy.Port
+	err              string
 }
 
 func (r *redirect) Init() {
 	r.matchServiceName = makeMatchService(r.Match)
+	if r.Start && r.From > 0 && r.To != "" {
+		var err error
+		r.port, err = reverseproxy.AddRedirect(r.matchServiceName, r.From, r.To)
+		if err != nil {
+			r.err = err.Error()
+		}
+	}
 }
 
 type command struct {
