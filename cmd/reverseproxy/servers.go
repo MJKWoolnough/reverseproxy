@@ -5,8 +5,8 @@ import "sync"
 type servers map[string]*server
 
 func (s server) Init() {
-	for _, server := range s {
-		server.Init()
+	for name, server := range s {
+		server.Init(name)
 	}
 }
 
@@ -16,17 +16,19 @@ type server struct {
 	Commands  map[uint64]*command  `json:"commands"`
 	lastRID   uint64
 	lastCID   uint64
+	name      string
 }
 
-func (s *server) Init() {
+func (s *server) Init(name string) {
+	s.name = name
 	for id, r := range s.Redirects {
-		r.Init()
+		r.Init(name)
 		if id > s.lastRID {
 			s.lastRID = id
 		}
 	}
 	for id, c := range s.Commands {
-		c.Init()
+		c.Init(name)
 		if id > s.lastCID {
 			s.lastCID = id
 		}
@@ -63,7 +65,7 @@ type redirect struct {
 	To   uint16 `json:"to"`
 }
 
-func (r *redirect) Init() {}
+func (r *redirect) Init(name string) {}
 
 type command struct {
 	Exe    string            `json:"exe"`
@@ -71,4 +73,4 @@ type command struct {
 	Env    map[string]string `json:"env"`
 }
 
-func (c *command) Init() {}
+func (c *command) Init(name string) {}
