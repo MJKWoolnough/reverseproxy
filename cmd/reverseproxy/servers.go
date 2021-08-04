@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net"
 	"os/exec"
 	"sync"
 
@@ -38,7 +39,7 @@ func (s *server) Init() {
 	}
 }
 
-func (s *server) addRedirect(from, to uint16) uint64 {
+func (s *server) addRedirect(from uint16, to string) uint64 {
 	s.mu.Lock()
 	s.lastRID++
 	id := s.lastRID
@@ -76,8 +77,10 @@ type redirect struct {
 func (r *redirect) Init() {
 	r.matchServiceName = makeMatchService(r.Match)
 	if r.Start && r.From > 0 && r.To != "" {
-		var err error
-		if r.port, err = reverseproxy.AddRedirect(r.matchServiceName, r.From, r.To); err != nil {
+		addr, err := net.ResolveTCPAddr("tcp", r.To)
+		if err != nil {
+			r.err = err.Error()
+		} else if r.port, err = reverseproxy.AddRedirect(r.matchServiceName, r.From, addr); err != nil {
 			r.err = err.Error()
 		}
 	}
