@@ -152,6 +152,8 @@ func defineConfig(configFile string) error {
 	if err == nil {
 		json.NewDecoder(f).Decode(&c)
 		f.Close()
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("error opening config file: %w", err)
 	}
 	r := bufio.NewReader(os.Stdin)
 	var skipPort, skipCredentials bool
