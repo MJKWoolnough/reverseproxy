@@ -4,7 +4,7 @@ import "sync"
 
 type servers map[string]*server
 
-func (s server) Init() {
+func (s servers) Init() {
 	for name, server := range s {
 		server.Init(name)
 	}
@@ -53,7 +53,7 @@ func (s *server) addCommand(exe string, params []string, env map[string]string) 
 	id := s.lastCID
 	s.Commands[id] = &command{
 		Exe:    exe,
-		params: params,
+		Params: params,
 		Env:    env,
 	}
 	s.mu.Unlock()
