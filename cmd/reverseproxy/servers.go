@@ -1,5 +1,7 @@
 package main
 
+import "sync"
+
 type servers map[string]*server
 
 func (s server) Init() {
@@ -9,10 +11,11 @@ func (s server) Init() {
 }
 
 type server struct {
-	Redirects map[uint64]redirect `json:"redirects"`
-	Commands  map[uint64]command  `json:"commands"`
-	lastRID   uint64              `json:"-"`
-	lastCID   uint64              `json:"-"`
+	mu        sync.RWMutex
+	Redirects map[uint64]*redirect `json:"redirects"`
+	Commands  map[uint64]*command  `json:"commands"`
+	lastRID   uint64
+	lastCID   uint64
 }
 
 func (s *server) Init() {
@@ -28,6 +31,31 @@ func (s *server) Init() {
 			s.lastCID = id
 		}
 	}
+}
+
+func (s *server) addRedirect(from, to uint16) uint64 {
+	s.mu.Lock()
+	s.lastRID++
+	id := s.lastRID
+	s.Redirects[id] = &redirect{
+		From: from,
+		To:   to,
+	}
+	s.mu.Unlock()
+	return id
+}
+
+func (s *server) addCommand(exe string, params []string, env map[string]string) uint64 {
+	s.mu.Lock()
+	s.lastCID++
+	id := s.lastCID
+	s.Commands[id] = &command{
+		Exe:    exe,
+		params: params,
+		Env:    env,
+	}
+	s.mu.Unlock()
+	return id
 }
 
 type redirect struct {
