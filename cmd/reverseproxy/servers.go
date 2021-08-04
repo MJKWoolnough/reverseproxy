@@ -3,8 +3,10 @@ package main
 type servers map[string]server
 
 type server struct {
-	Redirects []redirect `json:"redirects"`
-	Commands  []command  `json:"commands"`
+	Redirects map[uint64]redirect `json:"redirects"`
+	Commands  map[uint64]command  `json:"commands"`
+	nextRID   uint64              `json:"-"`
+	nextCID   uint64              `json:"-"`
 }
 
 type redirect struct {
