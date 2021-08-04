@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os/exec"
 	"sync"
 
 	"vimagination.zapto.org/reverseproxy"
@@ -76,8 +77,7 @@ func (r *redirect) Init() {
 	r.matchServiceName = makeMatchService(r.Match)
 	if r.Start && r.From > 0 && r.To != "" {
 		var err error
-		r.port, err = reverseproxy.AddRedirect(r.matchServiceName, r.From, r.To)
-		if err != nil {
+		if r.port, err = reverseproxy.AddRedirect(r.matchServiceName, r.From, r.To); err != nil {
 			r.err = err.Error()
 		}
 	}
@@ -89,10 +89,24 @@ type command struct {
 	Env              map[string]string `json:"env"`
 	Match            []match           `json:"match"`
 	matchServiceName reverseproxy.MatchServiceName
+	Start            bool `json:"start"`
+	unixCmd          *reverseproxy.UnixCmd
+	err              string
 }
 
 func (c *command) Init() {
 	c.matchServiceName = makeMatchService(c.Match)
+	if c.Start {
+		cmd := exec.Command(c.Exe, c.Params...)
+		cmd.Env = make([]string, 0, len(c.Env))
+		for k, v := range c.Env {
+			cmd.Env = append(cmd.Env, k+"="+v)
+		}
+		var err error
+		if c.unixCmd, err = reverseproxy.RegisterCmd(c.matchServiceName, cmd); err != nil {
+			c.err = err.Error()
+		}
+	}
 }
 
 type match struct {
