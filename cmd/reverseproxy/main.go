@@ -63,7 +63,9 @@ func (h *hash) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type config struct {
+var config Config
+
+type Config struct {
 	Port     uint16
 	Username string
 	Password hash
@@ -80,7 +82,7 @@ var unauthorised = []byte(`<html>
 </html>
 `)
 
-func (c *config) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (c *Config) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if u, p, ok := r.BasicAuth(); ok && u == c.Username && sha256.Sum256([]byte(p)) == c.Password {
 		switch r.URL.Path {
 		case "/":
@@ -118,22 +120,21 @@ func run() error {
 	if define {
 		return defineConfig(configFile)
 	}
-	var c config
 	f, err := os.Open(configFile)
 	if err != nil {
 		return fmt.Errorf("error while opening config file: %w", err)
 	}
-	if err := json.NewDecoder(f).Decode(&c); err != nil {
+	if err := json.NewDecoder(f).Decode(&config); err != nil {
 		return fmt.Errorf("error while decoding config file: %w", err)
 	}
 	f.Close()
-	l, err := net.ListenTCP("tcp", &net.TCPAddr{Port: int(c.Port)})
+	l, err := net.ListenTCP("tcp", &net.TCPAddr{Port: int(config.Port)})
 	if err != nil {
 		return fmt.Errorf("error opening management interface port: %w", err)
 	}
-	c.Servers.Init()
+	config.Servers.Init()
 	var s = http.Server{
-		Handler: &c,
+		Handler: &config,
 	}
 	go s.Serve(l)
 	sc := make(chan os.Signal, 1)
@@ -143,23 +144,22 @@ func run() error {
 	close(sc)
 	s.Close()
 	ShutdownRPC()
-	c.Servers.Shutdown()
+	config.Servers.Shutdown()
 	return nil
 }
 
 func defineConfig(configFile string) error {
-	var c config
 	f, err := os.Open(configFile)
 	if err == nil {
-		json.NewDecoder(f).Decode(&c)
+		json.NewDecoder(f).Decode(&config)
 		f.Close()
 	} else if !os.IsNotExist(err) {
 		return fmt.Errorf("error opening config file: %w", err)
 	}
 	r := bufio.NewReader(os.Stdin)
 	var skipPort, skipCredentials bool
-	if c.Port != 0 {
-		if err := getInput(r, fmt.Sprintf("Do you want to set a new management port (%d)? Y/N: ", c.Port), func(ans string) bool {
+	if config.Port != 0 {
+		if err := getInput(r, fmt.Sprintf("Do you want to set a new management port (%d)? Y/N: ", config.Port), func(ans string) bool {
 			switch ans {
 			case "Y", "y":
 				skipPort = true
@@ -178,13 +178,13 @@ func defineConfig(configFile string) error {
 			if err != nil {
 				return false
 			}
-			c.Port = uint16(p)
+			config.Port = uint16(p)
 			return true
 		}); err != nil {
 			return err
 		}
 	}
-	if c.Username != "" {
+	if config.Username != "" {
 		if err := getInput(r, "Do you want to set new management credentials? Y/N: ", func(ans string) bool {
 			switch ans {
 			case "Y", "y":
@@ -203,7 +203,7 @@ func defineConfig(configFile string) error {
 			if ans == "" {
 				return false
 			}
-			c.Username = ans
+			config.Username = ans
 			return true
 		}); err != nil {
 			return err
@@ -212,7 +212,7 @@ func defineConfig(configFile string) error {
 			if ans == "" {
 				return false
 			}
-			c.Password = sha256.Sum256([]byte(ans))
+			config.Password = sha256.Sum256([]byte(ans))
 			return true
 		}); err != nil {
 			return err
@@ -223,7 +223,7 @@ func defineConfig(configFile string) error {
 		if err != nil {
 			return fmt.Errorf("error creating new config file: %w", err)
 		}
-		if err = json.NewEncoder(f).Encode(&c); err != nil {
+		if err = json.NewEncoder(f).Encode(&config); err != nil {
 			return fmt.Errorf("error writing config file: %w", err)
 		}
 		if err = f.Close(); err != nil {
