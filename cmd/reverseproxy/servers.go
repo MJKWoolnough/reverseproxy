@@ -76,7 +76,13 @@ type redirect struct {
 
 func (r *redirect) Init() {
 	r.matchServiceName = makeMatchService(r.Match)
-	if r.Start && r.From > 0 && r.To != "" {
+	if r.Start {
+		r.Run()
+	}
+}
+
+func (r *redirect) Run() {
+	if r.From > 0 && r.To != "" {
 		addr, err := net.ResolveTCPAddr("tcp", r.To)
 		if err != nil {
 			r.err = err.Error()
@@ -100,15 +106,19 @@ type command struct {
 func (c *command) Init() {
 	c.matchServiceName = makeMatchService(c.Match)
 	if c.Start {
-		cmd := exec.Command(c.Exe, c.Params...)
-		cmd.Env = make([]string, 0, len(c.Env))
-		for k, v := range c.Env {
-			cmd.Env = append(cmd.Env, k+"="+v)
-		}
-		var err error
-		if c.unixCmd, err = reverseproxy.RegisterCmd(c.matchServiceName, cmd); err != nil {
-			c.err = err.Error()
-		}
+		c.Run()
+	}
+}
+
+func (c *command) Run() {
+	cmd := exec.Command(c.Exe, c.Params...)
+	cmd.Env = make([]string, 0, len(c.Env))
+	for k, v := range c.Env {
+		cmd.Env = append(cmd.Env, k+"="+v)
+	}
+	var err error
+	if c.unixCmd, err = reverseproxy.RegisterCmd(c.matchServiceName, cmd); err != nil {
+		c.err = err.Error()
 	}
 }
 
