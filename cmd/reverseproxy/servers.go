@@ -84,7 +84,7 @@ func (r *redirect) Init() {
 
 func (r *redirect) Run() {
 	r.mu.Lock()
-	if r.From > 0 && r.To != "" {
+	if r.From > 0 && r.To != "" && r.port == nil {
 		addr, err := net.ResolveTCPAddr("tcp", r.To)
 		if err != nil {
 			r.err = err.Error()
@@ -116,14 +116,16 @@ func (c *command) Init() {
 
 func (c *command) Run() {
 	c.mu.Lock()
-	cmd := exec.Command(c.Exe, c.Params...)
-	cmd.Env = make([]string, 0, len(c.Env))
-	for k, v := range c.Env {
-		cmd.Env = append(cmd.Env, k+"="+v)
-	}
-	var err error
-	if c.unixCmd, err = reverseproxy.RegisterCmd(c.matchServiceName, cmd); err != nil {
-		c.err = err.Error()
+	if c.unixCmd == nil {
+		cmd := exec.Command(c.Exe, c.Params...)
+		cmd.Env = make([]string, 0, len(c.Env))
+		for k, v := range c.Env {
+			cmd.Env = append(cmd.Env, k+"="+v)
+		}
+		var err error
+		if c.unixCmd, err = reverseproxy.RegisterCmd(c.matchServiceName, cmd); err != nil {
+			c.err = err.Error()
+		}
 	}
 	c.mu.Unlock()
 }
