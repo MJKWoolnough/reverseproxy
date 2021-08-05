@@ -95,6 +95,16 @@ func (r *redirect) Run() {
 	r.mu.Unlock()
 }
 
+func (r *redirect) Stop() {
+	r.mu.Lock()
+	r.Start = false
+	if r.port != nil {
+		r.port.Close()
+		r.port = nil
+	}
+	r.mu.Unlock()
+}
+
 type command struct {
 	mu               sync.RWMutex
 	Exe              string            `json:"exe"`
@@ -126,6 +136,15 @@ func (c *command) Run() {
 		if c.unixCmd, err = reverseproxy.RegisterCmd(c.matchServiceName, cmd); err != nil {
 			c.err = err.Error()
 		}
+	}
+	c.mu.Unlock()
+}
+
+func (c *command) Stop() {
+	c.mu.Lock()
+	c.Start = false
+	if c.unixCmd != nil {
+		c.unixCmd.Close()
 	}
 	c.mu.Unlock()
 }
