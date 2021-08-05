@@ -141,9 +141,8 @@ func run() error {
 	<-sc
 	signal.Stop(sc)
 	close(sc)
-	if err = s.Close(); err != nil {
-		return fmt.Errorf("error closing management interface: %w", err)
-	}
+	s.Close()
+	c.Servers.Shutdown()
 	return nil
 }
 
