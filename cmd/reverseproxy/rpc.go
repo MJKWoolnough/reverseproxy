@@ -36,6 +36,8 @@ func NewConn(conn *websocket.Conn) {
 	conns[&s] = struct{}{}
 	connMu.Unlock()
 
+	s.SendData(buildInitialMessage())
+
 	s.Handle()
 
 	connMu.Lock()
@@ -67,11 +69,15 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 	return nil, nil
 }
 
+func buildInitialMessage() json.RawMessage {
+	return buildMessage(-1, json.RawMessage{'{', '}'})
+}
+
 const broadcastStart = "{\"id\": -0,\"result\":"
 
-func broadcast(id int, data json.RawMessage, except uint64) {
+func buildMessage(id int, data json.RawMessage) json.RawMessage {
 	l := len(broadcastStart) + len(data) + 1
-	dat := make([]byte, l)
+	dat := make(json.RawMessage, l)
 	copy(dat, broadcastStart)
 	copy(dat[len(broadcastStart):], data)
 	id = -id
@@ -81,6 +87,11 @@ func broadcast(id int, data json.RawMessage, except uint64) {
 	}
 	dat[8] = byte('0' + id%10)
 	dat[l-1] = '}'
+	return dat
+}
+
+func broadcast(id int, data json.RawMessage, except uint64) {
+	dat := buildMessage(id, data)
 	connMu.RLock()
 	for c := range conns {
 		if c.id != except {
