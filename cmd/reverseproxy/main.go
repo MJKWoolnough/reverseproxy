@@ -142,6 +142,7 @@ func run() error {
 	signal.Stop(sc)
 	close(sc)
 	s.Close()
+	ShutdownRPC()
 	c.Servers.Shutdown()
 	return nil
 }
