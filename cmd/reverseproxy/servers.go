@@ -65,6 +65,7 @@ func (s *server) addCommand(exe string, params []string, env map[string]string) 
 }
 
 type redirect struct {
+	mu               sync.RWMutex
 	From             uint16  `json:"from"`
 	To               string  `json:"to"`
 	Match            []match `json:"match"`
@@ -82,6 +83,7 @@ func (r *redirect) Init() {
 }
 
 func (r *redirect) Run() {
+	r.mu.Lock()
 	if r.From > 0 && r.To != "" {
 		addr, err := net.ResolveTCPAddr("tcp", r.To)
 		if err != nil {
@@ -90,9 +92,11 @@ func (r *redirect) Run() {
 			r.err = err.Error()
 		}
 	}
+	r.mu.Unlock()
 }
 
 type command struct {
+	mu               sync.RWMutex
 	Exe              string            `json:"exe"`
 	Params           []string          `json:"params"`
 	Env              map[string]string `json:"env"`
@@ -111,6 +115,7 @@ func (c *command) Init() {
 }
 
 func (c *command) Run() {
+	c.mu.Lock()
 	cmd := exec.Command(c.Exe, c.Params...)
 	cmd.Env = make([]string, 0, len(c.Env))
 	for k, v := range c.Env {
@@ -120,6 +125,7 @@ func (c *command) Run() {
 	if c.unixCmd, err = reverseproxy.RegisterCmd(c.matchServiceName, cmd); err != nil {
 		c.err = err.Error()
 	}
+	c.mu.Unlock()
 }
 
 type match struct {
