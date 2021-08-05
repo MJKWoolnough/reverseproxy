@@ -14,7 +14,8 @@ const (
 
 type socket struct {
 	*jsonrpc.Server
-	id uint64
+	conn *websocket.Conn
+	id   uint64
 }
 
 var (
@@ -24,7 +25,9 @@ var (
 )
 
 func NewConn(conn *websocket.Conn) {
-	var s socket
+	s := socket{
+		conn: conn,
+	}
 	s.Server = jsonrpc.New(conn, &s)
 
 	connMu.Lock()
@@ -37,6 +40,14 @@ func NewConn(conn *websocket.Conn) {
 
 	connMu.Lock()
 	delete(conns, &s)
+	connMu.Unlock()
+}
+
+func ShutdownRPC() {
+	connMu.Lock()
+	for c := range conns {
+		c.conn.Close()
+	}
 	connMu.Unlock()
 }
 
