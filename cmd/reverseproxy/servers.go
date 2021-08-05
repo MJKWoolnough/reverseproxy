@@ -16,6 +16,12 @@ func (s servers) Init() {
 	}
 }
 
+func (s servers) Shutdown() {
+	for _, server := range s {
+		server.Shutdown()
+	}
+}
+
 type server struct {
 	mu        sync.RWMutex
 	Redirects map[uint64]*redirect `json:"redirects"`
@@ -64,6 +70,15 @@ func (s *server) addCommand(exe string, params []string, env map[string]string) 
 	return id
 }
 
+func (s *server) Shutdown() {
+	for _, r := range s.Redirects {
+		r.Shutdown()
+	}
+	for _, c := range s.Commands {
+		c.Shutdown()
+	}
+}
+
 type redirect struct {
 	mu               sync.RWMutex
 	From             uint16  `json:"from"`
@@ -98,11 +113,15 @@ func (r *redirect) Run() {
 func (r *redirect) Stop() {
 	r.mu.Lock()
 	r.Start = false
+	r.Shutdown()
+	r.mu.Unlock()
+}
+
+func (r *redirect) Shutdown() {
 	if r.port != nil {
 		r.port.Close()
 		r.port = nil
 	}
-	r.mu.Unlock()
 }
 
 type command struct {
@@ -143,10 +162,14 @@ func (c *command) Run() {
 func (c *command) Stop() {
 	c.mu.Lock()
 	c.Start = false
+	c.Shutdown()
+	c.mu.Unlock()
+}
+
+func (c *command) Shutdown() {
 	if c.unixCmd != nil {
 		c.unixCmd.Close()
 	}
-	c.mu.Unlock()
 }
 
 type match struct {
