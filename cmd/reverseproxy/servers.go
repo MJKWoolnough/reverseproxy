@@ -53,6 +53,7 @@ func (s *server) addRedirect(from uint16, to string) uint64 {
 		From: from,
 		To:   to,
 	}
+	saveConfig()
 	config.mu.Unlock()
 	return id
 }
@@ -66,6 +67,7 @@ func (s *server) addCommand(exe string, params []string, env map[string]string) 
 		Params: params,
 		Env:    env,
 	}
+	saveConfig()
 	config.mu.Unlock()
 	return id
 }
@@ -106,6 +108,7 @@ func (r *redirect) Run() {
 			r.err = err.Error()
 		} else {
 			r.Start = true
+			saveConfig()
 		}
 	}
 	config.mu.Unlock()
@@ -115,6 +118,7 @@ func (r *redirect) Stop() {
 	config.mu.Lock()
 	r.Start = false
 	r.Shutdown()
+	saveConfig()
 	config.mu.Unlock()
 }
 
@@ -170,6 +174,7 @@ func (c *command) Run() {
 				config.mu.Unlock()
 			}()
 			c.Start = true
+			saveConfig()
 		}
 	}
 	config.mu.Unlock()
@@ -179,6 +184,7 @@ func (c *command) Stop() {
 	config.mu.Lock()
 	c.Start = false
 	c.Shutdown()
+	saveConfig()
 	config.mu.Unlock()
 }
 
