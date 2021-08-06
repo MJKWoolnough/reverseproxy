@@ -78,6 +78,20 @@ type Config struct {
 	Servers servers
 }
 
+func saveConfig() error {
+	f, err := os.Create(configFile)
+	if err != nil {
+		return fmt.Errorf("error creating new config file: %w", err)
+	}
+	if err = json.NewEncoder(f).Encode(&config); err != nil {
+		return fmt.Errorf("error writing config file: %w", err)
+	}
+	if err = f.Close(); err != nil {
+		return fmt.Errorf("error closing config file: %w", err)
+	}
+	return nil
+}
+
 var unauthorised = []byte(`<html>
 	<head>
 		<title>Unauthorised</title>
@@ -222,16 +236,7 @@ func defineConfig() error {
 		}
 	}
 	if !skipPort && !skipCredentials {
-		f, err := os.Create(configFile)
-		if err != nil {
-			return fmt.Errorf("error creating new config file: %w", err)
-		}
-		if err = json.NewEncoder(f).Encode(&config); err != nil {
-			return fmt.Errorf("error writing config file: %w", err)
-		}
-		if err = f.Close(); err != nil {
-			return fmt.Errorf("error closing config file: %w", err)
-		}
+		return saveConfig()
 	}
 	return nil
 }
