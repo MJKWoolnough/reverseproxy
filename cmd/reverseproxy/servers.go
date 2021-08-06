@@ -11,8 +11,8 @@ import (
 type servers map[string]*server
 
 func (s servers) Init() {
-	for _, server := range s {
-		server.Init()
+	for name, server := range s {
+		server.Init(name)
 	}
 }
 
@@ -26,11 +26,13 @@ type server struct {
 	mu        sync.RWMutex
 	Redirects map[uint64]*redirect `json:"redirects"`
 	Commands  map[uint64]*command  `json:"commands"`
+	name      string
 	lastRID   uint64
 	lastCID   uint64
 }
 
-func (s *server) Init() {
+func (s *server) Init(name string) {
+	s.name = name
 	for id, r := range s.Redirects {
 		r.Init()
 		if id > s.lastRID {
@@ -38,7 +40,7 @@ func (s *server) Init() {
 		}
 	}
 	for id, c := range s.Commands {
-		c.Init()
+		c.Init(s)
 		if id > s.lastCID {
 			s.lastCID = id
 		}
@@ -135,9 +137,11 @@ type command struct {
 	status           int
 	unixCmd          *reverseproxy.UnixCmd
 	err              string
+	server           *server
 }
 
-func (c *command) Init() {
+func (c *command) Init(server *server) {
+	c.server = server
 	c.matchServiceName = makeMatchService(c.Match)
 	if c.Start {
 		c.Run()
