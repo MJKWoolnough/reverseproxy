@@ -64,7 +64,10 @@ func (h *hash) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-var config Config
+var (
+	configFile string
+	config     Config
+)
 
 type Config struct {
 	Port     uint16
@@ -110,10 +113,7 @@ func main() {
 }
 
 func run() error {
-	var (
-		configFile string
-		define     bool
-	)
+	var define bool
 	flag.StringVar(&configFile, "c", "", "config file")
 	flag.BoolVar(&define, "d", false, "define settings for config file")
 	flag.Parse()
@@ -121,7 +121,7 @@ func run() error {
 		return errors.New("no config file specified")
 	}
 	if define {
-		return defineConfig(configFile)
+		return defineConfig()
 	}
 	f, err := os.Open(configFile)
 	if err != nil {
@@ -151,7 +151,7 @@ func run() error {
 	return nil
 }
 
-func defineConfig(configFile string) error {
+func defineConfig() error {
 	f, err := os.Open(configFile)
 	if err == nil {
 		json.NewDecoder(f).Decode(&config)
