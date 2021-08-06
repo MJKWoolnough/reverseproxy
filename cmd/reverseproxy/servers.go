@@ -152,19 +152,22 @@ func (c *command) Run() {
 		for k, v := range c.Env {
 			cmd.Env = append(cmd.Env, k+"="+v)
 		}
-		var err error
-		if c.unixCmd, err = reverseproxy.RegisterCmd(c.matchServiceName, cmd); err != nil {
+		uc, err := reverseproxy.RegisterCmd(c.matchServiceName, cmd)
+		if err != nil {
 			c.err = err.Error()
 			c.status = 0
 		} else {
 			c.status = 1
+			c.unixCmd = uc
+			go func() {
+				cmd.Wait()
+				config.mu.Lock()
+				if c.unixCmd == uc {
+					c.status = 0
+				}
+				config.mu.Unlock()
+			}()
 		}
-		go func() {
-			cmd.Wait()
-			config.mu.Lock()
-			c.status = 0
-			config.mu.Unlock()
-		}()
 	}
 	config.mu.Unlock()
 }
