@@ -104,6 +104,8 @@ func (r *redirect) Run() {
 			r.err = err.Error()
 		} else if r.port, err = reverseproxy.AddRedirect(r.matchServiceName, r.From, addr); err != nil {
 			r.err = err.Error()
+		} else {
+			r.Start = true
 		}
 	}
 	config.mu.Unlock()
@@ -167,6 +169,7 @@ func (c *command) Run() {
 				}
 				config.mu.Unlock()
 			}()
+			c.Start = true
 		}
 	}
 	config.mu.Unlock()
