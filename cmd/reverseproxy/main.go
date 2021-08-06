@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 
 	"golang.org/x/net/websocket"
 )
@@ -69,7 +70,9 @@ type Config struct {
 	Port     uint16
 	Username string
 	Password hash
-	Servers  servers
+
+	mu      sync.RWMutex
+	Servers servers
 }
 
 var unauthorised = []byte(`<html>
