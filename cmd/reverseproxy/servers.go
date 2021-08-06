@@ -175,14 +175,15 @@ func (c *command) Run() {
 func (c *command) Stop() {
 	config.mu.Lock()
 	c.Start = false
-	c.status = 2
 	c.Shutdown()
 	config.mu.Unlock()
 }
 
 func (c *command) Shutdown() {
 	if c.unixCmd != nil {
+		c.status = 2
 		c.unixCmd.Close()
+		c.unixCmd = nil
 	}
 }
 
