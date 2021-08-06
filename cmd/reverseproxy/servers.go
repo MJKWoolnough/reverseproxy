@@ -3,7 +3,6 @@ package main
 import (
 	"net"
 	"os/exec"
-	"sync"
 
 	"vimagination.zapto.org/reverseproxy"
 )
@@ -23,7 +22,6 @@ func (s servers) Shutdown() {
 }
 
 type server struct {
-	mu        sync.RWMutex
 	Redirects map[uint64]*redirect `json:"redirects"`
 	Commands  map[uint64]*command  `json:"commands"`
 	name      string
@@ -48,19 +46,19 @@ func (s *server) Init(name string) {
 }
 
 func (s *server) addRedirect(from uint16, to string) uint64 {
-	s.mu.Lock()
+	config.mu.Lock()
 	s.lastRID++
 	id := s.lastRID
 	s.Redirects[id] = &redirect{
 		From: from,
 		To:   to,
 	}
-	s.mu.Unlock()
+	config.mu.Unlock()
 	return id
 }
 
 func (s *server) addCommand(exe string, params []string, env map[string]string) uint64 {
-	s.mu.Lock()
+	config.mu.Lock()
 	s.lastCID++
 	id := s.lastCID
 	s.Commands[id] = &command{
@@ -68,7 +66,7 @@ func (s *server) addCommand(exe string, params []string, env map[string]string) 
 		Params: params,
 		Env:    env,
 	}
-	s.mu.Unlock()
+	config.mu.Unlock()
 	return id
 }
 
@@ -82,7 +80,6 @@ func (s *server) Shutdown() {
 }
 
 type redirect struct {
-	mu               sync.RWMutex
 	From             uint16  `json:"from"`
 	To               string  `json:"to"`
 	Match            []match `json:"match"`
@@ -100,7 +97,7 @@ func (r *redirect) Init() {
 }
 
 func (r *redirect) Run() {
-	r.mu.Lock()
+	config.mu.Lock()
 	if r.From > 0 && r.To != "" && r.port == nil {
 		addr, err := net.ResolveTCPAddr("tcp", r.To)
 		if err != nil {
@@ -109,14 +106,14 @@ func (r *redirect) Run() {
 			r.err = err.Error()
 		}
 	}
-	r.mu.Unlock()
+	config.mu.Unlock()
 }
 
 func (r *redirect) Stop() {
-	r.mu.Lock()
+	config.mu.Lock()
 	r.Start = false
 	r.Shutdown()
-	r.mu.Unlock()
+	config.mu.Unlock()
 }
 
 func (r *redirect) Shutdown() {
@@ -127,7 +124,6 @@ func (r *redirect) Shutdown() {
 }
 
 type command struct {
-	mu               sync.RWMutex
 	Exe              string            `json:"exe"`
 	Params           []string          `json:"params"`
 	Env              map[string]string `json:"env"`
@@ -149,7 +145,7 @@ func (c *command) Init(server *server) {
 }
 
 func (c *command) Run() {
-	c.mu.Lock()
+	config.mu.Lock()
 	if c.unixCmd == nil {
 		cmd := exec.Command(c.Exe, c.Params...)
 		cmd.Env = make([]string, 0, len(c.Env))
@@ -165,20 +161,20 @@ func (c *command) Run() {
 		}
 		go func() {
 			cmd.Wait()
-			c.mu.Lock()
+			config.mu.Lock()
 			c.status = 0
-			c.mu.Unlock()
+			config.mu.Unlock()
 		}()
 	}
-	c.mu.Unlock()
+	config.mu.Unlock()
 }
 
 func (c *command) Stop() {
-	c.mu.Lock()
+	config.mu.Lock()
 	c.Start = false
 	c.status = 2
 	c.Shutdown()
-	c.mu.Unlock()
+	config.mu.Unlock()
 }
 
 func (c *command) Shutdown() {
