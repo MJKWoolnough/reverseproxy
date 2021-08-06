@@ -132,6 +132,7 @@ type command struct {
 	Match            []match           `json:"match"`
 	matchServiceName reverseproxy.MatchServiceName
 	Start            bool `json:"start"`
+	status           int
 	unixCmd          *reverseproxy.UnixCmd
 	err              string
 }
@@ -154,7 +155,16 @@ func (c *command) Run() {
 		var err error
 		if c.unixCmd, err = reverseproxy.RegisterCmd(c.matchServiceName, cmd); err != nil {
 			c.err = err.Error()
+			c.status = 0
+		} else {
+			c.status = 1
 		}
+		go func() {
+			cmd.Wait()
+			c.mu.Lock()
+			c.status = 0
+			c.mu.Unlock()
+		}()
 	}
 	c.mu.Unlock()
 }
@@ -162,6 +172,7 @@ func (c *command) Run() {
 func (c *command) Stop() {
 	c.mu.Lock()
 	c.Start = false
+	c.status = 2
 	c.Shutdown()
 	c.mu.Unlock()
 }
