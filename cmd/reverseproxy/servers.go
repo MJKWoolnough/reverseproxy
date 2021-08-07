@@ -3,6 +3,7 @@ package main
 import (
 	"net"
 	"os/exec"
+	"syscall"
 
 	"vimagination.zapto.org/reverseproxy"
 )
@@ -129,11 +130,17 @@ func (r *redirect) Shutdown() {
 	}
 }
 
+type user struct {
+	UID uint32 `json:"uid"`
+	GID uint32 `json:"gid"`
+}
+
 type command struct {
 	Exe              string            `json:"exe"`
 	Params           []string          `json:"params"`
 	Env              map[string]string `json:"env"`
 	Match            []match           `json:"match"`
+	User             *user             `json:"user,omitempty"`
 	matchServiceName reverseproxy.MatchServiceName
 	Start            bool `json:"start"`
 	status           int
@@ -157,6 +164,14 @@ func (c *command) Run() {
 		cmd.Env = make([]string, 0, len(c.Env))
 		for k, v := range c.Env {
 			cmd.Env = append(cmd.Env, k+"="+v)
+		}
+		if c.User != nil {
+			cmd.SysProcAttr = &syscall.SysProcAttr{
+				Credential: &syscall.Credential{
+					Uid: c.User.UID,
+					Gid: c.User.GID,
+				},
+			}
 		}
 		uc, err := reverseproxy.RegisterCmd(c.matchServiceName, cmd)
 		if err != nil {
