@@ -46,27 +46,26 @@ func (s *server) Init(name string) {
 	}
 }
 
-func (s *server) addRedirect(from uint16, to string) uint64 {
+func (s *server) addRedirect(rd redirectData) uint64 {
 	config.mu.Lock()
 	s.lastRID++
 	id := s.lastRID
 	s.Redirects[id] = &redirect{
-		From: from,
-		To:   to,
+		redirectData:     rd,
+		matchServiceName: makeMatchService(rd.Match),
 	}
 	saveConfig()
 	config.mu.Unlock()
 	return id
 }
 
-func (s *server) addCommand(exe string, params []string, env map[string]string) uint64 {
+func (s *server) addCommand(cd commandData) uint64 {
 	config.mu.Lock()
 	s.lastCID++
 	id := s.lastCID
 	s.Commands[id] = &command{
-		Exe:    exe,
-		Params: params,
-		Env:    env,
+		commandData:      cd,
+		matchServiceName: makeMatchService(cd.Match),
 	}
 	saveConfig()
 	config.mu.Unlock()
@@ -82,10 +81,14 @@ func (s *server) Shutdown() {
 	}
 }
 
+type redirectData struct {
+	From  uint16  `json:"from"`
+	To    string  `json:"to"`
+	Match []match `json:"match"`
+}
+
 type redirect struct {
-	From             uint16  `json:"from"`
-	To               string  `json:"to"`
-	Match            []match `json:"match"`
+	redirectData
 	matchServiceName reverseproxy.MatchServiceName
 	Start            bool `json:"start"`
 	port             *reverseproxy.Port
@@ -135,12 +138,16 @@ type user struct {
 	GID uint32 `json:"gid"`
 }
 
+type commandData struct {
+	Exe    string            `json:"exe"`
+	Params []string          `json:"params"`
+	Env    map[string]string `json:"env"`
+	Match  []match           `json:"match"`
+	User   *user             `json:"user,omitempty"`
+}
+
 type command struct {
-	Exe              string            `json:"exe"`
-	Params           []string          `json:"params"`
-	Env              map[string]string `json:"env"`
-	Match            []match           `json:"match"`
-	User             *user             `json:"user,omitempty"`
+	commandData
 	matchServiceName reverseproxy.MatchServiceName
 	Start            bool `json:"start"`
 	status           int
