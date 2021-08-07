@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -154,6 +155,17 @@ func broadcast(id int, data json.RawMessage, except uint64) {
 }
 
 func add(data json.RawMessage) (interface{}, error) {
+	var name string
+	if err := json.Unmarshal(data, &name); err != nil {
+		return nil, err
+	}
+	config.mu.Lock()
+	if _, ok := config.Servers[name]; ok {
+		config.mu.Unlock()
+		return nil, ErrNameExists
+	}
+	config.Servers[name] = &server{name: name}
+	config.mu.Unlock()
 	return nil, nil
 }
 
@@ -172,3 +184,7 @@ func stop(data json.RawMessage) (interface{}, error) {
 func remove(data json.RawMessage) (interface{}, error) {
 	return nil, nil
 }
+
+var (
+	ErrNameExists = errors.New("name already exists")
+)
