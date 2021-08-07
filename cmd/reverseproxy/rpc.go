@@ -167,6 +167,7 @@ func (s *socket) add(data json.RawMessage) (interface{}, error) {
 		return nil, ErrNameExists
 	}
 	config.Servers[name] = &server{name: name}
+	saveConfig()
 	broadcast(broadcastAdd, data, s.id)
 	config.mu.Unlock()
 	return nil, nil
@@ -188,6 +189,7 @@ func (s *socket) rename(data json.RawMessage) (interface{}, error) {
 	}
 	delete(config.Servers, name[0])
 	config.Servers[name[1]] = serv
+	saveConfig()
 	broadcast(broadcastRename, data, s.id)
 	config.mu.Unlock()
 	return nil, nil
