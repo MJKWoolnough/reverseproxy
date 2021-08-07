@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"golang.org/x/net/websocket"
@@ -16,6 +17,7 @@ const (
 	broadcastAdd
 	broadcastRename
 	broadcastRemove
+	broadcastAddRedirect
 )
 
 type socket struct {
@@ -67,6 +69,8 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 		return s.rename(data)
 	case "remove":
 		return s.remove(data)
+	case "addRedirect":
+		return s.addRedirect(data)
 	case "start":
 		return start(data)
 	case "stop":
@@ -224,6 +228,28 @@ func (s *socket) remove(data json.RawMessage) (interface{}, error) {
 	broadcast(broadcastRemove, data, s.id)
 	config.mu.Unlock()
 	return nil, nil
+}
+
+type addRedirect struct {
+	Server string `json:"server"`
+	redirectData
+}
+
+func (s *socket) addRedirect(data json.RawMessage) (interface{}, error) {
+	var ar addRedirect
+	if err := json.Unmarshal(data, &ar); err != nil {
+		return nil, err
+	}
+	config.mu.Lock()
+	serv, ok := config.Servers[ar.Server]
+	if !ok {
+		config.mu.Unlock()
+	}
+	id := serv.addRedirect(ar.redirectData)
+	saveConfig()
+	broadcast(broadcastAddRedirect, append(strconv.AppendUint(append(data[:len(data)-1], ",\"id\":"...), id, 10), '}'), s.id)
+	config.mu.Unlock()
+	return id, nil
 }
 
 func start(data json.RawMessage) (interface{}, error) {
