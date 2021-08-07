@@ -15,6 +15,7 @@ const (
 	broadcastList = -1 - iota
 	broadcastAdd
 	broadcastRename
+	broadcastRemove
 )
 
 type socket struct {
@@ -64,12 +65,12 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 		return s.add(data)
 	case "rename":
 		return s.rename(data)
+	case "remove":
+		return s.remove(data)
 	case "start":
 		return start(data)
 	case "stop":
 		return stop(data)
-	case "remove":
-		return remove(data)
 	}
 	return nil, nil
 }
@@ -195,6 +196,36 @@ func (s *socket) rename(data json.RawMessage) (interface{}, error) {
 	return nil, nil
 }
 
+func (s *socket) remove(data json.RawMessage) (interface{}, error) {
+	var name string
+	if err := json.Unmarshal(data, &name); err != nil {
+		return nil, err
+	}
+	config.mu.Lock()
+	serv, ok := config.Servers[name]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrNoServer
+	}
+	for _, r := range serv.Redirects {
+		if r.Start {
+			config.mu.Unlock()
+			return nil, ErrServerRunning
+		}
+	}
+	for _, c := range serv.Commands {
+		if c.status != 0 {
+			config.mu.Unlock()
+			return nil, ErrServerRunning
+		}
+	}
+	delete(config.Servers, name)
+	saveConfig()
+	broadcast(broadcastRemove, data, s.id)
+	config.mu.Unlock()
+	return nil, nil
+}
+
 func start(data json.RawMessage) (interface{}, error) {
 	return nil, nil
 }
@@ -203,11 +234,8 @@ func stop(data json.RawMessage) (interface{}, error) {
 	return nil, nil
 }
 
-func remove(data json.RawMessage) (interface{}, error) {
-	return nil, nil
-}
-
 var (
-	ErrNameExists = errors.New("name already exists")
-	ErrNoServer   = errors.New("no server by that name exists")
+	ErrNameExists    = errors.New("name already exists")
+	ErrNoServer      = errors.New("no server by that name exists")
+	ErrServerRunning = errors.New("cannot perform operation while server running")
 )
