@@ -71,6 +71,8 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 		return s.remove(data)
 	case "addRedirect":
 		return s.addRedirect(data)
+	case "addCommand":
+		return s.addCommand(data)
 	case "start":
 		return start(data)
 	case "stop":
@@ -246,6 +248,28 @@ func (s *socket) addRedirect(data json.RawMessage) (interface{}, error) {
 		config.mu.Unlock()
 	}
 	id := serv.addRedirect(ar.redirectData)
+	saveConfig()
+	broadcast(broadcastAddRedirect, append(strconv.AppendUint(append(data[:len(data)-1], ",\"id\":"...), id, 10), '}'), s.id)
+	config.mu.Unlock()
+	return id, nil
+}
+
+type addCommand struct {
+	Server string `json:"server"`
+	commandData
+}
+
+func (s *socket) addRedirect(data json.RawMessage) (interface{}, error) {
+	var ac addCommand
+	if err := json.Unmarshal(data, &ac); err != nil {
+		return nil, err
+	}
+	config.mu.Lock()
+	serv, ok := config.Servers[ac.Server]
+	if !ok {
+		config.mu.Unlock()
+	}
+	id := serv.addCommand(ac.commandData)
 	saveConfig()
 	broadcast(broadcastAddRedirect, append(strconv.AppendUint(append(data[:len(data)-1], ",\"id\":"...), id, 10), '}'), s.id)
 	config.mu.Unlock()
