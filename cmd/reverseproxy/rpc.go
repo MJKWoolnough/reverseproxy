@@ -13,6 +13,8 @@ import (
 
 const (
 	broadcastList = -1 - iota
+	broadcastAdd
+	broadcastRename
 )
 
 type socket struct {
@@ -59,9 +61,9 @@ func ShutdownRPC() {
 func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, error) {
 	switch method {
 	case "add":
-		return add(data)
-	case "modify":
-		return modify(data)
+		return s.add(data)
+	case "rename":
+		return s.rename(data)
 	case "start":
 		return start(data)
 	case "stop":
@@ -154,7 +156,7 @@ func broadcast(id int, data json.RawMessage, except uint64) {
 	connMu.RUnlock()
 }
 
-func add(data json.RawMessage) (interface{}, error) {
+func (s *socket) add(data json.RawMessage) (interface{}, error) {
 	var name string
 	if err := json.Unmarshal(data, &name); err != nil {
 		return nil, err
@@ -165,11 +167,29 @@ func add(data json.RawMessage) (interface{}, error) {
 		return nil, ErrNameExists
 	}
 	config.Servers[name] = &server{name: name}
+	broadcast(broadcastAdd, data, s.id)
 	config.mu.Unlock()
 	return nil, nil
 }
 
-func modify(data json.RawMessage) (interface{}, error) {
+func (s *socket) rename(data json.RawMessage) (interface{}, error) {
+	var name [2]string
+	if err := json.Unmarshal(data, &name); err != nil {
+		return nil, err
+	}
+	config.mu.Lock()
+	if _, ok := config.Servers[name[1]]; ok {
+		return nil, ErrNameExists
+	}
+	serv, ok := config.Servers[name[0]]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrNoServer
+	}
+	delete(config.Servers, name[0])
+	config.Servers[name[1]] = serv
+	broadcast(broadcastRename, data, s.id)
+	config.mu.Unlock()
 	return nil, nil
 }
 
@@ -187,4 +207,5 @@ func remove(data json.RawMessage) (interface{}, error) {
 
 var (
 	ErrNameExists = errors.New("name already exists")
+	ErrNoServer   = errors.New("no server by that name exists")
 )
