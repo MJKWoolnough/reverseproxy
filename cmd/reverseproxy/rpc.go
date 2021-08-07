@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"golang.org/x/net/websocket"
 	"vimagination.zapto.org/jsonrpc"
+	"vimagination.zapto.org/memio"
 )
 
 const (
@@ -70,7 +72,57 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 }
 
 func buildInitialMessage() json.RawMessage {
-	return buildMessage(-1, json.RawMessage{'{', '}'})
+	config.mu.RLock()
+	buf := memio.Buffer{'{'}
+	f := true
+	for name, server := range config.Servers {
+		if f {
+			f = false
+		} else {
+			buf = append(buf, ',')
+		}
+		fmt.Fprintf(&buf, "%q:[{", name)
+		first := true
+		for id, redirect := range server.Redirects {
+			if first {
+				first = false
+			} else {
+				buf = append(buf, ',')
+			}
+			fmt.Fprintf(&buf, "\"%d\":[%d,%q,%t,%q]", id, redirect.From, redirect.To, redirect.Start, redirect.err)
+		}
+		buf = append(buf, '}', ',', '{')
+		first = true
+		for id, cmd := range server.Commands {
+			if first {
+				first = false
+			} else {
+				buf = append(buf, ',')
+			}
+			fmt.Fprintf(&buf, "\"%d\":[%s, [", id, cmd.Exe)
+			for n, param := range cmd.Params {
+				if n > 0 {
+					buf = append(buf, ',')
+				}
+				fmt.Fprintf(&buf, "%q", param)
+			}
+			buf = append(buf, ']', ',', '{')
+			o := true
+			for key, value := range cmd.Env {
+				if o {
+					o = false
+				} else {
+					buf = append(buf, ',')
+				}
+				fmt.Fprintf(&buf, "%q:%q", key, value)
+			}
+			fmt.Fprintf(&buf, "},%d,%q]", cmd.status, cmd.err)
+		}
+		buf = append(buf, '}', ']')
+	}
+	buf = append(buf, '}')
+	config.mu.RUnlock()
+	return buildMessage(-1, json.RawMessage(buf))
 }
 
 const broadcastStart = "{\"id\": -0,\"result\":"
