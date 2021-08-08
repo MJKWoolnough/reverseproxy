@@ -232,13 +232,11 @@ func (s *socket) remove(data json.RawMessage) (interface{}, error) {
 	return nil, nil
 }
 
-type addRedirect struct {
-	Server string `json:"server"`
-	redirectData
-}
-
 func (s *socket) addRedirect(data json.RawMessage) (interface{}, error) {
-	var ar addRedirect
+	var ar struct {
+		Server string `json:"server"`
+		redirectData
+	}
 	if err := json.Unmarshal(data, &ar); err != nil {
 		return nil, err
 	}
@@ -254,13 +252,11 @@ func (s *socket) addRedirect(data json.RawMessage) (interface{}, error) {
 	return id, nil
 }
 
-type addCommand struct {
-	Server string `json:"server"`
-	commandData
-}
-
-func (s *socket) addRedirect(data json.RawMessage) (interface{}, error) {
-	var ac addCommand
+func (s *socket) addCommand(data json.RawMessage) (interface{}, error) {
+	var ac struct {
+		Server string `json:"server"`
+		commandData
+	}
 	if err := json.Unmarshal(data, &ac); err != nil {
 		return nil, err
 	}
