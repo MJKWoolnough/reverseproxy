@@ -244,6 +244,7 @@ func (s *socket) addRedirect(data json.RawMessage) (interface{}, error) {
 	serv, ok := config.Servers[ar.Server]
 	if !ok {
 		config.mu.Unlock()
+		return nil, ErrNoServer
 	}
 	id := serv.addRedirect(ar.redirectData)
 	saveConfig()
@@ -264,6 +265,7 @@ func (s *socket) addCommand(data json.RawMessage) (interface{}, error) {
 	serv, ok := config.Servers[ac.Server]
 	if !ok {
 		config.mu.Unlock()
+		return nil, ErrNoServer
 	}
 	id := serv.addCommand(ac.commandData)
 	saveConfig()
