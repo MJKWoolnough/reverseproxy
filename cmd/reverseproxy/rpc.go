@@ -18,6 +18,9 @@ const (
 	broadcastRename
 	broadcastRemove
 	broadcastAddRedirect
+	broadcastAddCommand
+	broadcastModifyRedirect
+	broadcastModifyCommand
 )
 
 type socket struct {
@@ -73,6 +76,10 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 		return s.addRedirect(data)
 	case "addCommand":
 		return s.addCommand(data)
+	case "modifyRedirect":
+		return s.modifyRedirect(data)
+	case "modifyCommand":
+		return s.modifyCommand(data)
 	case "start":
 		return start(data)
 	case "stop":
@@ -269,9 +276,71 @@ func (s *socket) addCommand(data json.RawMessage) (interface{}, error) {
 	}
 	id := serv.addCommand(ac.commandData)
 	saveConfig()
-	broadcast(broadcastAddRedirect, append(strconv.AppendUint(append(data[:len(data)-1], ",\"id\":"...), id, 10), '}'), s.id)
+	broadcast(broadcastAddCommand, append(strconv.AppendUint(append(data[:len(data)-1], ",\"id\":"...), id, 10), '}'), s.id)
 	config.mu.Unlock()
 	return id, nil
+}
+
+func (s *socket) modifyRedirect(data json.RawMessage) (interface{}, error) {
+	var mr struct {
+		Server string `json:"server"`
+		ID     uint64 `json:"id"`
+		redirectData
+	}
+	if err := json.Unmarshal(data, &mr); err != nil {
+		return nil, err
+	}
+	config.mu.Lock()
+	serv, ok := config.Servers[mr.Server]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrNoServer
+	}
+	r, ok := serv.Redirects[mr.ID]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrUnknownRedirect
+	}
+	if r.Start {
+		config.mu.Unlock()
+		return nil, ErrServerRunning
+	}
+	r.redirectData = mr.redirectData
+	saveConfig()
+	broadcast(broadcastModifyRedirect, data, s.id)
+	config.mu.Unlock()
+	return nil, nil
+}
+
+func (s *socket) modifyCommand(data json.RawMessage) (interface{}, error) {
+	var mc struct {
+		Server string `json:"server"`
+		ID     uint64 `json:"id"`
+		commandData
+	}
+	if err := json.Unmarshal(data, &mc); err != nil {
+		return nil, err
+	}
+	config.mu.Lock()
+	serv, ok := config.Servers[mc.Server]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrNoServer
+	}
+	c, ok := serv.Commands[mc.ID]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrUnknownCommand
+	}
+	if c.Start {
+		config.mu.Unlock()
+		return nil, ErrServerRunning
+	}
+	c.commandData = mc.commandData
+	saveConfig()
+	broadcast(broadcastModifyCommand, data, s.id)
+	config.mu.Unlock()
+	return nil, nil
 }
 
 func start(data json.RawMessage) (interface{}, error) {
@@ -283,7 +352,9 @@ func stop(data json.RawMessage) (interface{}, error) {
 }
 
 var (
-	ErrNameExists    = errors.New("name already exists")
-	ErrNoServer      = errors.New("no server by that name exists")
-	ErrServerRunning = errors.New("cannot perform operation while server running")
+	ErrNameExists      = errors.New("name already exists")
+	ErrNoServer        = errors.New("no server by that name exists")
+	ErrServerRunning   = errors.New("cannot perform operation while server running")
+	ErrUnknownRedirect = errors.New("unknown redirect")
+	ErrUnknownCommand  = errors.New("unknown command")
 )
