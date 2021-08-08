@@ -21,6 +21,8 @@ const (
 	broadcastAddCommand
 	broadcastModifyRedirect
 	broadcastModifyCommand
+	broadcastRemoveRedirect
+	broadcastRemoveCommand
 )
 
 type socket struct {
@@ -80,6 +82,10 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 		return s.modifyRedirect(data)
 	case "modifyCommand":
 		return s.modifyCommand(data)
+	case "removeRedirect":
+		return s.removeRedirect(data)
+	case "removeCommand":
+		return s.removeCommand(data)
 	case "start":
 		return start(data)
 	case "stop":
@@ -339,6 +345,66 @@ func (s *socket) modifyCommand(data json.RawMessage) (interface{}, error) {
 	c.commandData = mc.commandData
 	saveConfig()
 	broadcast(broadcastModifyCommand, data, s.id)
+	config.mu.Unlock()
+	return nil, nil
+}
+
+func (s *socket) removeRedirect(data json.RawMessage) (interface{}, error) {
+	var rr struct {
+		Server string `json:"server"`
+		ID     uint64 `json:"id"`
+	}
+	if err := json.Unmarshal(data, &rr); err != nil {
+		return nil, err
+	}
+	config.mu.Lock()
+	serv, ok := config.Servers[rr.Server]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrNoServer
+	}
+	r, ok := serv.Redirects[rr.ID]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrUnknownRedirect
+	}
+	if r.Start {
+		config.mu.Unlock()
+		return nil, ErrServerRunning
+	}
+	delete(serv.Redirects, rr.ID)
+	saveConfig()
+	broadcast(broadcastRemoveRedirect, data, s.id)
+	config.mu.Unlock()
+	return nil, nil
+}
+
+func (s *socket) removeCommand(data json.RawMessage) (interface{}, error) {
+	var rc struct {
+		Server string `json:"server"`
+		ID     uint64 `json:"id"`
+	}
+	if err := json.Unmarshal(data, &rc); err != nil {
+		return nil, err
+	}
+	config.mu.Lock()
+	serv, ok := config.Servers[rc.Server]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrNoServer
+	}
+	c, ok := serv.Redirects[rc.ID]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrUnknownCommand
+	}
+	if c.Start {
+		config.mu.Unlock()
+		return nil, ErrServerRunning
+	}
+	delete(serv.Commands, rc.ID)
+	saveConfig()
+	broadcast(broadcastRemoveCommand, data, s.id)
 	config.mu.Unlock()
 	return nil, nil
 }
