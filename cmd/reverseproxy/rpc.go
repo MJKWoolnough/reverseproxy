@@ -25,6 +25,8 @@ const (
 	broadcastRemoveCommand
 	broadcastStartRedirect
 	broadcastStartCommand
+	broadcastStopRedirect
+	broadcastStopCommand
 )
 
 type socket struct {
@@ -92,8 +94,10 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 		return s.startRedirect(data)
 	case "startCommand":
 		return s.startCommand(data)
-	case "stop":
-		return stop(data)
+	case "stopRedirect":
+		return s.stopRedirect(data)
+	case "stopCommand":
+		return s.stopCommand(data)
 	}
 	return nil, nil
 }
@@ -431,10 +435,65 @@ func stop(data json.RawMessage) (interface{}, error) {
 	return nil, nil
 }
 
+func (s *socket) stopRedirect(data json.RawMessage) (interface{}, error) {
+	var sr nameID
+	if err := json.Unmarshal(data, &sr); err != nil {
+		return nil, err
+	}
+	config.mu.Lock()
+	serv, ok := config.Servers[sr.Server]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrNoServer
+	}
+	r, ok := serv.Redirects[sr.ID]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrUnknownRedirect
+	}
+	if !r.Start {
+		config.mu.Unlock()
+		return nil, ErrServerNotRunning
+	}
+	r.Stop()
+	broadcast(broadcastStopRedirect, data, s.id)
+	saveConfig()
+	config.mu.Unlock()
+	return nil, nil
+}
+
+func (s *socket) stopCommand(data json.RawMessage) (interface{}, error) {
+	var sc nameID
+	if err := json.Unmarshal(data, &sc); err != nil {
+		return nil, err
+	}
+	config.mu.Lock()
+	serv, ok := config.Servers[sc.Server]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrNoServer
+	}
+	c, ok := serv.Commands[sc.ID]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrUnknownCommand
+	}
+	if c.status != 1 {
+		config.mu.Unlock()
+		return nil, ErrServerNotRunning
+	}
+	c.Stop()
+	broadcast(broadcastStopCommand, data, s.id)
+	saveConfig()
+	config.mu.Unlock()
+	return nil, nil
+}
+
 var (
-	ErrNameExists      = errors.New("name already exists")
-	ErrNoServer        = errors.New("no server by that name exists")
-	ErrServerRunning   = errors.New("cannot perform operation while server running")
-	ErrUnknownRedirect = errors.New("unknown redirect")
-	ErrUnknownCommand  = errors.New("unknown command")
+	ErrNameExists       = errors.New("name already exists")
+	ErrNoServer         = errors.New("no server by that name exists")
+	ErrServerRunning    = errors.New("cannot perform operation while server running")
+	ErrServerNotRunning = errors.New("server not running")
+	ErrUnknownRedirect  = errors.New("unknown redirect")
+	ErrUnknownCommand   = errors.New("unknown command")
 )
