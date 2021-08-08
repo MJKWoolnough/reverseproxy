@@ -23,6 +23,8 @@ const (
 	broadcastModifyCommand
 	broadcastRemoveRedirect
 	broadcastRemoveCommand
+	broadcastStartRedirect
+	broadcastStartCommand
 )
 
 type socket struct {
@@ -86,8 +88,10 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 		return s.removeRedirect(data)
 	case "removeCommand":
 		return s.removeCommand(data)
-	case "start":
-		return start(data)
+	case "startRedirect":
+		return s.startRedirect(data)
+	case "startCommand":
+		return s.startCommand(data)
 	case "stop":
 		return stop(data)
 	}
@@ -396,7 +400,7 @@ func (s *socket) removeCommand(data json.RawMessage) (interface{}, error) {
 		config.mu.Unlock()
 		return nil, ErrNoServer
 	}
-	c, ok := serv.Redirects[rc.ID]
+	c, ok := serv.Commands[rc.ID]
 	if !ok {
 		config.mu.Unlock()
 		return nil, ErrUnknownCommand
@@ -412,7 +416,63 @@ func (s *socket) removeCommand(data json.RawMessage) (interface{}, error) {
 	return nil, nil
 }
 
-func start(data json.RawMessage) (interface{}, error) {
+func (s *socket) startRedirect(data json.RawMessage) (interface{}, error) {
+	var sr struct {
+		Server string `json:"server"`
+		ID     uint64 `json:"id"`
+	}
+	if err := json.Unmarshal(data, &sr); err != nil {
+		return nil, err
+	}
+	config.mu.Lock()
+	serv, ok := config.Servers[sr.Server]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrNoServer
+	}
+	r, ok := serv.Redirects[sr.ID]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrUnknownRedirect
+	}
+	if r.Start {
+		config.mu.Unlock()
+		return nil, ErrServerRunning
+	}
+	r.Run()
+	saveConfig()
+	broadcast(broadcastStartRedirect, data, s.id)
+	config.mu.Unlock()
+	return nil, nil
+}
+
+func (s *socket) startCommand(data json.RawMessage) (interface{}, error) {
+	var sc struct {
+		Server string `json:"server"`
+		ID     uint64 `json:"id"`
+	}
+	if err := json.Unmarshal(data, &sc); err != nil {
+		return nil, err
+	}
+	config.mu.Lock()
+	serv, ok := config.Servers[sc.Server]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrNoServer
+	}
+	c, ok := serv.Commands[sc.ID]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrUnknownRedirect
+	}
+	if c.status == 1 {
+		config.mu.Unlock()
+		return nil, ErrServerRunning
+	}
+	c.Run()
+	saveConfig()
+	broadcast(broadcastStartCommand, data, s.id)
+	config.mu.Unlock()
 	return nil, nil
 }
 
