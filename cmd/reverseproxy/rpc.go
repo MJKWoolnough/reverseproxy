@@ -166,10 +166,13 @@ func buildMessage(id int, data json.RawMessage) json.RawMessage {
 }
 
 func broadcast(id int, data json.RawMessage, except uint64) {
-	dat := buildMessage(id, data)
 	connMu.RLock()
+	var dat json.RawMessage
 	for c := range conns {
 		if c.id != except {
+			if len(dat) == 0 {
+				dat = buildMessage(id, data)
+			}
 			go c.SendData(dat)
 		}
 	}
