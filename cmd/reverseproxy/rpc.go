@@ -36,7 +36,7 @@ type socket struct {
 }
 
 var (
-	connMu sync.RWMutex
+	connMu sync.Mutex
 	conns  = make(map[*socket]struct{})
 	nextID uint64
 )
@@ -174,7 +174,7 @@ func buildMessage(id int, data json.RawMessage) json.RawMessage {
 }
 
 func broadcast(id int, data json.RawMessage, except uint64) {
-	connMu.RLock()
+	connMu.Lock()
 	var dat json.RawMessage
 	for c := range conns {
 		if c.id != except {
@@ -184,7 +184,7 @@ func broadcast(id int, data json.RawMessage, except uint64) {
 			go c.SendData(dat)
 		}
 	}
-	connMu.RUnlock()
+	connMu.Unlock()
 }
 
 type nameID struct {
