@@ -185,9 +185,12 @@ func (c *command) Run() error {
 		c.status = 1
 		c.unixCmd = uc
 		go func() {
-			cmd.Wait()
+			err := cmd.Wait()
 			config.mu.Lock()
 			if c.unixCmd == uc {
+				if err != nil {
+					c.err = string(err.(*exec.ExitError).Stderr)
+				}
 				broadcast(broadcastCommandStopped, append(strconv.AppendUint(append(strconv.AppendQuote(json.RawMessage{'['}, c.server.name), ','), c.id, 10), ']'), 0)
 				c.status = 0
 			}
