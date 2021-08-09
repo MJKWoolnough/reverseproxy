@@ -28,6 +28,7 @@ const (
 	broadcastStopRedirect
 	broadcastStopCommand
 	broadcastCommandStopped
+	broadcastCommandError
 )
 
 type socket struct {
@@ -426,9 +427,13 @@ func (s *socket) startCommand(data json.RawMessage) (interface{}, error) {
 		return nil, err
 	}
 	return nil, s.getCommand(sc, func(_ *server, c *command) error {
-		c.Run()
-		broadcast(broadcastStartCommand, data, s.id)
-		return nil
+		err := c.Run()
+		if err != nil {
+			broadcast(broadcastCommandError, append(strconv.AppendQuote(append(data[:len(data)-1], ','), err.Error()), ']'), s.id)
+		} else {
+			broadcast(broadcastStartCommand, data, s.id)
+		}
+		return err
 	})
 }
 
