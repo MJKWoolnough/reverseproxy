@@ -39,7 +39,7 @@ func (s *server) Init(name string) {
 		}
 	}
 	for id, c := range s.Commands {
-		c.Init(s)
+		c.Init(s, id)
 		if id > s.lastCID {
 			s.lastCID = id
 		}
@@ -63,6 +63,7 @@ func (s *server) addCommand(cd commandData) uint64 {
 	s.Commands[id] = &command{
 		commandData:      cd,
 		matchServiceName: makeMatchService(cd.Match),
+		id:               id,
 	}
 	saveConfig()
 	return id
@@ -146,10 +147,12 @@ type command struct {
 	unixCmd          *reverseproxy.UnixCmd
 	err              string
 	server           *server
+	id               uint64
 }
 
-func (c *command) Init(server *server) {
+func (c *command) Init(server *server, id uint64) {
 	c.server = server
+	c.id = id
 	c.matchServiceName = makeMatchService(c.Match)
 	if c.Start {
 		c.Run()
