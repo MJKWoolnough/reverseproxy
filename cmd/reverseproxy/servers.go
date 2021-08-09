@@ -47,7 +47,6 @@ func (s *server) Init(name string) {
 }
 
 func (s *server) addRedirect(rd redirectData) uint64 {
-	config.mu.Lock()
 	s.lastRID++
 	id := s.lastRID
 	s.Redirects[id] = &redirect{
@@ -55,12 +54,10 @@ func (s *server) addRedirect(rd redirectData) uint64 {
 		matchServiceName: makeMatchService(rd.Match),
 	}
 	saveConfig()
-	config.mu.Unlock()
 	return id
 }
 
 func (s *server) addCommand(cd commandData) uint64 {
-	config.mu.Lock()
 	s.lastCID++
 	id := s.lastCID
 	s.Commands[id] = &command{
@@ -68,7 +65,6 @@ func (s *server) addCommand(cd commandData) uint64 {
 		matchServiceName: makeMatchService(cd.Match),
 	}
 	saveConfig()
-	config.mu.Unlock()
 	return id
 }
 
@@ -103,7 +99,6 @@ func (r *redirect) Init() {
 }
 
 func (r *redirect) Run() {
-	config.mu.Lock()
 	if r.From > 0 && r.To != "" && r.port == nil {
 		addr, err := net.ResolveTCPAddr("tcp", r.To)
 		if err != nil {
@@ -115,15 +110,12 @@ func (r *redirect) Run() {
 			saveConfig()
 		}
 	}
-	config.mu.Unlock()
 }
 
 func (r *redirect) Stop() {
-	config.mu.Lock()
 	r.Start = false
 	r.Shutdown()
 	saveConfig()
-	config.mu.Unlock()
 }
 
 func (r *redirect) Shutdown() {
@@ -165,7 +157,6 @@ func (c *command) Init(server *server) {
 }
 
 func (c *command) Run() {
-	config.mu.Lock()
 	if c.unixCmd == nil {
 		cmd := exec.Command(c.Exe, c.Params...)
 		cmd.Env = make([]string, 0, len(c.Env))
@@ -199,15 +190,12 @@ func (c *command) Run() {
 			saveConfig()
 		}
 	}
-	config.mu.Unlock()
 }
 
 func (c *command) Stop() {
-	config.mu.Lock()
 	c.Start = false
 	c.Shutdown()
 	saveConfig()
-	config.mu.Unlock()
 }
 
 func (c *command) Shutdown() {
