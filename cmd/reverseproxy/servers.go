@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"net"
 	"os/exec"
+	"strconv"
 	"syscall"
 
 	"vimagination.zapto.org/reverseproxy"
@@ -185,6 +187,7 @@ func (c *command) Run() {
 				cmd.Wait()
 				config.mu.Lock()
 				if c.unixCmd == uc {
+					broadcast(broadcastCommandStopped, append(strconv.AppendUint(append(strconv.AppendQuote(json.RawMessage{'['}, c.server.name), ','), c.id, 10), ']'), 0)
 					c.status = 0
 				}
 				config.mu.Unlock()

@@ -27,6 +27,7 @@ const (
 	broadcastStartCommand
 	broadcastStopRedirect
 	broadcastStopCommand
+	broadcastCommandStopped
 )
 
 type socket struct {
