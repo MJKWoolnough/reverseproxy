@@ -161,7 +161,7 @@ func (c *command) Init(server *server, id uint64) {
 	}
 }
 
-func (c *command) Run() {
+func (c *command) Run() error {
 	if c.unixCmd == nil {
 		cmd := exec.Command(c.Exe, c.Params...)
 		cmd.Env = make([]string, 0, len(c.Env))
@@ -180,22 +180,23 @@ func (c *command) Run() {
 		if err != nil {
 			c.err = err.Error()
 			c.status = 0
-		} else {
-			c.status = 1
-			c.unixCmd = uc
-			go func() {
-				cmd.Wait()
-				config.mu.Lock()
-				if c.unixCmd == uc {
-					broadcast(broadcastCommandStopped, append(strconv.AppendUint(append(strconv.AppendQuote(json.RawMessage{'['}, c.server.name), ','), c.id, 10), ']'), 0)
-					c.status = 0
-				}
-				config.mu.Unlock()
-			}()
-			c.Start = true
-			saveConfig()
+			return err
 		}
+		c.status = 1
+		c.unixCmd = uc
+		go func() {
+			cmd.Wait()
+			config.mu.Lock()
+			if c.unixCmd == uc {
+				broadcast(broadcastCommandStopped, append(strconv.AppendUint(append(strconv.AppendQuote(json.RawMessage{'['}, c.server.name), ','), c.id, 10), ']'), 0)
+				c.status = 0
+			}
+			config.mu.Unlock()
+		}()
+		c.Start = true
+		saveConfig()
 	}
+	return nil
 }
 
 func (c *command) Stop() {
