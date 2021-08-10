@@ -217,8 +217,8 @@ func (c *command) Shutdown() {
 }
 
 type match struct {
-	IsSuffix bool
-	Name     string
+	IsSuffix bool   `json:"isSuffix"`
+	Name     string `json:"name"`
 }
 
 func (m match) makeMatchService() reverseproxy.MatchServiceName {
