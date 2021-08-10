@@ -20,19 +20,19 @@ import (
 type hash [sha256.Size]byte
 
 func (h *hash) MarshalJSON() ([]byte, error) {
-	r := make([]byte, sha256.Size<<1+2)
+	r := make([]byte, (sha256.Size<<1)+2)
 	r[0] = '"'
-	r[sha256.Size<<1+1] = '"'
+	r[(sha256.Size<<1)+1] = '"'
 	for n, b := range *h {
 		if t := b >> 4; t > 9 {
-			r[n<<1] = 'A' - 10 + t
+			r[(n<<1)+1] = 'A' - 10 + t
 		} else {
-			r[n<<1] = '0' + t
+			r[(n<<1)+1] = '0' + t
 		}
 		if t := b & 15; t > 9 {
-			r[n<<1+1] = 'A' - 10 + t
+			r[(n<<1)+2] = 'A' - 10 + t
 		} else {
-			r[n<<1+1] = '0' + t
+			r[(n<<1)+2] = '0' + t
 		}
 	}
 	return r, nil
