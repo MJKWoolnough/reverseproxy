@@ -13,13 +13,13 @@ type Match = {
 	name:     string;
 };
 
-type RedirectData = {
+export type RedirectData = {
 	from:  string;
 	to:    string;
 	match: Match[];
 };
 
-type CommandData = {
+export type CommandData = {
 	exe:    string;
 	params: string[];
 	env:    Record<string, string>;
@@ -30,7 +30,7 @@ type CommandData = {
 	};
 };
 
-type NameID = {
+export type NameID = {
 	Server: string;
 	ID:     Uint;
 }
