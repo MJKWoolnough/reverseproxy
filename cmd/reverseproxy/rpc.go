@@ -100,6 +100,8 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 		return s.stopRedirect(data)
 	case "stopCommand":
 		return s.stopCommand(data)
+	case "getCommandPorts":
+		return s.getCommandPorts(data)
 	}
 	return nil, nil
 }
@@ -493,6 +495,19 @@ func (s *socket) stopCommand(data json.RawMessage) (interface{}, error) {
 	saveConfig()
 	config.mu.Unlock()
 	return nil, nil
+}
+
+func (s *socket) getCommandPorts(data json.RawMessage) (interface{}, error) {
+	var cp nameID
+	if err := json.Unmarshal(data, &cp); err != nil {
+		return nil, err
+	}
+	var ports []uint16
+	err := s.getCommand(cp, func(_ *server, c *command) error {
+		ports = c.unixCmd.Status().Ports
+		return nil
+	})
+	return ports, err
 }
 
 var (
