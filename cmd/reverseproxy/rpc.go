@@ -429,7 +429,7 @@ func (s *socket) startCommand(data json.RawMessage) (interface{}, error) {
 	return nil, s.getCommand(sc, func(_ *server, c *command) error {
 		err := c.Run()
 		if err != nil {
-			broadcast(broadcastCommandError, append(strconv.AppendQuote(append(data[:len(data)-1], ','), err.Error()), ']'), s.id)
+			broadcast(broadcastCommandError, append(strconv.AppendQuote(append(data[:len(data)-1], ',', '"', 'e', 'r', 'r', '"', ':'), err.Error()), '}'), s.id)
 		} else {
 			broadcast(broadcastStartCommand, data, s.id)
 		}
