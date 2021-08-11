@@ -17,16 +17,14 @@ export type MatchData = {
 	name:     string;
 };
 
-export type RedirectData = {
-	id:     Uint;
+export type RedirectData = NameID & {
 	from:   Uint;
 	to:     string;
 	active: boolean;
 	match:  MatchData[];
 };
 
-export type CommandData = {
-	id:     Uint;
+export type CommandData = NameID & {
 	exe:    string;
 	params: string[];
 	env:    Record<string, string>;
@@ -47,10 +45,10 @@ export type RPC = {
 	waitAdd:            () => Subscription<string>;
 	waitRename:         () => Subscription<[string, string]>;
 	waitRemove:         () => Subscription<string>;
-	waitAddRedirect:    () => Subscription<RedirectData & NameID>;
-	waitAddCommand:     () => Subscription<CommandData & NameID>;
-	waitModifyRedirect: () => Subscription<RedirectData & NameID>;
-	waitModifyCommand:  () => Subscription<CommandData & NameID>;
+	waitAddRedirect:    () => Subscription<RedirectData>;
+	waitAddCommand:     () => Subscription<CommandData>;
+	waitModifyRedirect: () => Subscription<RedirectData>;
+	waitModifyCommand:  () => Subscription<CommandData>;
 	waitRemoveRedirect: () => Subscription<NameID>;
 	waitRemoveCommand:  () => Subscription<NameID>;
 	waitStartRedirect:  () => Subscription<NameID>;
@@ -65,8 +63,8 @@ export type RPC = {
 	remove:          (name: string)                     => Promise<void>;
 	addRedirect:     (data: RedirectData)               => Promise<Uint>;
 	addCommand:      (data: CommandData)                => Promise<Uint>;
-	modifyRedirect:  (data: RedirectData | NameID)      => Promise<void>;
-	modifyCommand:   (data: CommandData | NameID)       => Promise<void>;
+	modifyRedirect:  (data: RedirectData)               => Promise<void>;
+	modifyCommand:   (data: CommandData)                => Promise<void>;
 	removeRedirect:  (redirect: NameID)                 => Promise<void>;
 	removeCommand:   (command: NameID)                  => Promise<void>;
 	startRedirect:   (redirect: NameID)                 => Promise<void>;
