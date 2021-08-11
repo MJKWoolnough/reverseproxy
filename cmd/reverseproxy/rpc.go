@@ -108,7 +108,7 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 
 func buildInitialMessage() json.RawMessage {
 	config.mu.RLock()
-	buf := memio.Buffer{'{'}
+	buf := memio.Buffer{'['}
 	f := true
 	for name, server := range config.Servers {
 		if f {
@@ -116,7 +116,7 @@ func buildInitialMessage() json.RawMessage {
 		} else {
 			buf = append(buf, ',')
 		}
-		fmt.Fprintf(&buf, "%q:[{", name)
+		fmt.Fprintf(&buf, "[%q,", name)
 		first := true
 		for id, redirect := range server.Redirects {
 			if first {
@@ -124,9 +124,9 @@ func buildInitialMessage() json.RawMessage {
 			} else {
 				buf = append(buf, ',')
 			}
-			fmt.Fprintf(&buf, "\"%d\":[%d,%q,%t,%q]", id, redirect.From, redirect.To, redirect.Start, redirect.err)
+			fmt.Fprintf(&buf, "[%d,%d,%q,%t,%q]", id, redirect.From, redirect.To, redirect.Start, redirect.err)
 		}
-		buf = append(buf, '}', ',', '{')
+		buf = append(buf, ']', ',', '[')
 		first = true
 		for id, cmd := range server.Commands {
 			if first {
@@ -134,7 +134,7 @@ func buildInitialMessage() json.RawMessage {
 			} else {
 				buf = append(buf, ',')
 			}
-			fmt.Fprintf(&buf, "\"%d\":[%s, [", id, cmd.Exe)
+			fmt.Fprintf(&buf, "[%d,%s,[", id, cmd.Exe)
 			for n, param := range cmd.Params {
 				if n > 0 {
 					buf = append(buf, ',')
@@ -153,9 +153,9 @@ func buildInitialMessage() json.RawMessage {
 			}
 			fmt.Fprintf(&buf, "},%d,%q]", cmd.status, cmd.err)
 		}
-		buf = append(buf, '}', ']')
+		buf = append(buf, ']')
 	}
-	buf = append(buf, '}')
+	buf = append(buf, ']')
 	config.mu.RUnlock()
 	return buildMessage(-1, json.RawMessage(buf))
 }
