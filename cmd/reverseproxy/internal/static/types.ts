@@ -2,11 +2,13 @@ import type {Subscription} from './lib/inter.js';
 
 export type Uint = number;
 
-type Redirect = [string, boolean, string];
+export type Redirect = [Uint, Uint, string, boolean, string];
 
-type Command = [string, string[], Record<string, string>, Uint, string];
+export type Command = [Uint, string, string[], Record<string, string>, Uint, string];
 
-type List = Record<string, [Record<Uint, Redirect>, Record<Uint, Command>]>;
+export type ListItem = [string, Redirect[], Command[]]
+
+type List = ListItem[];
 
 type Match = {
 	isSuffix: boolean;
@@ -14,7 +16,7 @@ type Match = {
 };
 
 export type RedirectData = {
-	from:  string;
+	from:  Uint;
 	to:    string;
 	match: Match[];
 };
