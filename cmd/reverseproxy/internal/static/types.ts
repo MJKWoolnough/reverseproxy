@@ -2,15 +2,17 @@ import type {Subscription} from './lib/inter.js';
 
 export type Uint = number;
 
-export type Redirect = [Uint, Uint, string, boolean, string];
+type Match = [boolean, string];
 
-export type Command = [Uint, string, string[], Record<string, string>, Uint, string];
+export type Redirect = [Uint, Uint, string, boolean, string, ...Match[]];
+
+export type Command = [Uint, string, string[], Record<string, string>, Uint, string, ...Match[]];
 
 export type ListItem = [string, Redirect[], Command[]]
 
 type List = ListItem[];
 
-type Match = {
+type MatchData = {
 	isSuffix: boolean;
 	name:     string;
 };
@@ -18,14 +20,14 @@ type Match = {
 export type RedirectData = {
 	from:  Uint;
 	to:    string;
-	match: Match[];
+	match: MatchData[];
 };
 
 export type CommandData = {
 	exe:    string;
 	params: string[];
 	env:    Record<string, string>;
-	match:  Match[];
+	match:  MatchData[];
 	user?:  {
 		uid: Uint;
 		gid: Uint;
