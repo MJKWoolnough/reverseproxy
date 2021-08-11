@@ -124,7 +124,14 @@ func buildInitialMessage() json.RawMessage {
 			} else {
 				buf = append(buf, ',')
 			}
-			fmt.Fprintf(&buf, "[%d,%d,%q,%t,%q]", id, redirect.From, redirect.To, redirect.Start, redirect.err)
+			fmt.Fprintf(&buf, "[%d,%d,%q,%t,%q,", id, redirect.From, redirect.To, redirect.Start, redirect.err)
+			for n, m := range redirect.Match {
+				if n > 0 {
+					buf = append(buf, ',')
+				}
+				fmt.Fprintf(&buf, "[%t,%q]", m.IsSuffix, m.Name)
+			}
+			buf = append(buf, ']')
 		}
 		buf = append(buf, ']', ',', '[')
 		first = true
@@ -151,7 +158,14 @@ func buildInitialMessage() json.RawMessage {
 				}
 				fmt.Fprintf(&buf, "%q:%q", key, value)
 			}
-			fmt.Fprintf(&buf, "},%d,%q]", cmd.status, cmd.err)
+			fmt.Fprintf(&buf, "},%d,%q", cmd.status, cmd.err)
+			for n, m := range cmd.Match {
+				if n > 0 {
+					buf = append(buf, ',')
+				}
+				fmt.Fprintf(&buf, "[%t,%q]", m.IsSuffix, m.Name)
+			}
+			buf = append(buf, ']')
 		}
 		buf = append(buf, ']')
 	}
