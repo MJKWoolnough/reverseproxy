@@ -38,8 +38,8 @@ export type CommandData = {
 };
 
 export type NameID = {
-	Server: string;
-	ID:     Uint;
+	server: string;
+	id:     Uint;
 }
 
 export type RPC = {
