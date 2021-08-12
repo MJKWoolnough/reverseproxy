@@ -25,7 +25,14 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 		      server: Server = {
 			get name(){return name},
 			set name(n: string){nameDiv.innerText = name = n},
-			node: li([nameDiv, redirects, commands]),
+			node: li([
+				nameDiv,
+				button({"onclick": () => {
+
+				}}, "+"),
+				redirects,
+				commands
+			]),
 			redirects: new SortNode<Redirect & {node: HTMLLIElement}>(redirects, rcSort),
 			commands: new SortNode<Command & {node: HTMLLIElement}>(commands, rcSort),
 			redirectMap: new Map<Uint, Redirect>(rs.map(([id, from, to, active, ...match]) => ([id, {
