@@ -1,6 +1,6 @@
 import type {Uint, Command, Match, Redirect, ListItem} from './types.js';
 import {createHTML, clearElement} from './lib/dom.js';
-import {button, ul, li} from './lib/html.js';
+import {button, div, li, ul} from './lib/html.js';
 import {stringSort, SortNode} from './lib/ordered.js';
 import RPC from './rpc.js';
 
@@ -19,13 +19,17 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 	const l = new SortNode(ul(), (a: Server, b: Server) => stringSort(a.name, b.name)),
 	      rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	      addToList = ([name, rs = [], cs = []]: ListItem) => {
-		const server: Server = {
-			name,
-			node: li(),
-			redirects: new SortNode<Redirect & {node: HTMLLIElement}>(ul(), rcSort),
-			commands: new SortNode<Command & {node: HTMLLIElement}>(ul(), rcSort),
+		const nameDiv = div(name),
+		      redirects = ul(),
+		      commands = ul(),
+		      server: Server = {
+			get name(){return name},
+			set name(n: string){nameDiv.innerText = name = n},
+			node: li([nameDiv, redirects, commands]),
+			redirects: new SortNode<Redirect & {node: HTMLLIElement}>(redirects, rcSort),
+			commands: new SortNode<Command & {node: HTMLLIElement}>(commands, rcSort),
 			redirectMap: new Map<Uint, Redirect>(rs.map(([id, from, to, active, ...match]) => ([id, {
-				get server() {return server.name;},
+				get server() {return name;},
 				id,
 				from,
 				to,
