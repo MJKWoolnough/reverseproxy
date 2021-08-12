@@ -4,11 +4,7 @@ export type Uint = number;
 
 export type Match = [boolean, string];
 
-type Redirect = [Uint, Uint, string, boolean, string, ...Match[]];
-
-type Command = [Uint, string, string[], Record<string, string>, Uint, string, ...Match[]];
-
-export type ListItem = [string, Redirect[], Command[]]
+export type ListItem = [string, [Uint, Uint, string, boolean, string, ...Match[]][], [Uint, string, string[], Record<string, string>, Uint, string, ...Match[]][]]
 
 type List = ListItem[];
 
@@ -17,14 +13,14 @@ export type MatchData = {
 	name:     string;
 };
 
-export type RedirectData = NameID & {
+export type Redirect = NameID & {
 	from:   Uint;
 	to:     string;
 	active: boolean;
 	match:  MatchData[];
 };
 
-export type CommandData = NameID & {
+export type Command = NameID & {
 	exe:    string;
 	params: string[];
 	env:    Record<string, string>;
@@ -45,10 +41,10 @@ export type RPC = {
 	waitAdd:            () => Subscription<string>;
 	waitRename:         () => Subscription<[string, string]>;
 	waitRemove:         () => Subscription<string>;
-	waitAddRedirect:    () => Subscription<RedirectData>;
-	waitAddCommand:     () => Subscription<CommandData>;
-	waitModifyRedirect: () => Subscription<RedirectData>;
-	waitModifyCommand:  () => Subscription<CommandData>;
+	waitAddRedirect:    () => Subscription<Redirect>;
+	waitAddCommand:     () => Subscription<Command>;
+	waitModifyRedirect: () => Subscription<Redirect>;
+	waitModifyCommand:  () => Subscription<Command>;
 	waitRemoveRedirect: () => Subscription<NameID>;
 	waitRemoveCommand:  () => Subscription<NameID>;
 	waitStartRedirect:  () => Subscription<NameID>;
@@ -58,18 +54,18 @@ export type RPC = {
 	waitCommandStopped: () => Subscription<[string, Uint]>;
 	waitCommandError:   () => Subscription<NameID & {err: string}>;
 
-	add:             (name: string)                     => Promise<Uint>;
-	rename:          (oldName: string, newName: string) => Promise<void>;
-	remove:          (name: string)                     => Promise<void>;
-	addRedirect:     (data: RedirectData)               => Promise<Uint>;
-	addCommand:      (data: CommandData)                => Promise<Uint>;
-	modifyRedirect:  (data: RedirectData)               => Promise<void>;
-	modifyCommand:   (data: CommandData)                => Promise<void>;
-	removeRedirect:  (redirect: NameID)                 => Promise<void>;
-	removeCommand:   (command: NameID)                  => Promise<void>;
-	startRedirect:   (redirect: NameID)                 => Promise<void>;
-	startCommand:    (command: NameID)                  => Promise<void>;
-	stopRedirect:    (redirect: NameID)                 => Promise<void>;
-	stopCommand:     (command: NameID)                  => Promise<void>;
-	getCommandPorts: (command: NameID)                  => Promise<Uint[]>;
+	add:             (name: string)           => Promise<Uint>;
+	rename:          (data: [string, string]) => Promise<void>;
+	remove:          (name: string)           => Promise<void>;
+	addRedirect:     (data: Redirect)         => Promise<Uint>;
+	addCommand:      (data: Command)          => Promise<Uint>;
+	modifyRedirect:  (data: Redirect)         => Promise<void>;
+	modifyCommand:   (data: Command)          => Promise<void>;
+	removeRedirect:  (redirect: NameID)       => Promise<void>;
+	removeCommand:   (command: NameID)        => Promise<void>;
+	startRedirect:   (redirect: NameID)       => Promise<void>;
+	startCommand:    (command: NameID)        => Promise<void>;
+	stopRedirect:    (redirect: NameID)       => Promise<void>;
+	stopCommand:     (command: NameID)        => Promise<void>;
+	getCommandPorts: (command: NameID)        => Promise<Uint[]>;
 };
