@@ -57,14 +57,17 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 				return r;
 			})),
 			commands: new SortNode<Command & {node: HTMLLIElement}>(commands, rcSort, cs.map(([id, exe, params, env, ...match]) => {
-				const c = {
+				const exeSpan = span(exe + " " + params.join(" ")),
+				      c = {
 					get server() {return server.name;},
 					id,
-					exe,
-					params,
+					get exe() {return exe},
+					set exe(e: string) {exeSpan.innerText = (exe = e) + " " + params.join(" ")},
+					get params() {return params},
+					set params(p: string[]) {exeSpan.innerText = exe + " " + (params = p).join(" ")},
 					env,
 					match: (match as Match[]).map(([isSuffix, name]) => ({isSuffix, name})),
-					node: li()
+					node: li(exeSpan)
 				};
 				commandMap.set(id, c);
 				return c;
