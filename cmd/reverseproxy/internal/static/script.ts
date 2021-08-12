@@ -1,6 +1,6 @@
 import type {Uint, Command, Match, Redirect, ListItem} from './types.js';
 import {createHTML, clearElement} from './lib/dom.js';
-import {button, div, li, ul} from './lib/html.js';
+import {button, div, li, span, ul} from './lib/html.js';
 import {stringSort, SortNode} from './lib/ordered.js';
 import RPC from './rpc.js';
 
@@ -36,14 +36,22 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 				commands
 			]),
 			redirects: new SortNode<Redirect & {node: HTMLLIElement}>(redirects, rcSort, rs.map(([id, from, to, active, _, ...match]) => {
-				const r = {
+				const fromSpan = span(from + ""),
+				      toSpan = span(to),
+				      r = {
 					get server() {return name},
 					id,
-					from,
-					to,
-					active,
+					get from() {return from},
+					set from(f: Uint) {fromSpan.innerText = (from = f) + ""},
+					get to() {return to},
+					set to(t: string) {toSpan.innerText = to = t},
+					get active() {return active},
+					set active(a: boolean) {active = a},
 					match: (match as Match[]).map(([isSuffix, name]) => ({isSuffix, name})),
-					node: li()
+					node: li([
+						fromSpan,
+						toSpan
+					])
 				};
 				redirectMap.set(id, r);
 				return r;
