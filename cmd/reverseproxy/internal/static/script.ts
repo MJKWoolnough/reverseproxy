@@ -17,12 +17,13 @@ type Server = {
 
 pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.location.host}/socket`).then(rpc => {rpc.waitList().then(list => {
 	const l = new SortNode(ul(), (a: Server, b: Server) => stringSort(a.name, b.name)),
+	      rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	      addToList = ([name, rs = [], cs = []]: ListItem) => {
 		const server: Server = {
 			name,
 			node: li(),
-			redirects: new SortNode<Redirect & {node: HTMLLIElement}>(ul()),
-			commands: new SortNode<Command & {node: HTMLLIElement}>(ul()),
+			redirects: new SortNode<Redirect & {node: HTMLLIElement}>(ul(), rcSort),
+			commands: new SortNode<Command & {node: HTMLLIElement}>(ul(), rcSort),
 			redirectMap: new Map<Uint, Redirect>(rs.map(([id, from, to, active, ...match]) => ([id, {
 				get server() {return server.name;},
 				id,
