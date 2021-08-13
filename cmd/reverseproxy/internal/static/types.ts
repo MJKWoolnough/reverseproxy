@@ -2,13 +2,13 @@ import type {Subscription} from './lib/inter.js';
 
 export type Uint = number;
 
-export type Match = [boolean, string];
+export type MatchData = [boolean, string];
 
-export type ListItem = [string, [Uint, Uint, string, boolean, string, ...Match[]][], [Uint, string, string[], Record<string, string>, Uint, string, ...Match[]][]]
+export type ListItem = [string, [Uint, Uint, string, boolean, string, ...MatchData[]][], [Uint, string, string[], Record<string, string>, Uint, string, ...MatchData[]][]]
 
 type List = ListItem[];
 
-export type MatchData = {
+export type Match = {
 	isSuffix: boolean;
 	name:     string;
 };
