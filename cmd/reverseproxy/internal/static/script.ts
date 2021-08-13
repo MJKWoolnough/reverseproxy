@@ -10,8 +10,11 @@ declare const pageLoad: Promise<void>;
 
 const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       matchData2Match = (md: MatchData[]) => md.map(([isSuffix, name]) => ({isSuffix, name})),
-      add2Map = <K, T>(m: Map<K, T>, id: K, item: T) => {
+      add2Map = <K, T>(m: Map<K, T>, id: K, item: T, list?: T[]) => {
 	      m.set(id, item);
+	      if (list) {
+			list.push(item);
+	      }
 	      return item;
       },
       noEnum = {"enumerable": false},
@@ -116,7 +119,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 	      s = clearElement(document.body).appendChild(shell([
 		button({"onclick": () => s.prompt("Server Name", "Please enter a name for the new server", "").then(name => {
 			if (name) {
-				rpc.add(name).catch(err => s.alert("Error", err)).then(() => add2Map(servers, name, new Server([name, [], []])));
+				rpc.add(name).catch(err => s.alert("Error", err)).then(() => add2Map(servers, name, new Server([name, [], []]), l));
 			}
 		})}, "New Server"),
 		l.node
