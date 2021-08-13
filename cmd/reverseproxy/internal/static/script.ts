@@ -17,8 +17,8 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 class Redirect {
 	server: Server;
 	id: Uint;
-	_from: Uint;
-	_to: string;
+	from: Uint;
+	to: string;
 	active: boolean;
 	match: Match[];
 	node: HTMLLIElement;
@@ -27,8 +27,8 @@ class Redirect {
 	constructor(server: Server, id: Uint, from: Uint, to: string, active: boolean, match: Match[]) {
 		this.server = server;
 		this.id = id;
-		this._from = from;
-		this._to = to;
+		this.from = from;
+		this.to = to;
 		this.active = active;
 		this.match = match;
 		this.fromSpan = span(from + ""),
@@ -38,19 +38,19 @@ class Redirect {
 			this.toSpan
 		]);
 	}
-	set from(f: Uint) {
-		this.fromSpan.innerText = (this._from = f) + "";
+	setFrom(f: Uint) {
+		this.fromSpan.innerText = (this.from = f) + "";
 	}
-	set to(t: string) {
-		this.toSpan.innerText = this._to = t;
+	setTo(t: string) {
+		this.toSpan.innerText = this.to = t;
 	}
 }
 
 class Command {
 	server: Server;
 	id: Uint;
-	_exe: string;
-	_params: string[];
+	exe: string;
+	params: string[];
 	env: Record<string, string>;
 	match: Match[];
 	node: HTMLLIElement;
@@ -58,18 +58,18 @@ class Command {
 	constructor(server: Server, id: Uint, exe: string, params: string[], env: Record<string, string>, match: Match[]) {
 		this.server = server;
 		this.id = id;
-		this._exe = exe;
-		this._params = params;
+		this.exe = exe;
+		this.params = params;
 		this.env = env;
 		this.match = match;
 		this.exeSpan = span(exe + " " + params.join(" "));
 		this.node = li(this.exeSpan);
 	}
-	set exe (e: string) {
-		this.exeSpan.innerText = (this.exe = e) + " " + this._params.join(" ");
+	setExe (e: string) {
+		this.exeSpan.innerText = (this.exe = e) + " " + this.params.join(" ");
 	}
-	set params (p: string[]) {
-		this.exeSpan.innerText = this.exe + " " + (this._params = p).join(" ");
+	setParams (p: string[]) {
+		this.exeSpan.innerText = this.exe + " " + (this.params = p).join(" ");
 	}
 }
 
