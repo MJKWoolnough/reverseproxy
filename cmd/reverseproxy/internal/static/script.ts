@@ -12,6 +12,18 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       add2Map = <K, T>(m: Map<K, T>, id: K, item: T) => {
 	      m.set(id, item);
 	      return item;
+      },
+      noEnum = {"enumerable": false},
+      redirectProps = {
+	"server": noEnum,
+	"node": noEnum,
+	"fromSpan": noEnum,
+	"toSpan": noEnum
+      },
+      commandProps = {
+	"server": noEnum,
+	"node": noEnum,
+	"exeSpan": noEnum
       };
 
 class Redirect {
@@ -37,6 +49,7 @@ class Redirect {
 			this.fromSpan,
 			this.toSpan
 		]);
+		Object.defineProperties(this, redirectProps);
 	}
 	setFrom(f: Uint) {
 		this.fromSpan.innerText = (this.from = f) + "";
@@ -64,6 +77,7 @@ class Command {
 		this.match = match;
 		this.exeSpan = span(exe + " " + params.join(" "));
 		this.node = li(this.exeSpan);
+		Object.defineProperties(this, commandProps);
 	}
 	setExe (e: string) {
 		this.exeSpan.innerText = (this.exe = e) + " " + this.params.join(" ");
