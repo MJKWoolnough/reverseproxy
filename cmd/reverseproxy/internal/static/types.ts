@@ -54,7 +54,7 @@ export type RPC = {
 	waitCommandStopped: () => Subscription<[string, Uint]>;
 	waitCommandError:   () => Subscription<NameID & {err: string}>;
 
-	add:             (name: string)           => Promise<Uint>;
+	add:             (name: string)           => Promise<void>;
 	rename:          (data: [string, string]) => Promise<void>;
 	remove:          (name: string)           => Promise<void>;
 	addRedirect:     (data: Redirect)         => Promise<Uint>;
