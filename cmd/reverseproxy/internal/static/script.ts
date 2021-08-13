@@ -124,4 +124,5 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 		})}, "New Server"),
 		l.node
 	      ]));
+	rpc.waitAdd().then(name => add2Map(servers, name, new Server([name, [], []]), l));
 })}));
