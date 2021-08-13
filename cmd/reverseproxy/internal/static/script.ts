@@ -10,7 +10,7 @@ declare const pageLoad: Promise<void>;
 
 const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       matchData2Match = (md: MatchData[]) => md.map(([isSuffix, name]) => ({isSuffix, name})),
-      add2Map = <K, T>(m: Map<K, T>, id: K, item: T, list?: T[]) => {
+      add2All = <K, T>(id: K, item: T, m: Map<K, T>, list?: T[]) => {
 	      m.set(id, item);
 	      if (list) {
 			list.push(item);
@@ -99,8 +99,8 @@ class Server {
 	nameDiv: HTMLDivElement;
 	constructor([name, rs, cs]: ListItem) {
 		this.name = name;
-		this.redirects = new SortNode<Redirect & {node: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => add2Map(this.redirectMap, id, new Redirect(this, id, from, to, active, matchData2Match(match)))));
-		this.commands = new SortNode<Command & {node: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, _a, _b, ...match]) => add2Map(this.commandMap, id, new Command(this, id, exe, params, env, matchData2Match(match)))));
+		this.redirects = new SortNode<Redirect & {node: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => add2All(id, new Redirect(this, id, from, to, active, matchData2Match(match)), this.redirectMap)));
+		this.commands = new SortNode<Command & {node: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, _a, _b, ...match]) => add2All(id, new Command(this, id, exe, params, env, matchData2Match(match)), this.commandMap)));
 		this.nameDiv = div(name);
 		this.node = li([
 			this.nameDiv,
@@ -115,14 +115,14 @@ class Server {
 
 pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.location.host}/socket`).then(rpc => {rpc.waitList().then(list => {
 	const servers = new Map<string, Server>(),
-	      l = new SortNode(ul(), (a: Server, b: Server) => stringSort(a.name, b.name), list.map(i => add2Map(servers, i[0], new Server(i)))),
+	      l = new SortNode(ul(), (a: Server, b: Server) => stringSort(a.name, b.name), list.map(i => add2All(i[0], new Server(i), servers))),
 	      s = clearElement(document.body).appendChild(shell([
 		button({"onclick": () => s.prompt("Server Name", "Please enter a name for the new server", "").then(name => {
 			if (name) {
-				rpc.add(name).catch(err => s.alert("Error", err)).then(() => add2Map(servers, name, new Server([name, [], []]), l));
+				rpc.add(name).catch(err => s.alert("Error", err)).then(() => add2All(name, new Server([name, [], []]), servers, l));
 			}
 		})}, "New Server"),
 		l.node
 	      ]));
-	rpc.waitAdd().then(name => add2Map(servers, name, new Server([name, [], []]), l));
+	rpc.waitAdd().then(name => add2All(name, new Server([name, [], []]), servers, l));
 })}));
