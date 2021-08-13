@@ -1,7 +1,8 @@
 import type {Uint, Match, MatchData, ListItem} from './types.js';
-import {createHTML, clearElement} from './lib/dom.js';
+import {clearElement} from './lib/dom.js';
 import {button, div, li, span, ul} from './lib/html.js';
 import {stringSort, SortNode} from './lib/ordered.js';
+import {shell} from './lib/windows.js';
 import RPC from './rpc.js';
 
 declare const pageLoad: Promise<void>;
@@ -93,7 +94,7 @@ class Server {
 	commandMap = new Map<Uint, Command>();
 	node: HTMLLIElement;
 	nameDiv: HTMLDivElement;
-	constructor([name, rs = [], cs = []]: ListItem) {
+	constructor([name, rs, cs]: ListItem) {
 		this.name = name;
 		this.redirects = new SortNode<Redirect & {node: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => add2Map(this.redirectMap, id, new Redirect(this, id, from, to, active, matchData2Match(match)))));
 		this.commands = new SortNode<Command & {node: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, _a, _b, ...match]) => add2Map(this.commandMap, id, new Command(this, id, exe, params, env, matchData2Match(match)))));
@@ -111,11 +112,13 @@ class Server {
 
 pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.location.host}/socket`).then(rpc => {rpc.waitList().then(list => {
 	const servers = new Map<string, Server>(),
-	      l = new SortNode(ul(), (a: Server, b: Server) => stringSort(a.name, b.name), list.map(i => add2Map(servers, i[0], new Server(i))));
-	createHTML(clearElement(document.body), [
-		button({"onclick": () => {
-
-		}}, "New Server"),
+	      l = new SortNode(ul(), (a: Server, b: Server) => stringSort(a.name, b.name), list.map(i => add2Map(servers, i[0], new Server(i)))),
+	      s = clearElement(document.body).appendChild(shell([
+		button({"onclick": () => s.prompt("Server Name", "Please enter a name for the new server", "").then(name => {
+			if (name) {
+				rpc.add(name).catch(err => s.alert("Error", err)).then(() => add2Map(servers, name, new Server([name, [], []])));
+			}
+		})}, "New Server"),
 		l.node
-	]);
+	      ]));
 })}));
