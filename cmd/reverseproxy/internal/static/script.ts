@@ -27,7 +27,6 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       };
 
 class Redirect {
-	server: Server;
 	id: Uint;
 	from: Uint;
 	to: string;
@@ -37,7 +36,6 @@ class Redirect {
 	fromSpan: HTMLSpanElement;
 	toSpan: HTMLSpanElement;
 	constructor(server: Server, id: Uint, from: Uint, to: string, active: boolean, match: Match[]) {
-		this.server = server;
 		this.id = id;
 		this.from = from;
 		this.to = to;
@@ -50,6 +48,7 @@ class Redirect {
 			this.toSpan
 		]);
 		Object.defineProperties(this, redirectProps);
+		Object.defineProperty(this, "name", {"get": () => server.name, "enumerable": true});
 	}
 	setFrom(f: Uint) {
 		this.fromSpan.innerText = (this.from = f) + "";
@@ -60,7 +59,6 @@ class Redirect {
 }
 
 class Command {
-	server: Server;
 	id: Uint;
 	exe: string;
 	params: string[];
@@ -69,7 +67,6 @@ class Command {
 	node: HTMLLIElement;
 	exeSpan: HTMLSpanElement;
 	constructor(server: Server, id: Uint, exe: string, params: string[], env: Record<string, string>, match: Match[]) {
-		this.server = server;
 		this.id = id;
 		this.exe = exe;
 		this.params = params;
@@ -78,6 +75,7 @@ class Command {
 		this.exeSpan = span(exe + " " + params.join(" "));
 		this.node = li(this.exeSpan);
 		Object.defineProperties(this, commandProps);
+		Object.defineProperty(this, "name", {"get": () => server.name, "enumerable": true});
 	}
 	setExe (e: string) {
 		this.exeSpan.innerText = (this.exe = e) + " " + this.params.join(" ");
