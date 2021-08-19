@@ -2,11 +2,10 @@ import type {Uint, Match, MatchData, ListItem} from './types.js';
 import {clearElement} from './lib/dom.js';
 import {button, div, li, span, ul} from './lib/html.js';
 import {stringSort, SortNode} from './lib/ordered.js';
-import {shell} from './lib/windows.js';
+import {shell, desktop} from './lib/windows.js';
 import RPC from './rpc.js';
 
 declare const pageLoad: Promise<void>;
-
 
 const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       matchData2Match = (md: MatchData[]) => md.map(([isSuffix, name]) => ({isSuffix, name})),
@@ -116,13 +115,13 @@ class Server {
 pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.location.host}/socket`).then(rpc => {rpc.waitList().then(list => {
 	const servers = new Map<string, Server>(),
 	      l = new SortNode(ul(), (a: Server, b: Server) => stringSort(a.name, b.name), list.map(i => add2All(i[0], new Server(i), servers))),
-	      s = clearElement(document.body).appendChild(shell([
+	      s = clearElement(document.body).appendChild(shell(desktop([
 		button({"onclick": () => s.prompt("Server Name", "Please enter a name for the new server", "").then(name => {
 			if (name) {
 				rpc.add(name).catch(err => s.alert("Error", err)).then(() => add2All(name, new Server([name, [], []]), servers, l));
 			}
 		})}, "New Server"),
 		l.node
-	      ]));
+	      ])));
 	rpc.waitAdd().then(name => add2All(name, new Server([name, [], []]), servers, l));
 })}));
