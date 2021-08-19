@@ -116,7 +116,7 @@ func buildInitialMessage() json.RawMessage {
 		} else {
 			buf = append(buf, ',')
 		}
-		fmt.Fprintf(&buf, "[%q,", name)
+		fmt.Fprintf(&buf, "[%q,[", name)
 		first := true
 		for id, redirect := range server.Redirects {
 			if first {
@@ -167,7 +167,7 @@ func buildInitialMessage() json.RawMessage {
 			}
 			buf = append(buf, ']')
 		}
-		buf = append(buf, ']')
+		buf = append(buf, ']', ']')
 	}
 	buf = append(buf, ']')
 	config.mu.RUnlock()
