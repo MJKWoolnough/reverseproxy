@@ -149,6 +149,9 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("error opening management interface port: %w", err)
 	}
+	if config.Servers == nil {
+		config.Servers = make(servers)
+	}
 	config.Servers.Init()
 	var s = http.Server{
 		Handler: &config,
