@@ -270,7 +270,11 @@ func (s *socket) add(data json.RawMessage) (interface{}, error) {
 		config.mu.Unlock()
 		return nil, ErrNameExists
 	}
-	config.Servers[name] = &server{name: name}
+	config.Servers[name] = &server{
+		Redirects: make(map[uint64]*redirect),
+		Commands:  make(map[uint64]*command),
+		name:      name,
+	}
 	saveConfig()
 	broadcast(broadcastAdd, data, s.id)
 	config.mu.Unlock()
