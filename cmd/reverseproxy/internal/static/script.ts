@@ -1,8 +1,9 @@
 import type {Uint, Match, MatchData, ListItem} from './types.js';
-import {clearElement} from './lib/dom.js';
-import {button, div, li, span, ul} from './lib/html.js';
+import {clearElement, createHTML} from './lib/dom.js';
+import {br, button, div, input, label, li, span, ul} from './lib/html.js';
 import {stringSort, SortNode} from './lib/ordered.js';
-import {shell, desktop} from './lib/windows.js';
+import {desktop, shell as shellElement, windows} from './lib/windows.js';
+import {MatchMaker} from './match.js';
 import RPC from './rpc.js';
 
 declare const pageLoad: Promise<void>;
@@ -27,7 +28,8 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	"server": noEnum,
 	"node": noEnum,
 	"exeSpan": noEnum
-      };
+      },
+      shell = shellElement();
 
 class Redirect {
 	id: Uint;
@@ -104,7 +106,22 @@ class Server {
 		this.node = li([
 			this.nameDiv,
 			button({"onclick": () => {
-
+				const from = input(),
+				      to = input(),
+				      matches = new MatchMaker(),
+				      w = windows({"window-title": "Add Redirect"}, [
+					label("From:"),
+					from,
+					br(),
+					label("To:"),
+					to,
+					br(),
+					matches.contents,
+					button({"onclick": () => {
+						w.remove();
+					}}, "Create Redirect")
+				      ]);
+				shell.addWindow(w);
 			}}, "Add Redirect"),
 			button({"onclick": () => {
 
@@ -118,7 +135,7 @@ class Server {
 pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.location.host}/socket`).then(rpc => {rpc.waitList().then(list => {
 	const servers = new Map<string, Server>(),
 	      l = new SortNode(ul(), (a: Server, b: Server) => stringSort(a.name, b.name), list.map(i => add2All(i[0], new Server(i), servers))),
-	      s = clearElement(document.body).appendChild(shell(desktop([
+	      s = clearElement(document.body).appendChild(createHTML(shell, desktop([
 		button({"onclick": () => s.prompt("Server Name", "Please enter a name for the new server", "").then(name => {
 			if (name) {
 				rpc.add(name).catch(err => s.alert("Error", err)).then(() => add2All(name, new Server([name, [], []]), servers, l));
