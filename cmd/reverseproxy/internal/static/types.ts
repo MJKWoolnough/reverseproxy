@@ -17,14 +17,14 @@ export type Redirect = NameID & {
 	from:   Uint;
 	to:     string;
 	active: boolean;
-	match:  MatchData[];
+	match:  Match[];
 };
 
 export type Command = NameID & {
 	exe:    string;
 	params: string[];
 	env:    Record<string, string>;
-	match:  MatchData[];
+	match:  Match[];
 	user?:  {
 		uid: Uint;
 		gid: Uint;
