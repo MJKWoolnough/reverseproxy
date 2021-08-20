@@ -108,8 +108,9 @@ class Server {
 			button({"onclick": () => {
 				const from = input(),
 				      to = input(),
-				      matches = new MatchMaker(),
-				      w = windows({"window-title": "Add Redirect"}, [
+				      w = windows(),
+				      matches = new MatchMaker(w);
+				shell.addWindow(createHTML(w, {"window-title": "Add Redirect"}, [
 					label("From:"),
 					from,
 					br(),
@@ -120,8 +121,7 @@ class Server {
 					button({"onclick": () => {
 						w.remove();
 					}}, "Create Redirect")
-				      ]);
-				shell.addWindow(w);
+				]));
 			}}, "Add Redirect"),
 			button({"onclick": () => {
 
