@@ -105,7 +105,10 @@ class Server {
 			this.nameDiv,
 			button({"onclick": () => {
 
-			}}, "+"),
+			}}, "Add Redirect"),
+			button({"onclick": () => {
+
+			}}, "Add Command"),
 			this.redirects.node,
 			this.commands.node
 		]);
