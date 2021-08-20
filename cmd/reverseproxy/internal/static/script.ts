@@ -1,9 +1,9 @@
 import type {Uint, Match, MatchData, ListItem} from './types.js';
+import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
 import {stringSort, SortNode} from './lib/ordered.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
-import {MatchMaker} from './match.js';
 import RPC, {rpc} from './rpc.js';
 
 declare const pageLoad: Promise<void>;
@@ -30,6 +30,43 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	"exeSpan": noEnum
       },
       shell = shellElement();
+
+class MatchMaker {
+	list: Match[];
+	contents: HTMLDivElement;
+	u = ul();
+	w: WindowElement;
+	constructor(w: WindowElement, matches: Match[] = []) {
+		this.list = matches;
+		for (const m of matches) {
+			this.add(m);
+		}
+		if (matches.length === 0) {
+			this.add();
+		}
+		this.contents = div([
+			"Matches",
+			this.u,
+			button({"onclick": () => this.add()}, "Add Match")
+		]);
+		this.w = w;
+	}
+	add(m: Match = {"name": "", "isSuffix": false}) {
+		this.list.push(m);
+		const l = this.u.appendChild(li([
+				input({"onchange": function(this: HTMLInputElement){m.name = this.value}, "value": m.name}),
+				input({"type": "checkbox", "onchange": function(this: HTMLInputElement){m.isSuffix = this.checked}, "checked": m.isSuffix}),
+				button({"onclick": () => {
+					if (this.list.length === 1) {
+						this.w.alert("Cannot remove Match", "Must have at least 1 Match");
+					} else {
+						this.list.splice(this.list.indexOf(m), 1);
+						l.remove();
+					}
+				}}, "X")
+		      ]));
+	}
+}
 
 class Redirect {
 	id: Uint;
