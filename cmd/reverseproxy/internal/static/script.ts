@@ -106,7 +106,7 @@ class Server {
 		this.node = li([
 			this.nameDiv,
 			button({"onclick": () => {
-				const from = input(),
+				const from = input({"type": "number", "min": 1, "max": 65535, "value": 80}),
 				      to = input(),
 				      w = windows(),
 				      matches = new MatchMaker(w);
