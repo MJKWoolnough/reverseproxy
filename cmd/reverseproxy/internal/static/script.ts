@@ -4,7 +4,7 @@ import {br, button, div, input, label, li, span, ul} from './lib/html.js';
 import {stringSort, SortNode} from './lib/ordered.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import {MatchMaker} from './match.js';
-import RPC from './rpc.js';
+import RPC, {rpc} from './rpc.js';
 
 declare const pageLoad: Promise<void>;
 
@@ -119,12 +119,28 @@ class Server {
 					br(),
 					matches.contents,
 					button({"onclick": () => {
-						w.remove();
+						const f = parseInt(from.value);
+						if (f <= 0 || f >= 65535) {
+							shell.alert("Invalid Port", `Invalid from port: ${from.value}`);
+						} else if (to.value === "") {
+							shell.alert("Invalid address", `Invalid to address: ${to.value}`);
+						} else if (matches.list.some(({name}) => name === "")) {
+							shell.alert("Invalid Match", "Cannot have empty match");
+						} else {
+							rpc.addRedirect({
+								"server": this.name,
+								"from": f,
+								"to": to.value,
+								"match": matches.list,
+							})
+							.then(id => this.redirects.push(new Redirect(this, id, f, to.value, false, matches.list)))
+							.catch(err => shell.alert("Error", err));
+							w.remove();
+						}
 					}}, "Create Redirect")
 				]));
 			}}, "Add Redirect"),
 			button({"onclick": () => {
-
 			}}, "Add Command"),
 			this.redirects.node,
 			this.commands.node
