@@ -2,7 +2,7 @@ import type {Uint, Match, MatchData, ListItem} from './types.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
-import {stringSort, SortNode} from './lib/ordered.js';
+import {stringSort, node, SortNode} from './lib/ordered.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
 
@@ -20,13 +20,11 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       noEnum = {"enumerable": false},
       redirectProps = {
 	"server": noEnum,
-	"node": noEnum,
 	"fromSpan": noEnum,
 	"toSpan": noEnum
       },
       commandProps = {
 	"server": noEnum,
-	"node": noEnum,
 	"exeSpan": noEnum
       },
       shell = shellElement();
@@ -74,7 +72,7 @@ class Redirect {
 	to: string;
 	active: boolean;
 	match: Match[];
-	node: HTMLLIElement;
+	[node]: HTMLLIElement;
 	fromSpan: HTMLSpanElement;
 	toSpan: HTMLSpanElement;
 	constructor(server: Server, id: Uint, from: Uint, to: string, active: boolean, match: Match[]) {
@@ -85,7 +83,7 @@ class Redirect {
 		this.match = match;
 		this.fromSpan = span(from + ""),
 		this.toSpan = span(to);
-		this.node = li([
+		this[node] = li([
 			this.fromSpan,
 			this.toSpan
 		]);
@@ -106,7 +104,7 @@ class Command {
 	params: string[];
 	env: Record<string, string>;
 	match: Match[];
-	node: HTMLLIElement;
+	[node]: HTMLLIElement;
 	exeSpan: HTMLSpanElement;
 	constructor(server: Server, id: Uint, exe: string, params: string[], env: Record<string, string>, match: Match[]) {
 		this.id = id;
@@ -115,7 +113,7 @@ class Command {
 		this.env = env;
 		this.match = match;
 		this.exeSpan = span(exe + " " + params.join(" "));
-		this.node = li(this.exeSpan);
+		this[node] = li(this.exeSpan);
 		Object.defineProperties(this, commandProps);
 		Object.defineProperty(this, "name", {"get": () => server.name, "enumerable": true});
 	}
@@ -133,14 +131,14 @@ class Server {
 	commands: SortNode<Command>;
 	redirectMap = new Map<Uint, Redirect>();
 	commandMap = new Map<Uint, Command>();
-	node: HTMLLIElement;
+	[node]: HTMLLIElement;
 	nameDiv: HTMLDivElement;
 	constructor([name, rs, cs]: ListItem) {
 		this.name = name;
-		this.redirects = new SortNode<Redirect & {node: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => add2All(id, new Redirect(this, id, from, to, active, matchData2Match(match)), this.redirectMap)));
-		this.commands = new SortNode<Command & {node: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, _a, _b, ...match]) => add2All(id, new Command(this, id, exe, params, env, matchData2Match(match)), this.commandMap)));
+		this.redirects = new SortNode<Redirect & {[node]: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => add2All(id, new Redirect(this, id, from, to, active, matchData2Match(match)), this.redirectMap)));
+		this.commands = new SortNode<Command & {[node]: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, _a, _b, ...match]) => add2All(id, new Command(this, id, exe, params, env, matchData2Match(match)), this.commandMap)));
 		this.nameDiv = div(name);
-		this.node = li([
+		this[node] = li([
 			this.nameDiv,
 			button({"onclick": () => {
 				const from = input({"type": "number", "min": 1, "max": 65535, "value": 80}),
@@ -179,8 +177,8 @@ class Server {
 			}}, "Add Redirect"),
 			button({"onclick": () => {
 			}}, "Add Command"),
-			this.redirects.node,
-			this.commands.node
+			this.redirects[node],
+			this.commands[node]
 		]);
 	}
 }
@@ -194,7 +192,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 				rpc.add(name).catch(err => s.alert("Error", err)).then(() => add2All(name, new Server([name, [], []]), servers, l));
 			}
 		})}, "New Server"),
-		l.node
+		l[node]
 	      ])));
 	rpc.waitAdd().then(name => add2All(name, new Server([name, [], []]), servers, l));
 	rpc.waitAddRedirect().then(r => {
