@@ -2,7 +2,7 @@ import type {Uint, Match, MatchData, ListItem} from './types.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
-import {stringSort, node, SortNode} from './lib/ordered.js';
+import {stringSort, node, MapNode} from './lib/ordered.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
 
@@ -10,13 +10,6 @@ declare const pageLoad: Promise<void>;
 
 const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       matchData2Match = (md: MatchData[]) => md.map(([isSuffix, name]) => ({isSuffix, name})),
-      add2All = <K, T>(id: K, item: T, m: Map<K, T>, list?: T[]) => {
-	      m.set(id, item);
-	      if (list) {
-			list.push(item);
-	      }
-	      return item;
-      },
       noEnum = {"enumerable": false},
       redirectProps = {
 	"server": noEnum,
@@ -127,16 +120,14 @@ class Command {
 
 class Server {
 	name: string;
-	redirects: SortNode<Redirect>;
-	commands: SortNode<Command>;
-	redirectMap = new Map<Uint, Redirect>();
-	commandMap = new Map<Uint, Command>();
+	redirects: MapNode<Uint, Redirect>;
+	commands: MapNode<Uint, Command>;
 	[node]: HTMLLIElement;
 	nameDiv: HTMLDivElement;
 	constructor([name, rs, cs]: ListItem) {
 		this.name = name;
-		this.redirects = new SortNode<Redirect & {[node]: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => add2All(id, new Redirect(this, id, from, to, active, matchData2Match(match)), this.redirectMap)));
-		this.commands = new SortNode<Command & {[node]: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, _a, _b, ...match]) => add2All(id, new Command(this, id, exe, params, env, matchData2Match(match)), this.commandMap)));
+		this.redirects = new MapNode<Uint, Redirect & {[node]: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => [id, new Redirect(this, id, from, to, active, matchData2Match(match))]));
+		this.commands = new MapNode<Uint, Command & {[node]: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, _a, _b, ...match]) => [id, new Command(this, id, exe, params, env, matchData2Match(match))]));
 		this.nameDiv = div(name);
 		this[node] = li([
 			this.nameDiv,
@@ -168,7 +159,7 @@ class Server {
 								"to": to.value,
 								"match": matches.list,
 							})
-							.then(id => add2All(id, new Redirect(this, id, f, to.value, false, matches.list), this.redirectMap, this.redirects))
+							.then(id => this.redirects.set(id, new Redirect(this, id, f, to.value, false, matches.list)))
 							.catch(err => shell.alert("Error", err));
 							w.remove();
 						}
@@ -184,21 +175,20 @@ class Server {
 }
 
 pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.location.host}/socket`).then(rpc => {rpc.waitList().then(list => {
-	const servers = new Map<string, Server>(),
-	      l = new SortNode(ul(), (a: Server, b: Server) => stringSort(a.name, b.name), list.map(i => add2All(i[0], new Server(i), servers))),
+	const servers = new MapNode<string, Server>(ul(), (a: Server, b: Server) => stringSort(a.name, b.name), list.map(i => [i[0], new Server(i)])),
 	      s = clearElement(document.body).appendChild(createHTML(shell, desktop([
 		button({"onclick": () => s.prompt("Server Name", "Please enter a name for the new server", "").then(name => {
 			if (name) {
-				rpc.add(name).catch(err => s.alert("Error", err)).then(() => add2All(name, new Server([name, [], []]), servers, l));
+				rpc.add(name).catch(err => s.alert("Error", err)).then(() => servers.set(name, new Server([name, [], []])));
 			}
 		})}, "New Server"),
-		l[node]
+		servers[node]
 	      ])));
-	rpc.waitAdd().then(name => add2All(name, new Server([name, [], []]), servers, l));
+	rpc.waitAdd().then(name => servers.set(name, new Server([name, [], []])));
 	rpc.waitAddRedirect().then(r => {
 		const server = servers.get(r.server)!
 		if (server) {
-			add2All(r.id, new Redirect(server, r.id, r.from, r.to, false, r.match), server.redirectMap, server.redirects);
+			server.redirects.set(r.id, new Redirect(server, r.id, r.from, r.to, false, r.match));
 		}
 	});
 
