@@ -170,7 +170,7 @@ class Server {
 								"to": to.value,
 								"match": matches.list,
 							})
-							.then(id => this.redirects.push(new Redirect(this, id, f, to.value, false, matches.list)))
+							.then(id => add2All(id, new Redirect(this, id, f, to.value, false, matches.list), this.redirectMap, this.redirects))
 							.catch(err => shell.alert("Error", err));
 							w.remove();
 						}
