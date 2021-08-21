@@ -197,4 +197,11 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 		l.node
 	      ])));
 	rpc.waitAdd().then(name => add2All(name, new Server([name, [], []]), servers, l));
+	rpc.waitAddRedirect().then(r => {
+		const server = servers.get(r.server)!
+		if (server) {
+			add2All(r.id, new Redirect(server, r.id, r.from, r.to, false, r.match), server.redirectMap, server.redirects);
+		}
+	});
+
 })}));
