@@ -2,7 +2,7 @@ import type {Uint, Match, MatchData, ListItem} from './types.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
-import {stringSort, node, NodeMap} from './lib/ordered.js';
+import {stringSort, node, NodeMap} from './lib/nodes.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
 
