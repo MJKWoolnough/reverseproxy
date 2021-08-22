@@ -2,7 +2,7 @@ import type {Uint, Match, MatchData, ListItem} from './types.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
-import {stringSort, node, MapNode} from './lib/ordered.js';
+import {stringSort, node, NodeMap} from './lib/ordered.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
 
@@ -120,14 +120,14 @@ class Command {
 
 class Server {
 	name: string;
-	redirects: MapNode<Uint, Redirect>;
-	commands: MapNode<Uint, Command>;
+	redirects: NodeMap<Uint, Redirect>;
+	commands: NodeMap<Uint, Command>;
 	[node]: HTMLLIElement;
 	nameDiv: HTMLDivElement;
 	constructor([name, rs, cs]: ListItem) {
 		this.name = name;
-		this.redirects = new MapNode<Uint, Redirect & {[node]: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => [id, new Redirect(this, id, from, to, active, matchData2Match(match))]));
-		this.commands = new MapNode<Uint, Command & {[node]: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, _a, _b, ...match]) => [id, new Command(this, id, exe, params, env, matchData2Match(match))]));
+		this.redirects = new NodeMap<Uint, Redirect & {[node]: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => [id, new Redirect(this, id, from, to, active, matchData2Match(match))]));
+		this.commands = new NodeMap<Uint, Command & {[node]: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, _a, _b, ...match]) => [id, new Command(this, id, exe, params, env, matchData2Match(match))]));
 		this.nameDiv = div(name);
 		this[node] = li([
 			this.nameDiv,
@@ -175,7 +175,7 @@ class Server {
 }
 
 pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.location.host}/socket`).then(rpc => {rpc.waitList().then(list => {
-	const servers = new MapNode<string, Server>(ul(), (a: Server, b: Server) => stringSort(a.name, b.name), list.map(i => [i[0], new Server(i)])),
+	const servers = new NodeMap<string, Server>(ul(), (a: Server, b: Server) => stringSort(a.name, b.name), list.map(i => [i[0], new Server(i)])),
 	      s = clearElement(document.body).appendChild(createHTML(shell, desktop([
 		button({"onclick": () => s.prompt("Server Name", "Please enter a name for the new server", "").then(name => {
 			if (name) {
