@@ -78,7 +78,7 @@ class MatchMaker {
 	u = ul();
 	w: WindowElement;
 	constructor(w: WindowElement, matches: Match[]) {
-		this.list = matches;
+		this.list = [];
 		for (const m of matches) {
 			this.add(m);
 		}
