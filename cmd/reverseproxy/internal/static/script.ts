@@ -78,7 +78,13 @@ class Redirect {
 		this.toSpan = span(to);
 		this[node] = li([
 			this.fromSpan,
-			this.toSpan
+			this.toSpan,
+			button({"onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this redirect?").then(c => {
+				if (c) {
+					server.redirects.delete(id);
+					rpc.removeRedirect({"server": server.name, "id": id});
+				}
+			})}, "X")
 		]);
 		Object.defineProperties(this, redirectProps);
 		Object.defineProperty(this, "name", {"get": () => server.name, "enumerable": true});
