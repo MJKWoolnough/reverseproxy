@@ -129,6 +129,7 @@ class Redirect {
 		this[node] = li([
 			this.fromSpan,
 			this.toSpan,
+			button({"onclick": () => editRedirect(server, this)}, "Edit"),
 			button({"onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this redirect?").then(c => {
 				if (c) {
 					server.redirects.delete(id);
