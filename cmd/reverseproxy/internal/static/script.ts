@@ -20,14 +20,64 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	"server": noEnum,
 	"exeSpan": noEnum
       },
-      shell = shellElement();
+      shell = shellElement(),
+      editRedirect = (server: Server, data?: Redirect) => {
+	const from = input({"type": "number", "min": 1, "max": 65535, "value": data?.from ?? 80}),
+	      to = input({"value": data?.to}),
+	      w = windows(),
+	      matches = new MatchMaker(w, data?.match ?? []);
+	shell.addWindow(createHTML(w, {"window-title": "Add Redirect"}, [
+		label("From:"),
+		from,
+		br(),
+		label("To:"),
+		to,
+		br(),
+		matches.contents,
+		button({"onclick": () => {
+			const f = parseInt(from.value);
+			if (f <= 0 || f >= 65535) {
+				shell.alert("Invalid Port", `Invalid from port: ${from.value}`);
+			} else if (to.value === "") {
+				shell.alert("Invalid address", `Invalid to address: ${to.value}`);
+			} else if (matches.list.some(({name}) => name === "")) {
+				shell.alert("Invalid Match", "Cannot have empty match");
+			} else if (data) {
+				rpc.modifyRedirect({
+					"server": server.name,
+					"id": data.id,
+					"from": f,
+					"to": to.value,
+					"match": matches.list
+				})
+				.then(() => {
+					data.setFrom(f);
+					data.setTo(to.value);
+					data.match = matches.list;
+				})
+				.catch(err => shell.alert("Error", err));
+				w.remove();
+			} else {
+				rpc.addRedirect({
+					"server": server.name,
+					"from": f,
+					"to": to.value,
+					"match": matches.list,
+				})
+				.then(id => server.redirects.set(id, new Redirect(server, id, f, to.value, false, matches.list)))
+				.catch(err => shell.alert("Error", err));
+				w.remove();
+			}
+		}}, "Create Redirect")
+	]));
+      };
 
 class MatchMaker {
 	list: Match[];
 	contents: HTMLDivElement;
 	u = ul();
 	w: WindowElement;
-	constructor(w: WindowElement, matches: Match[] = []) {
+	constructor(w: WindowElement, matches: Match[]) {
 		this.list = matches;
 		for (const m of matches) {
 			this.add(m);
@@ -138,41 +188,7 @@ class Server {
 		this.nameDiv = div(name);
 		this[node] = li([
 			this.nameDiv,
-			button({"onclick": () => {
-				const from = input({"type": "number", "min": 1, "max": 65535, "value": 80}),
-				      to = input(),
-				      w = windows(),
-				      matches = new MatchMaker(w);
-				shell.addWindow(createHTML(w, {"window-title": "Add Redirect"}, [
-					label("From:"),
-					from,
-					br(),
-					label("To:"),
-					to,
-					br(),
-					matches.contents,
-					button({"onclick": () => {
-						const f = parseInt(from.value);
-						if (f <= 0 || f >= 65535) {
-							shell.alert("Invalid Port", `Invalid from port: ${from.value}`);
-						} else if (to.value === "") {
-							shell.alert("Invalid address", `Invalid to address: ${to.value}`);
-						} else if (matches.list.some(({name}) => name === "")) {
-							shell.alert("Invalid Match", "Cannot have empty match");
-						} else {
-							rpc.addRedirect({
-								"server": this.name,
-								"from": f,
-								"to": to.value,
-								"match": matches.list,
-							})
-							.then(id => this.redirects.set(id, new Redirect(this, id, f, to.value, false, matches.list)))
-							.catch(err => shell.alert("Error", err));
-							w.remove();
-						}
-					}}, "Create Redirect")
-				]));
-			}}, "Add Redirect"),
+			button({"onclick": () => editRedirect(this)}, "Add Redirect"),
 			button({"onclick": () => {
 			}}, "Add Command"),
 			this.redirects[node],
