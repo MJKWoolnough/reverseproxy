@@ -197,5 +197,11 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 			server.redirects.set(r.id, new Redirect(server, r.id, r.from, r.to, false, r.match));
 		}
 	});
+	rpc.waitRemoveRedirect().then(r => {
+		const server = servers.get(r.server)!
+		if (server) {
+			server.redirects.delete(r.id);
+		}
+	});
 
 })}));
