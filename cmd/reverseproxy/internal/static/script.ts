@@ -221,5 +221,13 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 			server.redirects.delete(r.id);
 		}
 	});
+	rpc.waitModifyRedirect().then(r => {
+		const redirect = servers.get(r.server)?.redirects.get(r.id);
+		if (redirect) {
+			redirect.setFrom(r.from);
+			redirect.setTo(r.to);
+			redirect.match = r.match;
+		}
+	});
 
 })}));
