@@ -412,7 +412,7 @@ func (s *socket) removeRedirect(data json.RawMessage) (interface{}, error) {
 	}
 	return nil, s.getRedirect(rr, func(serv *server, _ *redirect) error {
 		delete(serv.Redirects, rr.ID)
-		broadcast(broadcastModifyRedirect, data, s.id)
+		broadcast(broadcastRemoveRedirect, data, s.id)
 		return nil
 	})
 }
