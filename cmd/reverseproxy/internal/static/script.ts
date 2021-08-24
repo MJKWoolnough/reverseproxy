@@ -181,20 +181,25 @@ class Server {
 	redirects: NodeMap<Uint, Redirect>;
 	commands: NodeMap<Uint, Command>;
 	[node]: HTMLLIElement;
-	nameDiv: HTMLDivElement;
+	nameSpan: HTMLSpanElement;
 	constructor([name, rs, cs]: ListItem) {
 		this.name = name;
 		this.redirects = new NodeMap<Uint, Redirect & {[node]: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => [id, new Redirect(this, id, from, to, active, matchData2Match(match))]));
 		this.commands = new NodeMap<Uint, Command & {[node]: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, _a, _b, ...match]) => [id, new Command(this, id, exe, params, env, matchData2Match(match))]));
-		this.nameDiv = div(name);
+		this.nameSpan = div(name);
 		this[node] = li([
-			this.nameDiv,
+			div([
+				this.nameSpan
+			]),
 			button({"onclick": () => editRedirect(this)}, "Add Redirect"),
 			button({"onclick": () => {
 			}}, "Add Command"),
 			this.redirects[node],
 			this.commands[node]
 		]);
+	}
+	setName(name: string) {
+		this.nameSpan.innerText = this.name = name;
 	}
 }
 
