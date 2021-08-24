@@ -195,7 +195,12 @@ class Server {
 						rpc.rename([this.name, name]).catch(err => shell.alert("Error", err));
 						this.setName(name);
 					}
-				})}, "Rename")
+				})}, "Rename"),
+				button({"onclick": () => shell.confirm("Remove", "Are you sure you wish to remove this server?").then(ok => {
+					if (ok) {
+						rpc.remove(this.name).catch(err => shell.alert("Error", err.message));
+					}
+				})}, "Remove")
 			]),
 			button({"onclick": () => editRedirect(this)}, "Add Redirect"),
 			button({"onclick": () => {
