@@ -192,7 +192,7 @@ class Server {
 				this.nameSpan,
 				button({"onclick": () => shell.prompt("New Name", "Plese enter a new name for this server", this.name).then(name => {
 					if (name && name !== this.name) {
-						rpc.rename([this.name, name]).catch(err => shell.alert("Error", err));
+						rpc.rename([this.name, name]).catch(err => shell.alert("Error", err.message));
 						this.setName(name);
 					}
 				})}, "Rename"),
