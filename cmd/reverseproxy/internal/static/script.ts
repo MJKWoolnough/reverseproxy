@@ -189,7 +189,13 @@ class Server {
 		this.nameSpan = div(name);
 		this[node] = li([
 			div([
-				this.nameSpan
+				this.nameSpan,
+				button({"onclick": () => shell.prompt("New Name", "Plese enter a new name for this server", this.name).then(name => {
+					if (name && name !== this.name) {
+						rpc.rename([this.name, name]).catch(err => shell.alert("Error", err));
+						this.setName(name);
+					}
+				})}, "Rename")
 			]),
 			button({"onclick": () => editRedirect(this)}, "Add Redirect"),
 			button({"onclick": () => {
