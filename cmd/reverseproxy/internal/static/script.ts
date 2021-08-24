@@ -2,11 +2,15 @@ import type {Uint, Match, MatchData, ListItem} from './types.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
-import {stringSort, node, NodeMap} from './lib/nodes.js';
+import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
 
 declare const pageLoad: Promise<void>;
+
+type Param = {
+	[node]: HTMLInputElement;
+}
 
 const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       matchData2Match = (md: MatchData[]) => md.map(([isSuffix, name]) => ({isSuffix, name})),
@@ -69,6 +73,59 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 				w.remove();
 			}
 		}}, "Create Redirect")
+	]));
+      },
+      editCommand = (server: Server, data?: Command) => {
+	const exe = input({"value": data?.exe}),
+	      params = new NodeArray<Param>(div(), noSort, data?.params.map(p => ({[node]: input({"value": p})})) ?? []),
+	      w = windows(),
+	      matches = new MatchMaker(w, data?.match ?? []);
+	shell.addWindow(createHTML(w, {"window-title": "Add Command"}, [
+		label("Executable:"),
+		exe,
+		br(),
+		label("Params:"),
+		params[node],
+		button("-"),
+		button("+"),
+		br(),
+		matches.contents,
+		button({"onclick": () => {
+			if (exe.value === "") {
+				w.alert("Invalid executable", "Executable cannot be empty");
+			} else if (matches.list.some(({name}) => name === "")) {
+				w.alert("Invalid Match", "Cannot have empty match");
+			} else if (data) {
+				const p = params.map(p => p[node].value);
+				rpc.modifyCommand({
+					"server": server.name,
+					"id": data.id,
+					"exe": exe.value,
+					"params": p,
+					"env": {},
+					"match": matches.list,
+				})
+				.then(() => {
+					data.exe = exe.value;
+					data.params = p;
+					data.match = matches.list;
+				})
+				.catch(err => shell.alert("Error", err));
+				w.remove();
+			} else {
+				const p = params.map(p => p[node].value);
+				rpc.addCommand({
+					"server": server.name,
+					"exe": exe.value,
+					"params": p,
+					"env": {},
+					"match": matches.list,
+				})
+				.then(id => server.commands.set(id, new Command(server, id, exe.value, p, {}, matches.list)))
+				.catch(err => shell.alert("Error", err.message));
+				w.remove();
+			}
+		}}, "Create Command")
 	]));
       };
 
@@ -203,8 +260,7 @@ class Server {
 				})}, "Remove")
 			]),
 			button({"onclick": () => editRedirect(this)}, "Add Redirect"),
-			button({"onclick": () => {
-			}}, "Add Command"),
+			button({"onclick": () => editCommand(this)}, "Add Command"),
 			this.redirects[node],
 			this.commands[node]
 		]);
