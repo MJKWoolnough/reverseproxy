@@ -220,6 +220,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 		servers[node]
 	      ])));
 	rpc.waitAdd().then(name => servers.set(name, new Server([name, [], []])));
+	rpc.waitRename().then(([oldName, newName]) => servers.get(oldName)?.setName(newName));
 	rpc.waitAddRedirect().then(r => {
 		const server = servers.get(r.server);
 		if (server) {
