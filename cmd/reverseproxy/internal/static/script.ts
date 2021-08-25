@@ -110,8 +110,8 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 					"match": matches.list,
 				})
 				.then(() => {
-					data.exe = exe.value;
-					data.params = p;
+					data.setExe(exe.value);
+					data.setParams(p);
 					data.match = matches.list;
 				})
 				.catch(err => shell.alert("Error", err));
