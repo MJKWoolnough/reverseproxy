@@ -46,30 +46,27 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 				w.alert("Invalid address", `Invalid to address: ${to.value}`);
 			} else if (matches.list.some(({name}) => name === "")) {
 				w.alert("Invalid Match", "Cannot have empty match");
-			} else if (data) {
-				rpc.modifyRedirect({
-					"server": server.name,
-					"id": data.id,
-					"from": f,
-					"to": to.value,
-					"match": matches.list
-				})
-				.then(() => {
-					data.setFrom(f);
-					data.setTo(to.value);
-					data.match = matches.list;
-				})
-				.catch(err => shell.alert("Error", err.message));
-				w.remove();
 			} else {
-				rpc.addRedirect({
-					"server": server.name,
-					"from": f,
-					"to": to.value,
-					"match": matches.list,
-				})
-				.then(id => server.redirects.set(id, new Redirect(server, id, f, to.value, false, matches.list)))
-				.catch(err => shell.alert("Error", err.message));
+				(data ?
+					rpc.modifyRedirect({
+						"server": server.name,
+						"id": data.id,
+						"from": f,
+						"to": to.value,
+						"match": matches.list
+					})
+					.then(() => {
+						data.setFrom(f);
+						data.setTo(to.value);
+						data.match = matches.list;
+					}) : rpc.addRedirect({
+						"server": server.name,
+						"from": f,
+						"to": to.value,
+						"match": matches.list,
+					})
+					.then(id => server.redirects.set(id, new Redirect(server, id, f, to.value, false, matches.list)))
+				).catch(err => shell.alert("Error", err.message));
 				w.remove();
 			}
 		}}, "Create Redirect")
