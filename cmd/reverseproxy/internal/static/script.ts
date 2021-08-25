@@ -88,7 +88,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		params[node],
 		button({"onclick": () => {
 			if (params.length > 0) {
-				params.pop()
+				params.pop();
 			}
 		}}, "-"),
 		button({"onclick": () => params.push({[node]: input()})}, "+"),
