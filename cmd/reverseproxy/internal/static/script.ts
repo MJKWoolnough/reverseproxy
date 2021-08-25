@@ -59,7 +59,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 					data.setTo(to.value);
 					data.match = matches.list;
 				})
-				.catch(err => shell.alert("Error", err));
+				.catch(err => shell.alert("Error", err.message));
 				w.remove();
 			} else {
 				rpc.addRedirect({
@@ -69,7 +69,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 					"match": matches.list,
 				})
 				.then(id => server.redirects.set(id, new Redirect(server, id, f, to.value, false, matches.list)))
-				.catch(err => shell.alert("Error", err));
+				.catch(err => shell.alert("Error", err.message));
 				w.remove();
 			}
 		}}, "Create Redirect")
