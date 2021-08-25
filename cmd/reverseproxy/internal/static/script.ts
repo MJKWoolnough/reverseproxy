@@ -78,6 +78,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       editCommand = (server: Server, data?: Command) => {
 	const exe = input({"value": data?.exe}),
 	      params = new NodeArray<Param>(div(), noSort, data?.params.map(p => ({[node]: input({"value": p})})) ?? []),
+	      env = new EnvMaker(data?.env ?? {}),
 	      w = windows(),
 	      matches = new MatchMaker(w, data?.match ?? []);
 	shell.addWindow(createHTML(w, {"window-title": "Add Command"}, [
@@ -92,6 +93,9 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 			}
 		}}, "-"),
 		button({"onclick": () => params.push({[node]: input()})}, "+"),
+		br(),
+		label("Environment:"),
+		env[node],
 		br(),
 		matches.contents,
 		button({"onclick": () => {
@@ -167,6 +171,51 @@ class MatchMaker {
 					}
 				}}, "X")
 		      ]));
+	}
+}
+
+type Env = {
+	key: HTMLInputElement;
+	value: HTMLInputElement;
+	[node]: HTMLLIElement;
+}
+
+class EnvMaker {
+	nextID = 0;
+	m: NodeMap<number, Env>;
+	[node]: HTMLDivElement;
+	constructor(environment: Record<string, string>) {
+		this.m = new NodeMap<number, Env>(ul());
+		for (const key in environment) {
+			this.addEnv(key, environment[key]);
+		}
+		this[node] = div([
+			this.m[node],
+			button({"onclick": () => this.addEnv()}, "+")
+		]);
+	}
+	addEnv(key = "", value = "") {
+		const id = this.nextID++,
+		      k = input({"value": key}),
+		      v = input({value});
+		this.m.set(id, {
+			"key": k,
+			"value": v,
+			[node]: li([
+				k,
+				v,
+				button({"onclick": () => this.m.delete(id)}, "-")
+			])
+		});
+	}
+	toObject() {
+		const env: Record<string, string> = {};
+		for (const e of this.m.values()) {
+			if (e.key.value) {
+				env[e.key.value] = e.value.value;
+			}
+		}
+		return env;
 	}
 }
 
