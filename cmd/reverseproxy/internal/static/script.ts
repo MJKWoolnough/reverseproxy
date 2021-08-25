@@ -41,11 +41,11 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		button({"onclick": () => {
 			const f = parseInt(from.value);
 			if (f <= 0 || f >= 65535) {
-				shell.alert("Invalid Port", `Invalid from port: ${from.value}`);
+				w.alert("Invalid Port", `Invalid from port: ${from.value}`);
 			} else if (to.value === "") {
-				shell.alert("Invalid address", `Invalid to address: ${to.value}`);
+				w.alert("Invalid address", `Invalid to address: ${to.value}`);
 			} else if (matches.list.some(({name}) => name === "")) {
-				shell.alert("Invalid Match", "Cannot have empty match");
+				w.alert("Invalid Match", "Cannot have empty match");
 			} else if (data) {
 				rpc.modifyRedirect({
 					"server": server.name,
