@@ -20,15 +20,17 @@ export type Redirect = NameID & {
 	match:  Match[];
 };
 
+export type UserID = {
+	uid: Uint;
+	gid: Uint;
+}
+
 export type Command = NameID & {
 	exe:    string;
 	params: string[];
 	env:    Record<string, string>;
 	match:  Match[];
-	user?:  {
-		uid: Uint;
-		gid: Uint;
-	};
+	user?:  UserID;
 };
 
 export type NameID = {
