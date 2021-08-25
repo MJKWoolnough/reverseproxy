@@ -103,33 +103,32 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 				w.alert("Invalid executable", "Executable cannot be empty");
 			} else if (matches.list.some(({name}) => name === "")) {
 				w.alert("Invalid Match", "Cannot have empty match");
-			} else if (data) {
-				const p = params.map(p => p[node].value);
-				rpc.modifyCommand({
-					"server": server.name,
-					"id": data.id,
-					"exe": exe.value,
-					"params": p,
-					"env": {},
-					"match": matches.list,
-				})
-				.then(() => {
-					data.setExe(exe.value);
-					data.setParams(p);
-					data.match = matches.list;
-				})
-				.catch(err => shell.alert("Error", err));
-				w.remove();
 			} else {
-				const p = params.map(p => p[node].value);
-				rpc.addCommand({
-					"server": server.name,
-					"exe": exe.value,
-					"params": p,
-					"env": {},
-					"match": matches.list,
-				})
-				.then(id => server.commands.set(id, new Command(server, id, exe.value, p, {}, matches.list)))
+				const p = params.map(p => p[node].value),
+				      e = env.toObject();
+				(data ?
+					rpc.modifyCommand({
+						"server": server.name,
+						"id": data.id,
+						"exe": exe.value,
+						"params": p,
+						"env": e,
+						"match": matches.list,
+					})
+					.then(() => {
+						data.setExe(exe.value);
+						data.setParams(p);
+						data.env = e;
+						data.match = matches.list;
+					}) : rpc.addCommand({
+						"server": server.name,
+						"exe": exe.value,
+						"params": p,
+						"env": e,
+						"match": matches.list,
+					})
+					.then(id => server.commands.set(id, new Command(server, id, exe.value, p, e, matches.list)))
+				)
 				.catch(err => shell.alert("Error", err.message));
 				w.remove();
 			}
