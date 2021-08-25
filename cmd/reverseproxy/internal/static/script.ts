@@ -37,7 +37,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		label("To:"),
 		to,
 		br(),
-		matches.contents,
+		matches[node],
 		button({"onclick": () => {
 			const f = parseInt(from.value);
 			if (f <= 0 || f >= 65535) {
@@ -97,7 +97,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		label("Environment:"),
 		env[node],
 		br(),
-		matches.contents,
+		matches[node],
 		button({"onclick": () => {
 			if (exe.value === "") {
 				w.alert("Invalid executable", "Executable cannot be empty");
@@ -139,7 +139,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 
 class MatchMaker {
 	list: Match[];
-	contents: HTMLDivElement;
+	[node]: HTMLDivElement;
 	u = ul();
 	w: WindowElement;
 	constructor(w: WindowElement, matches: Match[]) {
@@ -150,7 +150,7 @@ class MatchMaker {
 		if (matches.length === 0) {
 			this.add();
 		}
-		this.contents = div([
+		this[node] = div([
 			"Matches",
 			this.u,
 			button({"onclick": () => this.add()}, "Add Match")
