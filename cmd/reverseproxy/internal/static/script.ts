@@ -361,12 +361,6 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 			server.redirects.set(r.id, new Redirect(server, r.id, r.from, r.to, false, r.match));
 		}
 	});
-	rpc.waitRemoveRedirect().then(r => {
-		const server = servers.get(r.server);
-		if (server) {
-			server.redirects.delete(r.id);
-		}
-	});
 	rpc.waitModifyRedirect().then(r => {
 		const redirect = servers.get(r.server)?.redirects.get(r.id);
 		if (redirect) {
@@ -375,5 +369,16 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 			redirect.match = r.match;
 		}
 	});
-
+	rpc.waitRemoveRedirect().then(r => {
+		const server = servers.get(r.server);
+		if (server) {
+			server.redirects.delete(r.id);
+		}
+	});
+	rpc.waitAddCommand().then(c => {
+		const server = servers.get(c.server);
+		if (server) {
+			server.commands.set(c.id, new Command(server, c.id, c.exe, c.params, c.env, c.match, c.user));
+		}
+	});
 })}));
