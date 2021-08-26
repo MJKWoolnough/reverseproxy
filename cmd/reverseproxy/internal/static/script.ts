@@ -293,7 +293,10 @@ class Command {
 		this.match = match;
 		this.exeSpan = span(exe + " " + params.join(" "));
 		this.user = user;
-		this[node] = li(this.exeSpan);
+		this[node] = li([
+			this.exeSpan,
+			button({"onclick": () => editCommand(server, this)}, "Edit")
+		]);
 		Object.defineProperties(this, commandProps);
 		Object.defineProperty(this, "name", {"get": () => server.name, "enumerable": true});
 	}
