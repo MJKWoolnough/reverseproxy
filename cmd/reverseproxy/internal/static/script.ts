@@ -1,4 +1,4 @@
-import type {Uint, Match, MatchData, ListItem} from './types.js';
+import type {Uint, Match, MatchData, ListItem, UserID} from './types.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
@@ -76,6 +76,12 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	const exe = input({"value": data?.exe}),
 	      params = new NodeArray<Param>(div(), noSort, data?.params.map(p => ({[node]: input({"value": p})})) ?? []),
 	      env = new EnvMaker(data?.env ?? {}),
+	      userID = input({"id": "userID", "type": "checkbox", "checked": data?.user !== undefined, "onchange": () => {
+		      uid.toggleAttribute("disabled", !userID.checked);
+		      gid.toggleAttribute("disabled", !userID.checked);
+	      }}),
+	      uid = input({"id": "uid", "type": "number", "min": 0, "value": data?.user?.uid, "disabled": data?.user === undefined}),
+	      gid = input({"id": "gid", "type": "number", "min": 0, "value": data?.user?.gid, "disabled": data?.user === undefined}),
 	      w = windows(),
 	      matches = new MatchMaker(w, data?.match ?? []);
 	shell.addWindow(createHTML(w, {"window-title": "Add Command"}, [
@@ -95,6 +101,15 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		env[node],
 		br(),
 		matches[node],
+		label({"for": "userID"}, "Run as different user?:"),
+		userID,
+		br(),
+		label({"for": "uid"}, "UID:"),
+		uid,
+		br(),
+		label({"for": "gid"}, "GID:"),
+		gid,
+		br(),
 		button({"onclick": () => {
 			if (exe.value === "") {
 				w.alert("Invalid executable", "Executable cannot be empty");
@@ -102,7 +117,11 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 				w.alert("Invalid Match", "Cannot have empty match");
 			} else {
 				const p = params.map(p => p[node].value),
-				      e = env.toObject();
+				      e = env.toObject(),
+				      u = userID.checked ? {
+					      "uid": parseInt(uid.value),
+					      "gid": parseInt(gid.value)
+				      } : undefined;
 				(data ?
 					rpc.modifyCommand({
 						"server": server.name,
@@ -111,6 +130,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 						"params": p,
 						"env": e,
 						"match": matches.list,
+						"user": u
 					})
 					.then(() => {
 						data.setExe(exe.value);
@@ -123,6 +143,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 						"params": p,
 						"env": e,
 						"match": matches.list,
+						"user": u
 					})
 					.then(id => server.commands.set(id, new Command(server, id, exe.value, p, e, matches.list)))
 				)
@@ -263,13 +284,15 @@ class Command {
 	match: Match[];
 	[node]: HTMLLIElement;
 	exeSpan: HTMLSpanElement;
-	constructor(server: Server, id: Uint, exe: string, params: string[], env: Record<string, string>, match: Match[]) {
+	user?: UserID;
+	constructor(server: Server, id: Uint, exe: string, params: string[], env: Record<string, string>, match: Match[], user?: UserID) {
 		this.id = id;
 		this.exe = exe;
 		this.params = params;
 		this.env = env;
 		this.match = match;
 		this.exeSpan = span(exe + " " + params.join(" "));
+		this.user = user;
 		this[node] = li(this.exeSpan);
 		Object.defineProperties(this, commandProps);
 		Object.defineProperty(this, "name", {"get": () => server.name, "enumerable": true});
