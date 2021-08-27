@@ -284,14 +284,18 @@ class Command {
 	match: Match[];
 	[node]: HTMLLIElement;
 	exeSpan: HTMLSpanElement;
+	status: Uint;
+	error: string;
 	user?: UserID;
-	constructor(server: Server, id: Uint, exe: string, params: string[], env: Record<string, string>, match: Match[], user?: UserID) {
+	constructor(server: Server, id: Uint, exe: string, params: string[], env: Record<string, string>, match: Match[], status: Uint = 0, error = "", user?: UserID) {
 		this.id = id;
 		this.exe = exe;
 		this.params = params;
 		this.env = env;
 		this.match = match;
 		this.exeSpan = span(exe + " " + params.join(" "));
+		this.status = status;
+		this.error = error;
 		this.user = user;
 		this[node] = li([
 			this.exeSpan,
@@ -324,7 +328,7 @@ class Server {
 	constructor([name, rs, cs]: ListItem) {
 		this.name = name;
 		this.redirects = new NodeMap<Uint, Redirect & {[node]: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => [id, new Redirect(this, id, from, to, active, matchData2Match(match))]));
-		this.commands = new NodeMap<Uint, Command & {[node]: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, _a, _b, ...match]) => [id, new Command(this, id, exe, params, env, matchData2Match(match))]));
+		this.commands = new NodeMap<Uint, Command & {[node]: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, status, error, ...match]) => [id, new Command(this, id, exe, params, env, matchData2Match(match), status, error)]));
 		this.nameSpan = div(name);
 		this[node] = li([
 			div([
@@ -388,7 +392,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 	rpc.waitAddCommand().then(c => {
 		const server = servers.get(c.server);
 		if (server) {
-			server.commands.set(c.id, new Command(server, c.id, c.exe, c.params, c.env, c.match, c.user));
+			server.commands.set(c.id, new Command(server, c.id, c.exe, c.params, c.env, c.match, 0, "", c.user));
 		}
 	});
 	rpc.waitModifyCommand().then(c => {
