@@ -274,6 +274,9 @@ class Redirect {
 	setTo(t: string) {
 		this.toSpan.innerText = this.to = t;
 	}
+	setActive(v: boolean) {
+		this.active = v;
+	}
 }
 
 class Command {
@@ -411,4 +414,5 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 			server.commands.delete(c.id);
 		}
 	});
+	rpc.waitStartRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.setActive(true));
 })}));
