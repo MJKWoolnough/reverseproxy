@@ -179,7 +179,7 @@ func (c *command) Run() error {
 		uc, err := reverseproxy.RegisterCmd(c.matchServiceName, cmd)
 		if err != nil {
 			c.err = err.Error()
-			c.status = 0
+			c.status = 2
 			return err
 		}
 		c.status = 1
@@ -192,7 +192,7 @@ func (c *command) Run() error {
 					c.err = string(err.(*exec.ExitError).Stderr)
 				}
 				broadcast(broadcastCommandStopped, append(strconv.AppendUint(append(strconv.AppendQuote(json.RawMessage{'['}, c.server.name), ','), c.id, 10), ']'), 0)
-				c.status = 0
+				c.status = 2
 			}
 			config.mu.Unlock()
 		}()
@@ -210,7 +210,7 @@ func (c *command) Stop() {
 
 func (c *command) Shutdown() {
 	if c.unixCmd != nil {
-		c.status = 2
+		c.status = 0
 		c.unixCmd.Close()
 		c.unixCmd = nil
 	}
