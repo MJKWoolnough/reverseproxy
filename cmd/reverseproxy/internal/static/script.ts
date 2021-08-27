@@ -259,8 +259,8 @@ class Redirect {
 			button({"onclick": () => editRedirect(server, this)}, "Edit"),
 			button({"onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this redirect?").then(c => {
 				if (c) {
-					server.redirects.delete(id);
 					rpc.removeRedirect({"server": server.name, "id": id})
+					.then(() => server.redirects.delete(id))
 					.catch(e => shell.alert("Error removing redirect", e.message));
 				}
 			})}, "X")
