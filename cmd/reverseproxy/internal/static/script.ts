@@ -320,6 +320,9 @@ class Command {
 	setParams (p: string[]) {
 		this.exeSpan.innerText = this.exe + " " + (this.params = p).join(" ");
 	}
+	setStatus (s: Uint) {
+		this.status = s;
+	}
 }
 
 class Server {
@@ -416,4 +419,5 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 	});
 	rpc.waitStartRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.setActive(true));
 	rpc.waitStopRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.setActive(false));
+	rpc.waitStartCommand().then(c => servers.get(c.server)?.commands.get(c.id)?.setStatus(1));
 })}));
