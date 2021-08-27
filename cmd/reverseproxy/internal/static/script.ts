@@ -401,4 +401,10 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 			command.user = c.user;
 		}
 	});
+	rpc.waitRemoveCommand().then(c => {
+		const server = servers.get(c.server);
+		if (server) {
+			server.commands.delete(c.id);
+		}
+	});
 })}));
