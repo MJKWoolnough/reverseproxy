@@ -384,4 +384,14 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 			server.commands.set(c.id, new Command(server, c.id, c.exe, c.params, c.env, c.match, c.user));
 		}
 	});
+	rpc.waitModifyCommand().then(c => {
+		const command = servers.get(c.server)?.commands.get(c.id);
+		if (command) {
+			command.setExe(c.exe);
+			command.setParams(c.params);
+			command.env = c.env;
+			command.match = c.match;
+			command.user = c.user;
+		}
+	});
 })}));
