@@ -16,7 +16,6 @@ export type Match = {
 export type Redirect = NameID & {
 	from:   Uint;
 	to:     string;
-	active: boolean;
 	match:  Match[];
 };
 
@@ -59,9 +58,9 @@ export type RPC = {
 	add:             (name: string)                          => Promise<void>;
 	rename:          (data: [string, string])                => Promise<void>;
 	remove:          (name: string)                          => Promise<void>;
-	addRedirect:     (data: Omit<Redirect, "active" | "id">) => Promise<Uint>;
+	addRedirect:     (data: Omit<Redirect, "id">)            => Promise<Uint>;
 	addCommand:      (data: Omit<Command, "id">)             => Promise<Uint>;
-	modifyRedirect:  (data: Omit<Redirect, "active">)        => Promise<void>;
+	modifyRedirect:  (data: Redirect)                        => Promise<void>;
 	modifyCommand:   (data: Command)                         => Promise<void>;
 	removeRedirect:  (redirect: NameID)                      => Promise<void>;
 	removeCommand:   (command: NameID)                       => Promise<void>;
