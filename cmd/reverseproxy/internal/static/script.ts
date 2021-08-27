@@ -415,4 +415,5 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 		}
 	});
 	rpc.waitStartRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.setActive(true));
+	rpc.waitStopRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.setActive(false));
 })}));
