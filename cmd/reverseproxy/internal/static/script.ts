@@ -295,7 +295,14 @@ class Command {
 		this.user = user;
 		this[node] = li([
 			this.exeSpan,
-			button({"onclick": () => editCommand(server, this)}, "Edit")
+			button({"onclick": () => editCommand(server, this)}, "Edit"),
+			button({"onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this command?").then(c => {
+				if (c) {
+					rpc.removeCommand({"server": server.name, "id": id})
+					.then(() => server.commands.delete(id))
+					.catch(e => shell.alert("Error removing command", e.message));
+				}
+			})}, "X")
 		]);
 		Object.defineProperties(this, commandProps);
 		Object.defineProperty(this, "name", {"get": () => server.name, "enumerable": true});
