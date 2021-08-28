@@ -365,7 +365,7 @@ class Server {
 	}
 }
 
-pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.location.host}/socket`).then(rpc => {rpc.waitList().then(list => {
+pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.location.host}/socket`).then(() => {rpc.waitList().then(list => {
 	const servers = new NodeMap<string, Server>(ul(), (a: Server, b: Server) => stringSort(a.name, b.name), list.map(i => [i[0], new Server(i)])),
 	      s = clearElement(document.body).appendChild(createHTML(shell, desktop([
 		button({"onclick": () => s.prompt("Server Name", "Please enter a name for the new server", "").then(name => {
