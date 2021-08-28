@@ -323,6 +323,9 @@ class Command {
 	setStatus (s: Uint) {
 		this.status = s;
 	}
+	setError (e: string) {
+		this.error = e;
+	}
 }
 
 class Server {
@@ -422,4 +425,5 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 	rpc.waitStartCommand().then(c => servers.get(c.server)?.commands.get(c.id)?.setStatus(1));
 	rpc.waitStopCommand().then(c => servers.get(c.server)?.commands.get(c.id)?.setStatus(0));
 	rpc.waitCommandStopped().then(([server, id]) => servers.get(server)?.commands.get(id)?.setStatus(2));
+	rpc.waitCommandError().then(c => servers.get(c.server)?.commands.get(c.id)?.setError(c.err));
 })}));
