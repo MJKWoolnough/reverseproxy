@@ -190,6 +190,7 @@ func (c *command) Run() error {
 			if c.unixCmd == uc {
 				if err != nil {
 					c.err = string(err.(*exec.ExitError).Stderr)
+					broadcast(broadcastCommandError, append(strconv.AppendQuote(append(strconv.AppendUint(append(strconv.AppendQuote(json.RawMessage{'{', '"', 's', 'e', 'r', 'v', 'e', 'r', '"', ':'}, c.server.name), ',', '"', 'i', 'd', '"', ':'), c.id, 10), ',', '"', 'e', 'r', 'r', '"', ':'), c.err), '}'), 0)
 				}
 				broadcast(broadcastCommandStopped, append(strconv.AppendUint(append(strconv.AppendQuote(json.RawMessage{'['}, c.server.name), ','), c.id, 10), ']'), 0)
 				c.status = 2
