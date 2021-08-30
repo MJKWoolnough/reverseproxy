@@ -152,7 +152,8 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 			}
 		}}, "Create Command")
 	]));
-      };
+      },
+      servers = new NodeMap<string, Server>(ul(), (a: Server, b: Server) => stringSort(a.name, b.name));
 
 class MatchMaker {
 	list: Match[];
@@ -366,8 +367,10 @@ class Server {
 }
 
 pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.location.host}/socket`).then(() => {rpc.waitList().then(list => {
-	const servers = new NodeMap<string, Server>(ul(), (a: Server, b: Server) => stringSort(a.name, b.name), list.map(i => [i[0], new Server(i)])),
-	      s = clearElement(document.body).appendChild(createHTML(shell, desktop([
+	for (const s of list) {
+		servers.set(s[0], new Server(s));
+	}
+	const s = clearElement(document.body).appendChild(createHTML(shell, desktop([
 		button({"onclick": () => s.prompt("Server Name", "Please enter a name for the new server", "").then(name => {
 			if (name) {
 				rpc.add(name).catch(err => s.alert("Error", err)).then(() => servers.set(name, new Server([name, [], []])));
