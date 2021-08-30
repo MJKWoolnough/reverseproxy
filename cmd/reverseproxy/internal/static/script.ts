@@ -362,7 +362,9 @@ class Server {
 		]);
 	}
 	setName(name: string) {
+		servers.delete(this.name);
 		this.nameSpan.innerText = this.name = name;
+		servers.set(name, this);
 	}
 }
 
@@ -379,14 +381,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 		servers[node]
 	])));
 	rpc.waitAdd().then(name => servers.set(name, new Server([name, [], []])));
-	rpc.waitRename().then(([oldName, newName]) => {
-		const s = servers.get(oldName);
-		if (s) {
-			servers.delete(oldName);
-			s.setName(newName);
-			servers.set(newName, s);
-		}
-	});
+	rpc.waitRename().then(([oldName, newName]) => servers.get(oldName)?.setName(newName));
 	rpc.waitRemove().then(name => servers.delete(name));
 	rpc.waitAddRedirect().then(r => {
 		const server = servers.get(r.server);
