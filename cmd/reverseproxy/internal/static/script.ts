@@ -370,14 +370,14 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 	for (const s of list) {
 		servers.set(s[0], new Server(s));
 	}
-	const s = clearElement(document.body).appendChild(createHTML(shell, desktop([
-		button({"onclick": () => s.prompt("Server Name", "Please enter a name for the new server", "").then(name => {
+	clearElement(document.body).appendChild(createHTML(shell, desktop([
+		button({"onclick": () => shell.prompt("Server Name", "Please enter a name for the new server", "").then(name => {
 			if (name) {
-				rpc.add(name).catch(err => s.alert("Error", err)).then(() => servers.set(name, new Server([name, [], []])));
+				rpc.add(name).catch(err => shell.alert("Error", err)).then(() => servers.set(name, new Server([name, [], []])));
 			}
 		})}, "New Server"),
 		servers[node]
-	      ])));
+	])));
 	rpc.waitAdd().then(name => servers.set(name, new Server([name, [], []])));
 	rpc.waitRename().then(([oldName, newName]) => {
 		const s = servers.get(oldName);
