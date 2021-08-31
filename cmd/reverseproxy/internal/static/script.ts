@@ -288,24 +288,41 @@ class Command {
 	params: string[];
 	env: Record<string, string>;
 	match: Match[];
+	status: Uint;
 	[node]: HTMLLIElement;
 	exeSpan: HTMLSpanElement;
 	statusSpan: HTMLSpanElement;
 	error: string;
 	user?: UserID;
+	startStop: HTMLButtonElement;
 	constructor(server: Server, id: Uint, exe: string, params: string[], env: Record<string, string>, match: Match[], status: Uint = 0, error = "", user?: UserID) {
 		this.id = id;
 		this.exe = exe;
 		this.params = params;
 		this.env = env;
 		this.match = match;
+		this.status = status;
 		this.exeSpan = span(exe + " " + params.join(" "));
 		this.statusSpan = span({"class": "status", "style": {"color": statusColours[status]}});
 		this.error = error;
 		this.user = user;
+		this.startStop = button({"onclick": () => {
+			const sid = {"server": server.name, id}
+			if (this.status === 1) {
+				rpc.stopCommand(sid).then(() => this.setStatus(0));
+			} else {
+				rpc.startCommand(sid)
+				.then(() => this.setStatus(1))
+				.catch(err => {
+					this.setStatus(2);
+					this.setError(err.message);
+				});
+			}
+		}}, status === 1 ? "Stop" : "Start");
 		this[node] = li([
 			this.statusSpan,
 			this.exeSpan,
+			this.startStop,
 			button({"onclick": () => editCommand(server, this)}, "Edit"),
 			button({"onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this command?").then(c => {
 				if (c) {
@@ -325,7 +342,12 @@ class Command {
 		this.exeSpan.innerText = this.exe + " " + (this.params = p).join(" ");
 	}
 	setStatus (s: Uint) {
-		this.statusSpan.style.setProperty("color", statusColours[s]);
+		this.statusSpan.style.setProperty("color", statusColours[this.status = s]);
+		if (s === 1) {
+			this.startStop.innerText = "Stop";
+		} else {
+			this.startStop.innerText = "Start";
+		}
 	}
 	setError (e: string) {
 		this.error = e;
