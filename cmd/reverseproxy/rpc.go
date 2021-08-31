@@ -141,7 +141,7 @@ func buildInitialMessage() json.RawMessage {
 			} else {
 				buf = append(buf, ',')
 			}
-			fmt.Fprintf(&buf, "[%d,%s,[", id, cmd.Exe)
+			fmt.Fprintf(&buf, "[%d,%q,[", id, cmd.Exe)
 			for n, param := range cmd.Params {
 				if n > 0 {
 					buf = append(buf, ',')
