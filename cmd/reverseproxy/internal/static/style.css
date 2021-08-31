@@ -1,3 +1,11 @@
 windows-shell {
 	position: static;
 }
+
+.status {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	border-radius: 1em;
+	background-color: currentColor;
+}
