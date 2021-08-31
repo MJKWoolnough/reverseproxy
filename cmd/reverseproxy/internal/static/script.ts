@@ -309,13 +309,19 @@ class Command {
 		this.startStop = button({"onclick": () => {
 			const sid = {"server": server.name, id}
 			if (this.status === 1) {
-				rpc.stopCommand(sid).then(() => this.setStatus(0));
+				rpc.stopCommand(sid)
+				.then(() => this.setStatus(0))
+				.catch(err => {
+					this.setStatus(2);
+					shell.alert("Error stopping command", err.message)
+				});
 			} else {
 				rpc.startCommand(sid)
 				.then(() => this.setStatus(1))
 				.catch(err => {
 					this.setStatus(2);
 					this.setError(err.message);
+					shell.alert("Error starting command", err.message);
 				});
 			}
 		}}, status === 1 ? "Stop" : "Start");
