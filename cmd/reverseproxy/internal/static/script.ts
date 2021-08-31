@@ -242,20 +242,21 @@ class Redirect {
 	id: Uint;
 	from: Uint;
 	to: string;
-	active: boolean;
 	match: Match[];
 	[node]: HTMLLIElement;
 	fromSpan: HTMLSpanElement;
 	toSpan: HTMLSpanElement;
+	statusSpan: HTMLSpanElement;
 	constructor(server: Server, id: Uint, from: Uint, to: string, active: boolean, match: Match[]) {
 		this.id = id;
 		this.from = from;
 		this.to = to;
-		this.active = active;
 		this.match = match;
 		this.fromSpan = span(from + ""),
 		this.toSpan = span(to);
-		this[node] = li([
+		this.statusSpan = span({"class": "status", "style": {"color": statusColours[active ? 1 : 0]}})
+		this[node] = li	([
+			this.statusSpan,
 			this.fromSpan,
 			this.toSpan,
 			button({"onclick": () => editRedirect(server, this)}, "Edit"),
@@ -277,7 +278,7 @@ class Redirect {
 		this.toSpan.innerText = this.to = t;
 	}
 	setActive(v: boolean) {
-		this.active = v;
+		this.statusSpan.style.setProperty("color", statusColours[v ? 1 : 0]);
 	}
 }
 
