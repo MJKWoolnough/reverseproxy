@@ -153,7 +153,8 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		}}, "Create Command")
 	]));
       },
-      servers = new NodeMap<string, Server>(ul(), (a: Server, b: Server) => stringSort(a.name, b.name));
+      servers = new NodeMap<string, Server>(ul(), (a: Server, b: Server) => stringSort(a.name, b.name)),
+      statusColours = ["#f00", "#0f0", "#f80"];
 
 class MatchMaker {
 	list: Match[];
@@ -288,7 +289,7 @@ class Command {
 	match: Match[];
 	[node]: HTMLLIElement;
 	exeSpan: HTMLSpanElement;
-	status: Uint;
+	statusSpan: HTMLSpanElement;
 	error: string;
 	user?: UserID;
 	constructor(server: Server, id: Uint, exe: string, params: string[], env: Record<string, string>, match: Match[], status: Uint = 0, error = "", user?: UserID) {
@@ -298,10 +299,11 @@ class Command {
 		this.env = env;
 		this.match = match;
 		this.exeSpan = span(exe + " " + params.join(" "));
-		this.status = status;
+		this.statusSpan = span({"class": "status", "style": {"color": statusColours[status]}});
 		this.error = error;
 		this.user = user;
 		this[node] = li([
+			this.statusSpan,
 			this.exeSpan,
 			button({"onclick": () => editCommand(server, this)}, "Edit"),
 			button({"onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this command?").then(c => {
@@ -322,7 +324,7 @@ class Command {
 		this.exeSpan.innerText = this.exe + " " + (this.params = p).join(" ");
 	}
 	setStatus (s: Uint) {
-		this.status = s;
+		this.statusSpan.style.setProperty("color", statusColours[s]);
 	}
 	setError (e: string) {
 		this.error = e;
