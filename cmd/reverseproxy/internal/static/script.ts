@@ -243,22 +243,38 @@ class Redirect {
 	from: Uint;
 	to: string;
 	match: Match[];
+	active: boolean;
 	[node]: HTMLLIElement;
 	fromSpan: HTMLSpanElement;
 	toSpan: HTMLSpanElement;
 	statusSpan: HTMLSpanElement;
+	startStop: HTMLButtonElement;
 	constructor(server: Server, id: Uint, from: Uint, to: string, active: boolean, match: Match[]) {
 		this.id = id;
 		this.from = from;
 		this.to = to;
 		this.match = match;
+		this.active = active;
 		this.fromSpan = span(from + ""),
 		this.toSpan = span(to);
 		this.statusSpan = span({"class": "status", "style": {"color": statusColours[active ? 1 : 0]}})
+		this.startStop = button({"onclick": () => {
+			const sid = {"server": server.name, id};
+			if (this.active) {
+				rpc.stopRedirect(sid)
+				.then(() => this.setActive(false))
+				.catch(err => shell.alert("Error stopping redirect", err.message));
+			} else {
+				rpc.startRedirect(sid)
+				.then(() => this.setActive(true))
+				.catch(err => shell.alert("Error starting redirect", err.message));
+			}
+		}}, active ? "Stop" : "Start");
 		this[node] = li	([
 			this.statusSpan,
 			this.fromSpan,
 			this.toSpan,
+			this.startStop,
 			button({"onclick": () => editRedirect(server, this)}, "Edit"),
 			button({"onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this redirect?").then(c => {
 				if (c) {
@@ -279,6 +295,7 @@ class Redirect {
 	}
 	setActive(v: boolean) {
 		this.statusSpan.style.setProperty("color", statusColours[v ? 1 : 0]);
+		this.startStop.innerText = v ? "Stop" : "Start";
 	}
 }
 
