@@ -12,20 +12,24 @@ type Param = {
 	[node]: HTMLInputElement;
 }
 
+let nextID = 0;
+
 const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       matchData2Match = (md: MatchData[]) => md.map(([isSuffix, name]) => ({isSuffix, name})),
       shell = shellElement(),
+      addLabel = (name: string, input: HTMLInputElement): [HTMLLabelElement, HTMLInputElement] => {
+	const id = "ID_" + nextID++;
+	return [label({"for": id}, name), createHTML(input, {id})];
+      },
       editRedirect = (server: Server, data?: Redirect) => {
 	const from = input({"type": "number", "min": 1, "max": 65535, "value": data?.from ?? 80}),
 	      to = input({"value": data?.to}),
 	      w = windows(),
 	      matches = new MatchMaker(w, data?.match ?? []);
 	shell.addWindow(createHTML(w, {"window-title": (data ? "Edit" : "Add") + " Redirect"}, [
-		label("From:"),
-		from,
+		addLabel("From:", from),
 		br(),
-		label("To:"),
-		to,
+		addLabel("To:", to),
 		br(),
 		matches[node],
 		button({"onclick": () => {
@@ -66,17 +70,16 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	const exe = input({"value": data?.exe}),
 	      params = new NodeArray<Param>(div(), noSort, data?.params.map(p => ({[node]: input({"value": p})})) ?? []),
 	      env = new EnvMaker(data?.env ?? {}),
-	      userID = input({"id": "userID", "type": "checkbox", "checked": data?.user !== undefined, "onchange": () => {
+	      userID = input({"type": "checkbox", "checked": data?.user !== undefined, "onchange": () => {
 		      uid.toggleAttribute("disabled", !userID.checked);
 		      gid.toggleAttribute("disabled", !userID.checked);
 	      }}),
-	      uid = input({"id": "uid", "type": "number", "min": 0, "value": data?.user?.uid, "disabled": data?.user === undefined}),
-	      gid = input({"id": "gid", "type": "number", "min": 0, "value": data?.user?.gid, "disabled": data?.user === undefined}),
+	      uid = input({"type": "number", "min": 0, "value": data?.user?.uid, "disabled": data?.user === undefined}),
+	      gid = input({"type": "number", "min": 0, "value": data?.user?.gid, "disabled": data?.user === undefined}),
 	      w = windows(),
 	      matches = new MatchMaker(w, data?.match ?? []);
 	shell.addWindow(createHTML(w, {"window-title": (data ? "Edit" : "Add") + " Command"}, [
-		label("Executable:"),
-		exe,
+		addLabel("Executable:", exe),
 		br(),
 		label("Params:"),
 		params[node],
@@ -91,14 +94,11 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		env[node],
 		br(),
 		matches[node],
-		label({"for": "userID"}, "Run as different user?:"),
-		userID,
+		addLabel("Run as different user?:", userID),
 		br(),
-		label({"for": "uid"}, "UID:"),
-		uid,
+		addLabel("UID:", uid),
 		br(),
-		label({"for": "gid"}, "GID:"),
-		gid,
+		addLabel("GID:", gid),
 		br(),
 		button({"onclick": () => {
 			if (exe.value === "") {
