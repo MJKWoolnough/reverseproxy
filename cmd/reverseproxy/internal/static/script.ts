@@ -14,16 +14,6 @@ type Param = {
 
 const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       matchData2Match = (md: MatchData[]) => md.map(([isSuffix, name]) => ({isSuffix, name})),
-      noEnum = {"enumerable": false},
-      redirectProps = {
-	"server": noEnum,
-	"fromSpan": noEnum,
-	"toSpan": noEnum
-      },
-      commandProps = {
-	"server": noEnum,
-	"exeSpan": noEnum
-      },
       shell = shellElement(),
       editRedirect = (server: Server, data?: Redirect) => {
 	const from = input({"type": "number", "min": 1, "max": 65535, "value": data?.from ?? 80}),
@@ -284,8 +274,6 @@ class Redirect {
 				}
 			})}, "X")
 		]);
-		Object.defineProperties(this, redirectProps);
-		Object.defineProperty(this, "name", {"get": () => server.name, "enumerable": true});
 	}
 	setFrom(f: Uint) {
 		this.fromSpan.innerText = (this.from = f) + "";
@@ -355,8 +343,6 @@ class Command {
 				}
 			})}, "X")
 		]);
-		Object.defineProperties(this, commandProps);
-		Object.defineProperty(this, "name", {"get": () => server.name, "enumerable": true});
 	}
 	setExe (e: string) {
 		this.exeSpan.innerText = (this.exe = e) + " " + this.params.join(" ");
