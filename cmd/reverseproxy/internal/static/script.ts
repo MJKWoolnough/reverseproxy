@@ -30,7 +30,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	      to = input({"value": data?.to}),
 	      w = windows(),
 	      matches = new MatchMaker(w, data?.match ?? []);
-	shell.addWindow(createHTML(w, {"window-title": "Add Redirect"}, [
+	shell.addWindow(createHTML(w, {"window-title": (data ? "Edit" : "Add") + " Redirect"}, [
 		label("From:"),
 		from,
 		br(),
@@ -69,7 +69,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 				).catch(err => shell.alert("Error", err.message));
 				w.remove();
 			}
-		}}, "Create Redirect")
+		}}, (data ? "Edit" : "Create") + " Redirect")
 	]));
       },
       editCommand = (server: Server, data?: Command) => {
@@ -84,7 +84,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	      gid = input({"id": "gid", "type": "number", "min": 0, "value": data?.user?.gid, "disabled": data?.user === undefined}),
 	      w = windows(),
 	      matches = new MatchMaker(w, data?.match ?? []);
-	shell.addWindow(createHTML(w, {"window-title": "Add Command"}, [
+	shell.addWindow(createHTML(w, {"window-title": (data ? "Edit" : "Add") + " Command"}, [
 		label("Executable:"),
 		exe,
 		br(),
@@ -150,7 +150,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 				.catch(err => shell.alert("Error", err.message));
 				w.remove();
 			}
-		}}, "Create Command")
+		}}, (data ? "Edit" : "Create") + " Command")
 	]));
       },
       servers = new NodeMap<string, Server>(ul(), (a: Server, b: Server) => stringSort(a.name, b.name)),
