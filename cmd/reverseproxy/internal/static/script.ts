@@ -431,12 +431,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 			redirect.match = r.match;
 		}
 	});
-	rpc.waitRemoveRedirect().then(r => {
-		const server = servers.get(r.server);
-		if (server) {
-			server.redirects.delete(r.id);
-		}
-	});
+	rpc.waitRemoveRedirect().then(r => servers.get(r.server)?.redirects.delete(r.id));
 	rpc.waitAddCommand().then(c => {
 		const server = servers.get(c.server);
 		if (server) {
@@ -453,12 +448,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 			command.user = c.user;
 		}
 	});
-	rpc.waitRemoveCommand().then(c => {
-		const server = servers.get(c.server);
-		if (server) {
-			server.commands.delete(c.id);
-		}
-	});
+	rpc.waitRemoveCommand().then(c => servers.get(c.server)?.commands.delete(c.id));
 	rpc.waitStartRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.setActive(true));
 	rpc.waitStopRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.setActive(false));
 	rpc.waitStartCommand().then(c => servers.get(c.server)?.commands.get(c.id)?.setStatus(1));
