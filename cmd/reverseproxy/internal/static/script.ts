@@ -21,6 +21,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	const id = "ID_" + nextID++;
 	return [label({"for": id}, name), createHTML(input, {id})];
       },
+      maxID = 4294967296,
       editRedirect = (server: Server, data?: Redirect) => {
 	const from = input({"type": "number", "min": 1, "max": 65535, "value": data?.from ?? 80}),
 	      to = input({"value": data?.to}),
@@ -70,8 +71,8 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		      uid.toggleAttribute("disabled", !userID.checked);
 		      gid.toggleAttribute("disabled", !userID.checked);
 	      }}),
-	      uid = input({"type": "number", "min": 0, "value": data?.user?.uid, "disabled": data?.user === undefined}),
-	      gid = input({"type": "number", "min": 0, "value": data?.user?.gid, "disabled": data?.user === undefined}),
+	      uid = input({"type": "number", "min": 0, "max": maxID, "value": data?.user?.uid, "disabled": data?.user === undefined}),
+	      gid = input({"type": "number", "min": 0, "max": maxID, "value": data?.user?.gid, "disabled": data?.user === undefined}),
 	      w = windows(),
 	      matches = new MatchMaker(w, data?.match ?? []);
 	shell.addWindow(createHTML(w, {"window-title": (data ? "Edit" : "Add") + " Command"}, [
