@@ -34,7 +34,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		matches[node],
 		button({"onclick": () => {
 			const f = parseInt(from.value);
-			if (f <= 0 || f >= 65535) {
+			if (f <= 0 || f > 65535) {
 				w.alert("Invalid Port", `Invalid from port: ${from.value}`);
 			} else if (to.value === "") {
 				w.alert("Invalid address", `Invalid to address: ${to.value}`);
