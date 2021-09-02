@@ -133,7 +133,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 						"match": matches.list,
 						"user": ids
 					})
-					.then(id => server.commands.set(id, new Command(server, id, exe.value, p, e, matches.list)))
+					.then(id => server.commands.set(id, new Command(server, id, exe.value, p, e, matches.list, 0, "", ids)))
 				)
 				.catch(err => shell.alert("Error", err.message));
 				w.remove();
