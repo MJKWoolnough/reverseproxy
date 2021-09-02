@@ -158,7 +158,12 @@ func buildInitialMessage() json.RawMessage {
 				}
 				fmt.Fprintf(&buf, "%q:%q", key, value)
 			}
-			fmt.Fprintf(&buf, "},%d,%q", cmd.status, cmd.err)
+			fmt.Fprintf(&buf, "},%d,%q,", cmd.status, cmd.err)
+			if cmd.User != nil {
+				fmt.Fprintf(&buf, "{\"uid\":%d,\"gid\":%d}", cmd.User.UID, cmd.User.GID)
+			} else {
+				buf = append(buf, 'n', 'u', 'l', 'l')
+			}
 			for _, m := range cmd.Match {
 				fmt.Fprintf(&buf, ",[%t,%q]", m.IsSuffix, m.Name)
 			}
