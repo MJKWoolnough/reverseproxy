@@ -49,11 +49,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 						"to": to.value,
 						"match": matches.list
 					})
-					.then(() => {
-						data.setFrom(f);
-						data.setTo(to.value);
-						data.match = matches.list;
-					}) : rpc.addRedirect({
+					.then(() => data.update(f, to.value, matches.list)) : rpc.addRedirect({
 						"server": server.name,
 						"from": f,
 						"to": to.value,
@@ -270,11 +266,10 @@ class Redirect {
 			})}, "X")
 		]);
 	}
-	setFrom(f: Uint) {
-		this.fromSpan.innerText = (this.from = f) + "";
-	}
-	setTo(t: string) {
-		this.toSpan.innerText = this.to = t;
+	update(from: Uint, to: string, match: Match[]) {
+		this.fromSpan.innerText = (this.from = from) + "";
+		this.toSpan.innerText = this.to = to;
+		this.match = match;
 	}
 	setActive(v: boolean) {
 		this.statusSpan.style.setProperty("color", statusColours[v ? 1 : 0]);
@@ -421,9 +416,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 	rpc.waitModifyRedirect().then(r => {
 		const redirect = servers.get(r.server)?.redirects.get(r.id);
 		if (redirect) {
-			redirect.setFrom(r.from);
-			redirect.setTo(r.to);
-			redirect.match = r.match;
+			redirect.update(r.from, r.to, r.match);
 		}
 	});
 	rpc.waitRemoveRedirect().then(r => servers.get(r.server)?.redirects.delete(r.id));
