@@ -13,7 +13,7 @@ export type Match = {
 	name:     string;
 };
 
-export type Redirect = NameID & {
+type Redirect = NameID & {
 	from:   Uint;
 	to:     string;
 	match:  Match[];
@@ -24,7 +24,7 @@ export type UserID = {
 	gid: Uint;
 }
 
-export type Command = NameID & {
+type Command = NameID & {
 	exe:    string;
 	params: string[];
 	env:    Record<string, string>;
@@ -32,7 +32,7 @@ export type Command = NameID & {
 	user?:  UserID;
 };
 
-export type NameID = {
+type NameID = {
 	server: string;
 	id:     Uint;
 }
