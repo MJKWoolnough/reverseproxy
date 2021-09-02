@@ -413,12 +413,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 			server.redirects.set(r.id, new Redirect(server, r.id, r.from, r.to, false, r.match));
 		}
 	});
-	rpc.waitModifyRedirect().then(r => {
-		const redirect = servers.get(r.server)?.redirects.get(r.id);
-		if (redirect) {
-			redirect.update(r.from, r.to, r.match);
-		}
-	});
+	rpc.waitModifyRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.update(r.from, r.to, r.match));
 	rpc.waitRemoveRedirect().then(r => servers.get(r.server)?.redirects.delete(r.id));
 	rpc.waitAddCommand().then(c => {
 		const server = servers.get(c.server);
@@ -426,12 +421,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 			server.commands.set(c.id, new Command(server, c.id, c.exe, c.params, c.env, c.match, 0, "", c.user));
 		}
 	});
-	rpc.waitModifyCommand().then(c => {
-		const command = servers.get(c.server)?.commands.get(c.id);
-		if (command) {
-			command.update(c.exe, c.params, c.env, c.match, c.user)
-		}
-	});
+	rpc.waitModifyCommand().then(c => servers.get(c.server)?.commands.get(c.id)?.update(c.exe, c.params, c.env, c.match, c.user));
 	rpc.waitRemoveCommand().then(c => servers.get(c.server)?.commands.delete(c.id));
 	rpc.waitStartRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.setActive(true));
 	rpc.waitStopRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.setActive(false));
