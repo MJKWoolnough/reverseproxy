@@ -98,16 +98,22 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		addLabel("GID:", gid),
 		br(),
 		button({"onclick": () => {
+			const u = parseInt(uid.value),
+			      g = parseInt(gid.value);
 			if (exe.value === "") {
 				w.alert("Invalid executable", "Executable cannot be empty");
 			} else if (matches.list.some(({name}) => name === "")) {
 				w.alert("Invalid Match", "Cannot have empty match");
+			} else if (u < 0 || u > maxID) {
+				w.alert("Invalid UID", `UID must be in range 0 < uid < ${maxID}`);
+			} else if (g < 0 || g > maxID) {
+				w.alert("Invalid GID", `GID must be in range 0 < uid < ${maxID}`);
 			} else {
 				const p = params.map(p => p[node].value),
 				      e = env.toObject(),
-				      u = userID.checked ? {
-					      "uid": parseInt(uid.value),
-					      "gid": parseInt(gid.value)
+				      ids = userID.checked ? {
+					      "uid": u,
+					      "gid": g
 				      } : undefined;
 				(data ?
 					rpc.modifyCommand({
@@ -117,15 +123,15 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 						"params": p,
 						"env": e,
 						"match": matches.list,
-						"user": u
+						"user": ids
 					})
-					.then(() => data.update(exe.value, p, e, matches.list, u)) : rpc.addCommand({
+					.then(() => data.update(exe.value, p, e, matches.list, ids)) : rpc.addCommand({
 						"server": server.name,
 						"exe": exe.value,
 						"params": p,
 						"env": e,
 						"match": matches.list,
-						"user": u
+						"user": ids
 					})
 					.then(id => server.commands.set(id, new Command(server, id, exe.value, p, e, matches.list)))
 				)
