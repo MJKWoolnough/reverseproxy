@@ -122,12 +122,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 						"match": matches.list,
 						"user": u
 					})
-					.then(() => {
-						data.setExe(exe.value);
-						data.setParams(p);
-						data.env = e;
-						data.match = matches.list;
-					}) : rpc.addCommand({
+					.then(() => data.update(exe.value, p, e, matches.list, u)) : rpc.addCommand({
 						"server": server.name,
 						"exe": exe.value,
 						"params": p,
@@ -344,11 +339,11 @@ class Command {
 			})}, "X")
 		]);
 	}
-	setExe (e: string) {
-		this.exeSpan.innerText = (this.exe = e) + " " + this.params.join(" ");
-	}
-	setParams (p: string[]) {
-		this.exeSpan.innerText = this.exe + " " + (this.params = p).join(" ");
+	update(exe: string, params: string[], env: Record<string, string>, match: Match[], user?: UserID) {
+		this.exeSpan.innerText = (this.exe = exe) + " " + (this.params = params).join(" ");
+		this.env = env;
+		this.match = match;
+		this.user = user;
 	}
 	setStatus (s: Uint) {
 		this.statusSpan.style.setProperty("color", statusColours[this.status = s]);
@@ -441,11 +436,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 	rpc.waitModifyCommand().then(c => {
 		const command = servers.get(c.server)?.commands.get(c.id);
 		if (command) {
-			command.setExe(c.exe);
-			command.setParams(c.params);
-			command.env = c.env;
-			command.match = c.match;
-			command.user = c.user;
+			command.update(c.exe, c.params, c.env, c.match, c.user)
 		}
 	});
 	rpc.waitRemoveCommand().then(c => servers.get(c.server)?.commands.delete(c.id));
