@@ -4,7 +4,7 @@ export type Uint = number;
 
 export type MatchData = [boolean, string];
 
-export type ListItem = [string, [Uint, Uint, string, boolean, string, ...MatchData[]][], [Uint, string, string[], Record<string, string>, Uint, string, ...MatchData[]][]]
+export type ListItem = [string, [Uint, Uint, string, boolean, string, ...MatchData[]][], [Uint, string, string[], Record<string, string>, Uint, string, UserID | null, ...MatchData[]][]]
 
 type List = ListItem[];
 
