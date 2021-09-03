@@ -9,3 +9,13 @@ li > span:first-child {
 	border-radius: 1em;
 	background-color: currentColor;
 }
+
+windows-desktop > svg {
+	height: 0;
+	width: 0;
+}
+
+svg {
+	width: 1em;
+	height: 1em;
+}
