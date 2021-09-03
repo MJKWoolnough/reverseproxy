@@ -2,7 +2,7 @@ windows-shell {
 	position: static;
 }
 
-.status {
+li > span:first-child {
 	display: inline-block;
 	width: 1em;
 	height: 1em;

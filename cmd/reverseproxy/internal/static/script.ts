@@ -245,7 +245,7 @@ class Redirect {
 		this.active = active;
 		this.fromSpan = span(from + ""),
 		this.toSpan = span(to);
-		this.statusSpan = span({"class": "status", "style": {"color": statusColours[active ? 1 : 0]}})
+		this.statusSpan = span({"style": {"color": statusColours[active ? 1 : 0]}})
 		this.startStop = button({"onclick": () => {
 			const sid = {"server": server.name, id};
 			if (this.active) {
