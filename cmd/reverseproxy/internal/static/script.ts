@@ -1,7 +1,9 @@
 import type {Uint, Match, MatchData, ListItem, UserID} from './types.js';
+import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
+import {svg, title, use} from './lib/svg.js';
 import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
@@ -22,6 +24,15 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	return [label({"for": id}, name), createHTML(input, {id})];
       },
       maxID = 4294967296,
+      symbols = svg({"style": "width: 0"}),
+      addSymbol = (id: string, s: SVGSymbolElement) => {
+	s.setAttribute("id", id);
+	symbols.appendChild(s);
+	return (props: Props = {}) => svg(props, [
+		typeof props["title"] === "string" ? title(props["title"]) : [],
+		use({"href": `#${id}`})
+	]);
+      },
       editRedirect = (server: Server, data?: Redirect) => {
 	const from = input({"type": "number", "min": 1, "max": 65535, "value": data?.from ?? 80}),
 	      to = input({"value": data?.to}),
