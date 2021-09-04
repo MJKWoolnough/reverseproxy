@@ -1,7 +1,7 @@
 import type {Uint, Match, MatchData, ListItem, UserID} from './types.js';
 import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
-import {clearElement, createHTML} from './lib/dom.js';
+import {clearElement, createHTML, svgNS} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
 import {createSVG, path, svg, symbol, title, use} from './lib/svg.js';
 import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
@@ -25,15 +25,19 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       },
       maxID = 4294967296,
       symbols = svg(),
-      addSymbol = (s: SVGSymbolElement) => {
-	const id = "ID_" + nextID++;
+      addSymbol = (s: SVGSymbolElement): [(props?: Props) => SVGSVGElement, string] => {
+	const id = "ID_" + nextID++,
+	      str = s.outerHTML.slice(7, -7);
 	createSVG(symbols, createSVG(s, {id}));
-	return (props: Props = {}) => svg(props, [
-		typeof props["title"] === "string" ? title(props["title"]) : [],
-		use({"href": `#${id}`})
-	]);
+	return [
+		(props: Props = {}) => svg(props, [
+			typeof props["title"] === "string" ? title(props["title"]) : [],
+			use({"href": `#${id}`})
+		]),
+		"data:image/svg+xml," + encodeURIComponent(`<svg xmlns="${svgNS}"${str}svg>`)
+	];
       },
-      remove = addSymbol(symbol({"viewBox": "0 0 32 34"}, path({"d": "M10,5 v-3 q0,-1 1,-1 h10 q1,0 1,1 v3 m8,0 h-28 q-1,0 -1,1 v2 q0,1 1,1 h28 q1,0 1,-1 v-2 q0,-1 -1,-1 m-2,4 v22 q0,2 -2,2 h-20 q-2,0 -2,-2 v-22 m2,3 v18 q0,1 1,1 h3 q1,0 1,-1 v-18 q0,-1 -1,-1 h-3 q-1,0 -1,1 m7.5,0 v18 q0,1 1,1 h3 q1,0 1,-1 v-18 q0,-1 -1,-1 h-3 q-1,0 -1,1 m7.5,0 v18 q0,1 1,1 h3 q1,0 1,-1 v-18 q0,-1 -1,-1 h-3 q-1,0 -1,1", "style": "stroke: currentColor", "fill": "none"}))),
+      [remove] = addSymbol(symbol({"viewBox": "0 0 32 34"}, path({"d": "M10,5 v-3 q0,-1 1,-1 h10 q1,0 1,1 v3 m8,0 h-28 q-1,0 -1,1 v2 q0,1 1,1 h28 q1,0 1,-1 v-2 q0,-1 -1,-1 m-2,4 v22 q0,2 -2,2 h-20 q-2,0 -2,-2 v-22 m2,3 v18 q0,1 1,1 h3 q1,0 1,-1 v-18 q0,-1 -1,-1 h-3 q-1,0 -1,1 m7.5,0 v18 q0,1 1,1 h3 q1,0 1,-1 v-18 q0,-1 -1,-1 h-3 q-1,0 -1,1 m7.5,0 v18 q0,1 1,1 h3 q1,0 1,-1 v-18 q0,-1 -1,-1 h-3 q-1,0 -1,1", "style": "stroke: currentColor", "fill": "none"}))),
       editRedirect = (server: Server, data?: Redirect) => {
 	const from = input({"type": "number", "min": 1, "max": 65535, "value": data?.from ?? 80}),
 	      to = input({"value": data?.to}),
