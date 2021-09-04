@@ -3,7 +3,7 @@ import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
-import {path, svg, symbol, title, use} from './lib/svg.js';
+import {createSVG, path, svg, symbol, title, use} from './lib/svg.js';
 import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
@@ -27,8 +27,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       symbols = svg(),
       addSymbol = (s: SVGSymbolElement) => {
 	const id = "ID_" + nextID++;
-	s.setAttribute("id", id);
-	symbols.appendChild(s);
+	createSVG(symbols, createSVG(s, {id}));
 	return (props: Props = {}) => svg(props, [
 		typeof props["title"] === "string" ? title(props["title"]) : [],
 		use({"href": `#${id}`})
