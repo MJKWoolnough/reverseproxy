@@ -23,4 +23,5 @@ windows-desktop > svg {
 svg {
 	width: 1em;
 	height: 1em;
+	cursor: pointer;
 }
