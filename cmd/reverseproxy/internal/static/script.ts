@@ -3,7 +3,7 @@ import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML, svgNS} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
-import {createSVG, path, polyline, svg, symbol, title, use} from './lib/svg.js';
+import {createSVG, path, polyline, rect, svg, symbol, title, use} from './lib/svg.js';
 import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
@@ -43,6 +43,13 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       [addRedirect, addRedirectIcon] = addSymbol(symbol({"viewBox": "0 0 100 100"}, [
 	      path({"d": "M10,80 h40 a1,1 0,0,0 0,-60 h-20", "stroke-width": 15, "stroke": "#000", "fill": "none"}),
 	      path({"d": "M30,5 v30 l-20,-15 z", "fill": "#000"}),
+	      path({"d": "M60,40 v50 m-25,-25 h50", "stroke-width": 15, "stroke": "#0f0", "fill": "none"})
+      ])),
+      [addCommand, addCommandIcon] = addSymbol(symbol({"viewBox": "0 0 100 100"}, [
+	      rect({"width": 100, "height": 100, "fill": "#000", "rx": 10}),
+	      rect({"width": 100, "height": 30, "fill": "#aaa", "rx": 10}),
+	      rect({"y": 15, "width": 100, "height": 20, "fill": "#000"}),
+	      path({"d": "M10,25 l10,10 l-10,10 M25,45 h20", "stroke": "#fff", "stroke-width": 5}),
 	      path({"d": "M60,40 v50 m-25,-25 h50", "stroke-width": 15, "stroke": "#0f0", "fill": "none"})
       ])),
       editRedirect = (server: Server, data?: Redirect) => {
@@ -88,7 +95,8 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	]));
       },
       editCommand = (server: Server, data?: Command) => {
-	const exe = input({"value": data?.exe}),
+	const icon = data ? editIcon : addCommandIcon,
+	      exe = input({"value": data?.exe}),
 	      params = new NodeArray<Param>(div(), noSort, data?.params.map(p => ({[node]: input({"value": p})})) ?? []),
 	      env = new EnvMaker(data?.env ?? {}),
 	      userID = input({"type": "checkbox", "checked": data?.user !== undefined, "onchange": () => {
@@ -99,7 +107,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	      gid = input({"type": "number", "min": 0, "max": maxID, "value": data?.user?.gid, "disabled": data?.user === undefined}),
 	      w = windows(),
 	      matches = new MatchMaker(w, data?.match ?? []);
-	shell.addWindow(createHTML(w, {"window-title": (data ? "Edit" : "Add") + " Command", "window-icon": editIcon}, [
+	shell.addWindow(createHTML(w, {"window-title": (data ? "Edit" : "Add") + " Command", "window-icon": icon}, [
 		addLabel("Executable:", exe),
 		br(),
 		label("Params:"),
@@ -125,13 +133,13 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 			const u = parseInt(uid.value),
 			      g = parseInt(gid.value);
 			if (exe.value === "") {
-				w.alert("Invalid executable", "Executable cannot be empty");
+				w.alert("Invalid executable", "Executable cannot be empty", icon);
 			} else if (matches.list.some(({name}) => name === "")) {
-				w.alert("Invalid Match", "Cannot have empty match");
+				w.alert("Invalid Match", "Cannot have empty match", icon);
 			} else if (u < 0 || u > maxID) {
-				w.alert("Invalid UID", `UID must be in range 0 < uid < ${maxID}`);
+				w.alert("Invalid UID", `UID must be in range 0 < uid < ${maxID}`, icon);
 			} else if (g < 0 || g > maxID) {
-				w.alert("Invalid GID", `GID must be in range 0 < uid < ${maxID}`);
+				w.alert("Invalid GID", `GID must be in range 0 < uid < ${maxID}`, icon);
 			} else {
 				const p = params.map(p => p[node].value),
 				      e = env.toObject(),
@@ -159,7 +167,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 					})
 					.then(id => server.commands.set(id, new Command(server, id, exe.value, p, e, matches.list, ids)))
 				)
-				.catch(err => shell.alert("Error", err.message));
+				.catch(err => shell.alert("Error", err.message, icon));
 				w.remove();
 			}
 		}}, (data ? "Edit" : "Create") + " Command")
@@ -411,7 +419,7 @@ class Server {
 				})})
 			]),
 			addRedirect({"title": "Add Redirect", "onclick": () => editRedirect(this)}),
-			button({"onclick": () => editCommand(this)}, "Add Command"),
+			addCommand({"title": "Add Command", "onclick": () => editCommand(this)}),
 			this.redirects[node],
 			this.commands[node]
 		]);
