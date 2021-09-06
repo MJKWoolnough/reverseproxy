@@ -10,9 +10,14 @@ li > span:first-child {
 	background-color: currentColor;
 }
 
-windows-desktop > svg {
+windows-desktop > svg:first-child {
 	height: 0;
 	width: 0;
+}
+
+windows-desktop > svg {
+	height: 2em;
+	width: 2em;
 }
 
 svg {
