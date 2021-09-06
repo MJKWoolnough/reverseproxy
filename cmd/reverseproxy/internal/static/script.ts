@@ -3,7 +3,7 @@ import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML, svgNS} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
-import {createSVG, path, polyline, rect, svg, symbol, title, use} from './lib/svg.js';
+import {createSVG, circle, defs, g, line, path, polyline, rect, svg, symbol, title, use} from './lib/svg.js';
 import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
@@ -41,16 +41,34 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       [rename, renameIcon] = addSymbol(symbol({"viewBox": "0 0 30 20"}, path({"d": "M1,5 v10 h28 v-10 Z M17,1 h10 m-5,0 V19 m-5,0 h10", "style": "stroke: currentColor", "stroke-linejoin": "round", "fill": "none"}))),
       [edit, editIcon] = addSymbol(symbol({"viewBox": "0 0 70 70", "fill": "#fff", "stroke": "#000"}, [polyline({"points": "51,7 58,0 69,11 62,18 51,7 7,52 18,63 62,18", "stroke-width": 2}), path({"d": "M7,52 L1,68 L18,63 M53,12 L14,51 M57,16 L18,55"})])),
       [addRedirect, addRedirectIcon] = addSymbol(symbol({"viewBox": "0 0 100 100"}, [
-	      path({"d": "M10,80 h40 a1,1 0,0,0 0,-60 h-20", "stroke-width": 15, "stroke": "#000", "fill": "none"}),
-	      path({"d": "M30,5 v30 l-20,-15 z", "fill": "#000"}),
-	      path({"d": "M60,40 v50 m-25,-25 h50", "stroke-width": 15, "stroke": "#0f0", "fill": "none"})
+	path({"d": "M10,80 h40 a1,1 0,0,0 0,-60 h-20", "stroke-width": 15, "stroke": "#000", "fill": "none"}),
+	path({"d": "M30,5 v30 l-20,-15 z", "fill": "#000"}),
+	path({"d": "M60,40 v50 m-25,-25 h50", "stroke-width": 15, "stroke": "#0f0", "fill": "none"})
       ])),
       [addCommand, addCommandIcon] = addSymbol(symbol({"viewBox": "0 0 100 100"}, [
-	      rect({"width": 100, "height": 100, "fill": "#000", "rx": 10}),
-	      rect({"width": 100, "height": 30, "fill": "#aaa", "rx": 10}),
-	      rect({"y": 15, "width": 100, "height": 20, "fill": "#000"}),
-	      path({"d": "M10,25 l10,10 l-10,10 M25,45 h20", "stroke": "#fff", "stroke-width": 5}),
-	      path({"d": "M60,40 v50 m-25,-25 h50", "stroke-width": 15, "stroke": "#0f0", "fill": "none"})
+	rect({"width": 100, "height": 100, "fill": "#000", "rx": 10}),
+	rect({"width": 100, "height": 30, "fill": "#aaa", "rx": 10}),
+	rect({"y": 15, "width": 100, "height": 20, "fill": "#000"}),
+	path({"d": "M10,25 l10,10 l-10,10 M25,45 h20", "stroke": "#fff", "stroke-width": 5}),
+	path({"d": "M60,40 v50 m-25,-25 h50", "stroke-width": 15, "stroke": "#0f0", "fill": "none"})
+      ])),
+      [addServer, addServerIcon] = addSymbol(symbol({"viewBox": "0 0 100 100"}, [
+	defs([
+		circle({"id": "sc", "r": 2, "cy": 7, "fill": "#000"}),
+		g({"id": "sr"}, [
+			rect({"x": 2, "width": 96, "height": 20, "stroke": "#000", "stroke-width": 2, "fill": "#fff", "rx": 5}),
+			line({"x1": 10, "x2": 30, "y1": 7, "y2": 7, "stroke": "#000"}),
+			use({"href": "#sc", "x": 70}),
+			use({"href": "#sc", "x": 75}),
+			use({"href": "#sc", "x": 80}),
+			use({"href": "#sc", "x": 75})
+		])
+	]),
+	use({"href": "#sr", "y": 3}),
+	use({"href": "#sr", "y": 28}),
+	use({"href": "#sr", "y": 53}),
+	use({"href": "#sr", "y": 78}),
+	path({"d": "M60,40 v50 m-25,-25 h50", "stroke-width": 15, "stroke": "#0f0", "fill": "none"})
       ])),
       editRedirect = (server: Server, data?: Redirect) => {
 	const icon = data ? editIcon : addRedirectIcon,
@@ -437,11 +455,11 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 	}
 	clearElement(document.body).appendChild(createHTML(shell, desktop([
 		symbols,
-		button({"onclick": () => shell.prompt("Server Name", "Please enter a name for the new server", "").then(name => {
+		addServer({"title": "Add Server", "onclick": () => shell.prompt("Server Name", "Please enter a name for the new server", "", addServerIcon).then(name => {
 			if (name) {
-				rpc.add(name).catch(err => shell.alert("Error", err)).then(() => servers.set(name, new Server([name, [], []])));
+				rpc.add(name).catch(err => shell.alert("Error", err, addServerIcon)).then(() => servers.set(name, new Server([name, [], []])));
 			}
-		})}, "New Server"),
+		})}),
 		servers[node]
 	])));
 	rpc.waitAdd().then(name => servers.set(name, new Server([name, [], []])));
