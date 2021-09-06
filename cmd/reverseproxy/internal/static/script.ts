@@ -3,7 +3,7 @@ import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML, svgNS} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
-import {createSVG, path, svg, symbol, title, use} from './lib/svg.js';
+import {createSVG, path, polyline, svg, symbol, title, use} from './lib/svg.js';
 import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
@@ -39,12 +39,13 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       },
       [remove, removeIcon] = addSymbol(symbol({"viewBox": "0 0 32 34"}, path({"d": "M10,5 v-3 q0,-1 1,-1 h10 q1,0 1,1 v3 m8,0 h-28 q-1,0 -1,1 v2 q0,1 1,1 h28 q1,0 1,-1 v-2 q0,-1 -1,-1 m-2,4 v22 q0,2 -2,2 h-20 q-2,0 -2,-2 v-22 m2,3 v18 q0,1 1,1 h3 q1,0 1,-1 v-18 q0,-1 -1,-1 h-3 q-1,0 -1,1 m7.5,0 v18 q0,1 1,1 h3 q1,0 1,-1 v-18 q0,-1 -1,-1 h-3 q-1,0 -1,1 m7.5,0 v18 q0,1 1,1 h3 q1,0 1,-1 v-18 q0,-1 -1,-1 h-3 q-1,0 -1,1", "style": "stroke: currentColor", "fill": "none"}))),
       [rename, renameIcon] = addSymbol(symbol({"viewBox": "0 0 30 20"}, path({"d": "M1,5 v10 h28 v-10 Z M17,1 h10 m-5,0 V19 m-5,0 h10", "style": "stroke: currentColor", "stroke-linejoin": "round", "fill": "none"}))),
+      [edit, editIcon] = addSymbol(symbol({"viewBox": "0 0 70 70", "fill": "#fff", "stroke": "#000"}, [polyline({"points": "51,7 58,0 69,11 62,18 51,7 7,52 18,63 62,18", "stroke-width": 2}), path({"d": "M7,52 L1,68 L18,63 M53,12 L14,51 M57,16 L18,55"})])),
       editRedirect = (server: Server, data?: Redirect) => {
 	const from = input({"type": "number", "min": 1, "max": 65535, "value": data?.from ?? 80}),
 	      to = input({"value": data?.to}),
 	      w = windows(),
 	      matches = new MatchMaker(w, data?.match ?? []);
-	shell.addWindow(createHTML(w, {"window-title": (data ? "Edit" : "Add") + " Redirect"}, [
+	shell.addWindow(createHTML(w, {"window-title": (data ? "Edit" : "Add") + " Redirect", "window-icon": editIcon}, [
 		addLabel("From:", from),
 		br(),
 		addLabel("To:", to),
@@ -92,7 +93,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	      gid = input({"type": "number", "min": 0, "max": maxID, "value": data?.user?.gid, "disabled": data?.user === undefined}),
 	      w = windows(),
 	      matches = new MatchMaker(w, data?.match ?? []);
-	shell.addWindow(createHTML(w, {"window-title": (data ? "Edit" : "Add") + " Command"}, [
+	shell.addWindow(createHTML(w, {"window-title": (data ? "Edit" : "Add") + " Command", "window-icon": editIcon}, [
 		addLabel("Executable:", exe),
 		br(),
 		label("Params:"),
@@ -280,7 +281,7 @@ class Redirect {
 			this.fromSpan,
 			this.toSpan,
 			this.startStop,
-			button({"onclick": () => editRedirect(server, this)}, "Edit"),
+			edit({"title": "Edit Redirect", "onclick": () => editRedirect(server, this)}),
 			remove({"title": "Remove Redirect", "onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this redirect?", removeIcon).then(c => {
 				if (c) {
 					rpc.removeRedirect({"server": server.name, "id": id})
@@ -348,7 +349,7 @@ class Command {
 			this.statusSpan,
 			this.exeSpan,
 			this.startStop,
-			button({"onclick": () => editCommand(server, this)}, "Edit"),
+			edit({"title": "Edit Command", "onclick": () => editCommand(server, this)}),
 			remove({"title": "Remove Command", "onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this command?", removeIcon).then(c => {
 				if (c) {
 					rpc.removeCommand({"server": server.name, "id": id})
