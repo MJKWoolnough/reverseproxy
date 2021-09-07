@@ -3,11 +3,11 @@ import RPC from './lib/rpc_ws.js';
 
 const broadcastList = -1, broadcastAdd = -2, broadcastRename = -3, broadcastRemove = -4, broadcastAddRedirect = -5, broadcastAddCommand = -6, broadcastModifyRedirect = -7, broadcastModifyCommand = -8, broadcastRemoveRedirect = -9, broadcastRemoveCommand = -10, broadcastStartRedirect = -11, broadcastStartCommand = -12, broadcastStopRedirect = -13, broadcastStopCommand = -14, broadcastCommandStopped = -15, broadcastCommandError = -16;
 
-export let rpc: Readonly<RPCType>;
+export const rpc = {} as Readonly<RPCType>;
 
 export default (url: string): Promise<void> => {
 	return RPC(url, 1.1).then(arpc => {
-		rpc = Object.freeze(Object.fromEntries([
+		Object.freeze(Object.assign(rpc, Object.fromEntries([
 			([
 				["waitList",           broadcastList],
 				["waitAdd",            broadcastAdd],
@@ -42,6 +42,6 @@ export default (url: string): Promise<void> => {
 				"stopCommand",
 				"getCommandPorts"
 			].map(ep => [ep, arpc.request.bind(null, ep)])
-		].flat()) as RPCType)
+		].flat()) as RPCType))
 	});
 };
