@@ -20,11 +20,6 @@ func readHTTPServerName(r io.Reader, buf []byte) (string, []byte, error) {
 	l := -1
 	for l < 0 {
 		m, err := r.Read(buf[n:])
-		if err != nil {
-			if terr, ok := err.(net.Error); !ok || !terr.Temporary() {
-				return "", nil, fmt.Errorf("error reading headers: %w", err)
-			}
-		}
 		n += m
 		h = bytes.Index(buf[:n], host)
 		if e := bytes.Index(buf[:n], eoh); h > 0 && (e > h || e == -1) {
@@ -32,6 +27,11 @@ func readHTTPServerName(r io.Reader, buf []byte) (string, []byte, error) {
 			l = bytes.Index(buf[h:n], eol)
 		} else if e >= 0 {
 			return "", nil, errNoServerHeader
+		}
+		if err != nil {
+			if terr, ok := err.(net.Error); !ok || !terr.Temporary() {
+				return "", nil, fmt.Errorf("error reading headers: %w", err)
+			}
 		}
 	}
 	return string(buf[h : h+l]), buf[:n], nil
