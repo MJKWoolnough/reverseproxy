@@ -420,7 +420,7 @@ class Server {
 		this.name = name;
 		this.redirects = new NodeMap<Uint, Redirect & {[node]: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => [id, new Redirect(this, id, from, to, active, matchData2Match(match))]));
 		this.commands = new NodeMap<Uint, Command & {[node]: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, status, error, user, ...match]) => [id, new Command(this, id, exe, params, env, matchData2Match(match), user || undefined, status, error)]));
-		this.nameSpan = div(name);
+		this.nameSpan = span(name);
 		this[node] = li([
 			div([
 				this.nameSpan,
