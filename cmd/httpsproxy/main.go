@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"errors"
@@ -15,6 +16,19 @@ import (
 
 	"golang.org/x/crypto/acme/autocert"
 	"vimagination.zapto.org/reverseproxy/unixconn"
+)
+
+const bufSize = 1<<16 + 16
+
+var (
+	forwardHeader bool
+	headerPool    = sync.Pool{
+		New: func() interface{} {
+			return [bufSize]byte{}
+		},
+	}
+	eol     = []byte{'\r', '\n'}
+	forward = []byte{'\r', '\n', 'F', 'o', 'r', 'w', 'a', 'r', 'd', 'e', 'd', ':', ' ', 'f', 'o', 'r', '='}
 )
 
 type serverNames []string
@@ -39,6 +53,28 @@ func proxyConn(c net.Conn, p string, wg *sync.WaitGroup) {
 	if err != nil {
 		c.Close()
 		return
+	}
+	if forwardHeader {
+		buf := headerPool.Get().([bufSize]byte)
+		n := 0
+		l := 0
+		for {
+			m, err := c.Read(buf[n:])
+			n += m
+			if l = bytes.Index(buf[:n], eol); l >= 0 {
+				c.Write(buf[:l])
+				c.Write(forward)
+				io.WriteString(c, c.RemoteAddr().String())
+				break
+			}
+			if err != nil {
+				if terr, ok := err.(net.Error); !ok || !terr.Temporary() {
+					return
+				}
+			}
+		}
+		c.Write(buf[l:n])
+		headerPool.Put(buf)
 	}
 	go copyConn(c, pc, wg)
 	go copyConn(pc, c, wg)
@@ -72,6 +108,7 @@ func run() error {
 	)
 	flag.Var(&serverNames, "s", "server name(s) for TLS")
 	flag.StringVar(&proxy, "proxy", "p", "proxy address")
+	flag.BoolVar(&forwardHeader, "f", "add forward headers")
 	flag.Parse()
 	if len(serverNames) == 0 {
 		return errors.New("need server name")
