@@ -31,3 +31,11 @@ svg {
 	padding: 2px;
 	margin: 0 2px;
 }
+
+windows-desktop > ul > li {
+	background-color: #ccc;
+}
+
+windows-desktop > ul > li:nth-child(even) {
+	background-color: #eee;
+}
