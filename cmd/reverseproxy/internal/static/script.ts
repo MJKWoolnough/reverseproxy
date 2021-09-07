@@ -424,6 +424,8 @@ class Server {
 		this[node] = li([
 			div([
 				this.nameSpan,
+				addRedirect({"title": "Add Redirect", "onclick": () => editRedirect(this)}),
+				addCommand({"title": "Add Command", "onclick": () => editCommand(this)}),
 				rename({"title": "Rename Server", "onclick": () => shell.prompt("New Name", "Plese enter a new name for this server", this.name, renameIcon).then(name => {
 					if (name && name !== this.name) {
 						rpc.rename([this.name, name]).catch(err => shell.alert("Error", err.message, renameIcon));
@@ -436,8 +438,6 @@ class Server {
 					}
 				})})
 			]),
-			addRedirect({"title": "Add Redirect", "onclick": () => editRedirect(this)}),
-			addCommand({"title": "Add Command", "onclick": () => editCommand(this)}),
 			this.redirects[node],
 			this.commands[node]
 		]);
