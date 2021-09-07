@@ -40,8 +40,8 @@ func proxyConn(c net.Conn, p string, wg *sync.WaitGroup) {
 		c.Close()
 		return
 	}
-	go copyConn(c, pc)
-	go copyConn(pc, c)
+	go copyConn(c, pc, wg)
+	go copyConn(pc, c, wg)
 }
 
 func proxySSL(l net.Listener, p string, wg *sync.WaitGroup) {
