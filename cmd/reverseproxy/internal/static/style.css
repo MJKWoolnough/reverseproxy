@@ -8,6 +8,8 @@ li > span:first-child {
 	height: 1em;
 	border-radius: 1em;
 	background-color: currentColor;
+	margin-left: 0.5em;
+	margin-right: 0.5em;
 }
 
 windows-desktop > svg:first-child {
