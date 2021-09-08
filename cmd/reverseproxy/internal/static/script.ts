@@ -3,7 +3,7 @@ import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML, svgNS} from './lib/dom.js';
 import {br, button, div, input, label, li, span, ul} from './lib/html.js';
-import {createSVG, circle, defs, g, line, path, polyline, rect, svg, symbol, title, use} from './lib/svg.js';
+import {createSVG, circle, g, line, path, polyline, rect, svg, symbol, title, use} from './lib/svg.js';
 import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
@@ -53,21 +53,17 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	path({"d": "M60,40 v50 m-25,-25 h50", "stroke-width": 15, "stroke": "#0f0", "fill": "none"})
       ])),
       [addServer, addServerIcon] = addSymbol(symbol({"viewBox": "0 0 100 100"}, [
-	defs([
-		circle({"id": "sc", "r": 2, "cy": 7, "fill": "#000"}),
-		g({"id": "sr"}, [
-			rect({"x": 2, "width": 96, "height": 20, "stroke": "#000", "stroke-width": 2, "fill": "#fff", "rx": 5}),
-			line({"x1": 10, "x2": 30, "y1": 7, "y2": 7, "stroke": "#000"}),
-			use({"href": "#sc", "x": 70}),
-			use({"href": "#sc", "x": 75}),
-			use({"href": "#sc", "x": 80}),
-			use({"href": "#sc", "x": 75})
-		])
+	g({"id": "sr", "transform": "translate(0, 3)"}, [
+		rect({"x": 2, "width": 96, "height": 20, "stroke": "#000", "stroke-width": 2, "fill": "#fff", "rx": 5}),
+		line({"x1": 10, "x2": 30, "y1": 7, "y2": 7, "stroke": "#000"}),
+		circle({"id": "sc", "cx": 70, "r": 2, "cy": 7, "fill": "#000"}),
+		use({"href": "#sc", "x": 5}),
+		use({"href": "#sc", "x": 10}),
+		use({"href": "#sc", "x": 15})
 	]),
-	use({"href": "#sr", "y": 3}),
-	use({"href": "#sr", "y": 28}),
-	use({"href": "#sr", "y": 53}),
-	use({"href": "#sr", "y": 78}),
+	use({"href": "#sr", "y": 25}),
+	use({"href": "#sr", "y": 50}),
+	use({"href": "#sr", "y": 75}),
 	path({"d": "M60,40 v50 m-25,-25 h50", "stroke-width": 15, "stroke": "#0f0", "fill": "none"})
       ])),
       editRedirect = (server: Server, data?: Redirect) => {
