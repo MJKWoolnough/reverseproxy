@@ -66,6 +66,10 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	use({"href": "#sr", "y": 75}),
 	path({"d": "M60,40 v50 m-25,-25 h50", "stroke-width": 15, "stroke": "#0f0", "fill": "none"})
       ])),
+      [start, startIcon] = addSymbol(symbol({"viewBox": "0 0 100 100"}, [
+	      path({"d": "M10,10 v80 L90,50 z", "fill": "#000"}),
+	      rect({"x": 10, "y": 10, "width": 80, "height": 80, "style": {"display": "var(--h, none)"}})
+      ])),
       editRedirect = (server: Server, data?: Redirect) => {
 	const icon = data ? editIcon : addRedirectIcon,
 	      from = input({"type": "number", "min": 1, "max": 65535, "value": data?.from ?? 80}),
@@ -282,7 +286,7 @@ class Redirect {
 	fromSpan: HTMLSpanElement;
 	toSpan: HTMLSpanElement;
 	statusSpan: HTMLSpanElement;
-	startStop: HTMLButtonElement;
+	startStop: SVGSVGElement;
 	constructor(server: Server, id: Uint, from: Uint, to: string, active: boolean, match: Match[]) {
 		this.id = id;
 		this.from = from;
@@ -292,18 +296,18 @@ class Redirect {
 		this.fromSpan = span(from + ""),
 		this.toSpan = span(to);
 		this.statusSpan = span({"style": {"color": statusColours[active ? 1 : 0]}})
-		this.startStop = button({"onclick": () => {
+		this.startStop = start({"onclick": () => {
 			const sid = {"server": server.name, id};
 			if (this.active) {
 				rpc.stopRedirect(sid)
 				.then(() => this.setActive(false))
-				.catch(err => shell.alert("Error stopping redirect", err.message));
+				.catch(err => shell.alert("Error stopping redirect", err.message, startIcon));
 			} else {
 				rpc.startRedirect(sid)
 				.then(() => this.setActive(true))
-				.catch(err => shell.alert("Error starting redirect", err.message));
+				.catch(err => shell.alert("Error starting redirect", err.message, startIcon));
 			}
-		}}, active ? "Stop" : "Start");
+		}, "style": active ? "--h: auto" : undefined});
 		this[node] = li	([
 			this.statusSpan,
 			this.fromSpan,
@@ -326,7 +330,11 @@ class Redirect {
 	}
 	setActive(v: boolean) {
 		this.statusSpan.style.setProperty("color", statusColours[v ? 1 : 0]);
-		this.startStop.innerText = v ? "Stop" : "Start";
+		if (v) {
+			this.startStop.style.removeProperty("--h");
+		} else {
+			this.startStop.style.setProperty("--h", "auto");
+		}
 	}
 }
 
@@ -342,7 +350,7 @@ class Command {
 	statusSpan: HTMLSpanElement;
 	error: string;
 	user?: UserID;
-	startStop: HTMLButtonElement;
+	startStop: SVGSVGElement;
 	constructor(server: Server, id: Uint, exe: string, params: string[], env: Record<string, string>, match: Match[], user?: UserID, status: Uint = 0, error = "") {
 		this.id = id;
 		this.exe = exe;
@@ -354,7 +362,7 @@ class Command {
 		this.statusSpan = span({"class": "status", "style": {"color": statusColours[status]}});
 		this.error = error;
 		this.user = user;
-		this.startStop = button({"onclick": () => {
+		this.startStop = start({"onclick": () => {
 			const sid = {"server": server.name, id}
 			if (this.status === 1) {
 				rpc.stopCommand(sid)
@@ -372,7 +380,7 @@ class Command {
 					shell.alert("Error starting command", err.message);
 				});
 			}
-		}}, status === 1 ? "Stop" : "Start");
+		}, "style": status === 1 ? "--h: auto" : undefined});
 		this[node] = li([
 			this.statusSpan,
 			this.exeSpan,
@@ -396,9 +404,9 @@ class Command {
 	setStatus (s: Uint) {
 		this.statusSpan.style.setProperty("color", statusColours[this.status = s]);
 		if (s === 1) {
-			this.startStop.innerText = "Stop";
+			this.startStop.style.setProperty("--h", "auto");
 		} else {
-			this.startStop.innerText = "Start";
+			this.startStop.style.removeProperty("--h");
 		}
 	}
 	setError (e: string) {
