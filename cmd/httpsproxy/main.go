@@ -43,12 +43,12 @@ func (s *serverNames) Set(serverName string) error {
 }
 
 func copyConn(a io.Writer, b io.Reader, wg *sync.WaitGroup) {
-	wg.Add(1)
 	io.Copy(a, b)
 	wg.Done()
 }
 
 func proxyConn(c net.Conn, p string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	pc, err := net.Dial("tcp", p)
 	if err != nil {
 		c.Close()
@@ -76,6 +76,7 @@ func proxyConn(c net.Conn, p string, wg *sync.WaitGroup) {
 		c.Write(buf[l:n])
 		headerPool.Put(buf)
 	}
+	wg.Add(2)
 	go copyConn(c, pc, wg)
 	go copyConn(pc, c, wg)
 }
@@ -89,6 +90,7 @@ func proxySSL(l net.Listener, p string, wg *sync.WaitGroup) {
 			}
 			return
 		}
+		wg.Add(1)
 		go proxyConn(c, p, wg)
 	}
 }
