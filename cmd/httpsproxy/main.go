@@ -82,12 +82,14 @@ func proxyConn(c net.Conn, p string, wg *sync.WaitGroup) {
 }
 
 func proxySSL(l net.Listener, p string, wg *sync.WaitGroup) {
+	wg.Add(1)
 	for {
 		c, err := l.Accept()
 		if err != nil {
 			if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
 				continue
 			}
+			wg.Done()
 			return
 		}
 		wg.Add(1)
