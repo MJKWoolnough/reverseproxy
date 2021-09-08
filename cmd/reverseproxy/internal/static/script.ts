@@ -2,7 +2,7 @@ import type {Uint, Match, MatchData, ListItem, UserID} from './types.js';
 import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML, svgNS} from './lib/dom.js';
-import {br, button, div, input, label, li, span, ul} from './lib/html.js';
+import {br, button, div, input, label, h1, li, span, ul} from './lib/html.js';
 import {createSVG, circle, g, line, path, polyline, rect, svg, symbol, title, use} from './lib/svg.js';
 import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
@@ -459,6 +459,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 	}
 	clearElement(document.body).appendChild(createHTML(shell, desktop([
 		symbols,
+		h1("Reverse Proxy"),
 		addServer({"title": "Add Server", "onclick": () => shell.prompt("Server Name", "Please enter a name for the new server", "", addServerIcon).then(name => {
 			if (name) {
 				rpc.add(name).catch(err => shell.alert("Error", err, addServerIcon)).then(() => servers.set(name, new Server([name, [], []])));
