@@ -38,6 +38,12 @@ svg:hover {
 	background-color: #d0d0d7;
 }
 
+svg:active:hover {
+	background-color: #b1b1b9;
+	border-style: inset;
+	padding: 2.5px 1.5px 1.5px 2.5px;
+}
+
 windows-desktop > ul > li {
 	background-color: #ccc;
 }
