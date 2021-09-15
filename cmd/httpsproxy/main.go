@@ -76,6 +76,9 @@ func proxyConn(c net.Conn) {
 			}
 		}
 		c.Write(buf[l:n])
+		for p := range buf[:n] {
+			buf[p] = 0
+		}
 		headerPool.Put(buf)
 	}
 	wg.Add(2)
