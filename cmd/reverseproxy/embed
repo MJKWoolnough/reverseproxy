@@ -2,17 +2,23 @@
 
 bm="$(dirname "$0")";
 data="$bm/internal/static/";
-jslibJS="$(realpath "$bm/../../../jslib/lib.js/")";
+jslib="$(realpath "$bm/../../../jslib/")";
+jslibJS="$jslib/lib.js/";
 tmpFile="$(mktemp)";
 
 (
 	cd "$data";
 	for lib in lib/*.js; do
+		if [ "$lib" = "lib/html.js" -o "$lib" = "lib/svg.js" ]; then
+			continue;
+		fi;
 		source="$jslibJS/$(basename "$lib")";
 		if [ "$lib" -nt "$source" -o "$lib" -ot "$source" ]; then
 			cp -f --preserve=timestamps "$source" "$lib";
 		fi;
 	done;
+	$jslib/html.sh "$($jslib/requiredHTML.sh script.js)" lib/html.js;
+	$jslib/svg.sh "$($jslib/requiredSVG.sh script.js)" lib/svg.js;
 	head -n5 index.html | tr -d '\n	';
 	echo -n "<script type=\"module\">";
 	jslib -i "/$(grep "<script" index.html | grep -v "lib/load.js" | sed -e 's/.*src="\([^"]*\)".*/\1/')" | terser -m  --module --compress pure_getters,passes=3 --ecma 6 | tr -d '\n';
