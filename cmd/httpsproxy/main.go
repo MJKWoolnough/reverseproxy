@@ -29,6 +29,8 @@ var (
 	}
 	eol     = []byte{'\r', '\n'}
 	forward = []byte{'\r', '\n', 'F', 'o', 'r', 'w', 'a', 'r', 'd', 'e', 'd', ':', ' ', 'f', 'o', 'r', '='}
+	proxy   string
+	wg      sync.WaitGroup
 )
 
 type serverNames []string
@@ -42,14 +44,14 @@ func (s *serverNames) Set(serverName string) error {
 	return nil
 }
 
-func copyConn(a io.Writer, b io.Reader, wg *sync.WaitGroup) {
+func copyConn(a io.Writer, b io.Reader) {
 	io.Copy(a, b)
 	wg.Done()
 }
 
-func proxyConn(c net.Conn, p string, wg *sync.WaitGroup) {
+func proxyConn(c net.Conn) {
 	defer wg.Done()
-	pc, err := net.Dial("tcp", p)
+	pc, err := net.Dial("tcp", proxy)
 	if err != nil {
 		c.Close()
 		return
@@ -77,11 +79,11 @@ func proxyConn(c net.Conn, p string, wg *sync.WaitGroup) {
 		headerPool.Put(buf)
 	}
 	wg.Add(2)
-	go copyConn(c, pc, wg)
-	go copyConn(pc, c, wg)
+	go copyConn(c, pc)
+	go copyConn(pc, c)
 }
 
-func proxySSL(l net.Listener, p string, wg *sync.WaitGroup) {
+func proxySSL(l net.Listener) {
 	wg.Add(1)
 	for {
 		c, err := l.Accept()
@@ -93,7 +95,7 @@ func proxySSL(l net.Listener, p string, wg *sync.WaitGroup) {
 			return
 		}
 		wg.Add(1)
-		go proxyConn(c, p, wg)
+		go proxyConn(c)
 	}
 }
 
@@ -106,8 +108,6 @@ func main() {
 func run() error {
 	var (
 		serverNames serverNames
-		proxy       string
-		wg          sync.WaitGroup
 		server      http.Server
 	)
 	flag.Var(&serverNames, "s", "server name(s) for TLS")
@@ -137,7 +137,7 @@ func run() error {
 	go proxySSL(tls.NewListener(sl, &tls.Config{
 		GetCertificate: leManager.GetCertificate,
 		NextProtos:     []string{"http/1.1"},
-	}), proxy, &wg)
+	}))
 	go server.Serve(l)
 
 	sc := make(chan os.Signal, 1)
