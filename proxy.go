@@ -76,6 +76,9 @@ func (l *listener) transfer(c *net.TCPConn) {
 		buf[0] = tlsByte[0]
 		name, buf, err = readServerName(c, buf)
 		if err == nil {
+			if host, _, err := net.SplitHostPort(name); err == nil {
+				name = host
+			}
 			var port *Port
 			l.mu.RLock()
 			for p := range l.ports {
