@@ -238,7 +238,7 @@ func defineConfig() error {
 			return err
 		}
 	}
-	if !skipPort && !skipCredentials {
+	if !skipPort || !skipCredentials {
 		return saveConfig()
 	}
 	return nil
