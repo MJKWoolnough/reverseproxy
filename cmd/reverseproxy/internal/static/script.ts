@@ -311,6 +311,7 @@ class Redirect {
 		this[node] = li	([
 			this.statusSpan,
 			this.fromSpan,
+			" ➔ ",
 			this.toSpan,
 			this.startStop,
 			edit({"title": "Edit Redirect", "onclick": () => editRedirect(server, this)}),
