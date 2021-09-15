@@ -331,10 +331,10 @@ class Redirect {
 	}
 	setActive(v: boolean) {
 		this.statusSpan.style.setProperty("color", statusColours[v ? 1 : 0]);
-		if (v) {
-			this.startStop.style.removeProperty("--h");
-		} else {
+		if (this.active = v) {
 			this.startStop.style.setProperty("--h", "auto");
+		} else {
+			this.startStop.style.removeProperty("--h");
 		}
 	}
 }
