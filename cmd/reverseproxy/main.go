@@ -114,8 +114,8 @@ func (c *Config) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	w.WriteHeader(http.StatusUnauthorized)
 	w.Header().Set("WWW-Authenticate", "Basic realm=\"Enter Credentials\"")
+	w.WriteHeader(http.StatusUnauthorized)
 	w.Write(unauthorised)
 }
 
