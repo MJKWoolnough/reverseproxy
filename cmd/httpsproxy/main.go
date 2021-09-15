@@ -117,6 +117,9 @@ func run() error {
 	if len(serverNames) == 0 {
 		return errors.New("need server name")
 	}
+	if proxy == "" {
+		return errors.New("need proxy address")
+	}
 	leManager := &autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		Cache:      autocert.DirCache("./certcache/"),
