@@ -182,8 +182,8 @@ func defineConfig() error {
 		if err := getInput(r, fmt.Sprintf("Do you want to set a new management port (%d)? Y/N: ", config.Port), func(ans string) bool {
 			switch ans {
 			case "Y", "y":
-				skipPort = true
 			case "N", "n":
+				skipPort = true
 			default:
 				return false
 			}
@@ -208,8 +208,8 @@ func defineConfig() error {
 		if err := getInput(r, "Do you want to set new management credentials? Y/N: ", func(ans string) bool {
 			switch ans {
 			case "Y", "y":
-				skipCredentials = true
 			case "N", "n":
+				skipCredentials = true
 			default:
 				return false
 			}
