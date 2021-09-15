@@ -2,7 +2,7 @@
 
 bm="$(dirname "$0")";
 data="$bm/internal/static/";
-jslibJS="$(realpath "$bm/../jslib/lib.js/")";
+jslibJS="$(realpath "$bm/../../../jslib/lib.js/")";
 tmpFile="$(mktemp)";
 
 (
@@ -15,7 +15,7 @@ tmpFile="$(mktemp)";
 	done;
 	head -n5 index.html | tr -d '\n	';
 	echo -n "<script type=\"module\">";
-	jslib -i "$(grep "/<script" index.html | grep -v "lib/load.js" | sed -e 's/.*src="\([^"]*\)".*/\1/')" | terser -m  --module --compress pure_getters,passes=3 --ecma 6 | tr -d '\n';
+	jslib -i "/$(grep "<script" index.html | grep -v "lib/load.js" | sed -e 's/.*src="\([^"]*\)".*/\1/')" | terser -m  --module --compress pure_getters,passes=3 --ecma 6 | tr -d '\n';
 	echo -n "</script><style type=\"text/css\">";
 	grep -hv "^@import" *.css | uglifycss | tr -d '\n';
 	echo -n "</style>";
