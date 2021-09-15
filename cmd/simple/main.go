@@ -65,9 +65,13 @@ type contact struct {
 }
 
 type values struct {
-	Name, Email, Phone, Subject, Message string
-	Errors                               form.ErrorMap
-	Done                                 bool
+	Name    string `form:"name,post"`
+	Email   string `form:"email,required,post"`
+	Phone   string `form:"phone,post"`
+	Subject string `form:"subject,post"`
+	Message string `form:"message,post"`
+	Errors  form.ErrorMap
+	Done    bool
 }
 
 func (c *contact) ServeHTTP(w http.ResponseWriter, r *http.Request) {
