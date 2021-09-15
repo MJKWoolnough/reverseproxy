@@ -22,7 +22,7 @@ type ns struct {
 }
 
 var (
-	fallback         = uint32(0)
+	fallback         = uint32(1)
 	ucMu             sync.Mutex
 	uc               *net.UnixConn
 	listeningSockets map[uint16]struct{}
@@ -40,7 +40,7 @@ func init() {
 		u, ok := c.(*net.UnixConn)
 		uc = u
 		if ok {
-			fallback = 1
+			fallback = 0
 			newSocket = make(chan ns)
 			listeningSockets = make(map[uint16]struct{})
 			go runListenLoop()

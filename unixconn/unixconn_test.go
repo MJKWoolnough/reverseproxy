@@ -16,6 +16,7 @@ var (
 )
 
 func TestMain(m *testing.T) {
+	fallback = 0
 	addr := new(net.TCPAddr)
 	var err error
 	if lone, err = net.ListenTCP("tcp", addr); err != nil {
