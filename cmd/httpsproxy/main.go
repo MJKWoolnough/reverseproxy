@@ -75,7 +75,7 @@ func proxyConn(c net.Conn) {
 				}
 			}
 		}
-		c.Write(buf[l:n])
+		pc.Write(buf[l:n])
 		for p := range buf[:n] {
 			buf[p] = 0
 		}
