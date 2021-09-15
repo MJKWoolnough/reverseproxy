@@ -438,7 +438,7 @@ class Server {
 				})}),
 				remove({"title": "Remove Server", "onclick": () => shell.confirm("Remove", "Are you sure you wish to remove this server?", removeIcon).then(ok => {
 					if (ok) {
-						rpc.remove(this.name).catch(err => shell.alert("Error", err.message, removeIcon));
+						rpc.remove(this.name).catch(err => shell.alert("Error", err.message, removeIcon)).then(() => servers.delete(this.name));
 					}
 				})})
 			]),
