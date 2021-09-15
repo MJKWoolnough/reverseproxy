@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"syscall"
 
@@ -176,6 +177,7 @@ func (c *command) Run() error {
 				},
 			}
 		}
+		cmd.Dir = filepath.Dir(c.Exe)
 		uc, err := reverseproxy.RegisterCmd(c.matchServiceName, cmd)
 		if err != nil {
 			c.err = err.Error()
