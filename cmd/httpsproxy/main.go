@@ -111,8 +111,8 @@ func run() error {
 		server      http.Server
 	)
 	flag.Var(&serverNames, "s", "server name(s) for TLS")
-	flag.StringVar(&proxy, "proxy", "p", "proxy address")
-	flag.BoolVar(&forwardHeader, "f", "add forward headers")
+	flag.StringVar(&proxy, "p", "", "proxy address")
+	flag.BoolVar(&forwardHeader, "f", false, "add forward headers")
 	flag.Parse()
 	if len(serverNames) == 0 {
 		return errors.New("need server name")
