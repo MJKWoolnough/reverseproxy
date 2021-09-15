@@ -64,9 +64,9 @@ func proxyConn(c net.Conn) {
 			m, err := c.Read(buf[n:])
 			n += m
 			if l = bytes.Index(buf[:n], eol); l >= 0 {
-				c.Write(buf[:l])
-				c.Write(forward)
-				io.WriteString(c, c.RemoteAddr().String())
+				pc.Write(buf[:l])
+				pc.Write(forward)
+				io.WriteString(pc, c.RemoteAddr().String())
 				break
 			}
 			if err != nil {
