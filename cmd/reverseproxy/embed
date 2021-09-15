@@ -21,7 +21,7 @@ tmpFile="$(mktemp)";
 	$jslib/svg.sh "$($jslib/requiredSVG.sh script.js)" lib/svg.js;
 	head -n5 index.html | tr -d '\n	';
 	echo -n "<script type=\"module\">";
-	jslib -i "/$(grep "<script" index.html | grep -v "lib/load.js" | sed -e 's/.*src="\([^"]*\)".*/\1/')" -n -x | tail -n+2 | sed -e 's/pageLoad/(document.readyState == "complete" ? Promise.resolve() : new Promise(successFn => globalThis.addEventListener("load", successFn, {once: true})))/' | terser -m  --module --compress pure_getters,passes=3 --ecma 6 | tr -d '\n';
+	jslib -i "/$(grep "<script" index.html | grep -v "lib/load.js" | sed -e 's/.*src="\([^"]*\)".*/\1/')" -n | tail -n+2 | sed -e 's/pageLoad/(document.readyState == "complete" ? Promise.resolve() : new Promise(successFn => globalThis.addEventListener("load", successFn, {once: true})))/' | terser -m  --module --compress pure_getters,passes=3 --ecma 6 | tr -d '\n';
 	echo -n "</script><style type=\"text/css\">";
 	grep -hv "^@import" *.css | uglifycss | tr -d '\n';
 	echo -n "</style>";
