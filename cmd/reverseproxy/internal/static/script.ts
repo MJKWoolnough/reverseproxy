@@ -117,6 +117,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	      exe = input({"value": data?.exe}),
 	      params = new NodeArray<Param>(div(), noSort, data?.params.map(p => ({[node]: input({"value": p})})) ?? []),
 	      env = new EnvMaker(data?.env ?? {}),
+	      workDir = input({"value": data?.workDir}),
 	      userID = input({"type": "checkbox", "checked": data?.user !== undefined, "onchange": () => {
 		      uid.toggleAttribute("disabled", !userID.checked);
 		      gid.toggleAttribute("disabled", !userID.checked);
@@ -136,6 +137,8 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 			}
 		}}, "-"),
 		button({"onclick": () => params.push({[node]: input()})}, "+"),
+		br(),
+		addLabel("Working Directory: ", workDir),
 		br(),
 		label("Environment:"),
 		env[node],
@@ -171,7 +174,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 						"id": data.id,
 						"exe": exe.value,
 						"params": p,
-						"workDir": "",
+						"workDir": workDir.value,
 						"env": e,
 						"match": matches.list,
 						"user": ids
@@ -180,12 +183,12 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 						"server": server.name,
 						"exe": exe.value,
 						"params": p,
-						"workDir": "",
+						"workDir": workDir.value,
 						"env": e,
 						"match": matches.list,
 						"user": ids
 					})
-					.then(id => server.commands.set(id, new Command(server, id, exe.value, p, "", e, matches.list, ids)))
+					.then(id => server.commands.set(id, new Command(server, id, exe.value, p, workDir.value, e, matches.list, ids)))
 				)
 				.catch(err => shell.alert("Error", err.message, icon));
 				w.remove();
