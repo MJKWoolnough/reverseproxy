@@ -70,6 +70,11 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	      path({"d": "M10,10 v80 L90,50 z", "fill": "#000"}),
 	      rect({"x": 10, "y": 10, "width": 80, "height": 80, "style": {"display": "var(--h, none)"}})
       ])),
+      [info, infoIcon] = addSymbol(symbol({"viewBox": "0 0 100 100"}, [
+	      circle({"cx": 50, "cy": 50, "stroke-width": 6, "r": 47, "stroke": "#fff", "fill": "#15a"}),
+	      rect({"x": 42, "y": 45, "width": 16, "height": 40, "rx": 8, "fill": "#fff"}),
+	      circle({"cx": 50, "cy": 30, "r": 8, "fill": "#fff"})
+      ])),
       editRedirect = (server: Server, data?: Redirect) => {
 	const icon = data ? editIcon : addRedirectIcon,
 	      from = input({"type": "number", "min": 1, "max": 65535, "value": data?.from ?? 80}),
