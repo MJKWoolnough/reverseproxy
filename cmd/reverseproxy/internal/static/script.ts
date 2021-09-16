@@ -324,6 +324,7 @@ class Redirect {
 			" ➔ ",
 			this.toSpan,
 			this.startStop,
+			info({"title": "Redirect Information", "onclick": () => shell.addWindow(windows({"window-title": "Redirect Information", "window-icon": infoIcon}))}),
 			edit({"title": "Edit Redirect", "onclick": () => editRedirect(server, this)}),
 			remove({"title": "Remove Redirect", "onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this redirect?", removeIcon).then(c => {
 				if (c) {
@@ -398,6 +399,7 @@ class Command {
 			this.statusSpan,
 			this.exeSpan,
 			this.startStop,
+			info({"title": "Command Information", "onclick": () => shell.addWindow(windows({"window-title": "Command Information", "window-icon": infoIcon}))}),
 			edit({"title": "Edit Command", "onclick": () => editCommand(server, this)}),
 			remove({"title": "Remove Command", "onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this command?", removeIcon).then(c => {
 				if (c) {
