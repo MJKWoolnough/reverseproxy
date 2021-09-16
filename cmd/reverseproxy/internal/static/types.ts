@@ -4,7 +4,7 @@ export type Uint = number;
 
 export type MatchData = [boolean, string];
 
-export type ListItem = [string, [Uint, Uint, string, boolean, string, ...MatchData[]][], [Uint, string, string[], Record<string, string>, Uint, string, UserID | null, ...MatchData[]][]]
+export type ListItem = [string, [Uint, Uint, string, boolean, string, ...MatchData[]][], [Uint, string, string[], string, Record<string, string>, Uint, string, UserID | null, ...MatchData[]][]]
 
 type List = ListItem[];
 
@@ -25,11 +25,12 @@ export type UserID = {
 }
 
 type Command = NameID & {
-	exe:    string;
-	params: string[];
-	env:    Record<string, string>;
-	match:  Match[];
-	user?:  UserID;
+	exe:     string;
+	params:  string[];
+	workDir: string;
+	env:     Record<string, string>;
+	match:   Match[];
+	user?:   UserID;
 };
 
 type NameID = {

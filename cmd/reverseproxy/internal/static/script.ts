@@ -171,6 +171,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 						"id": data.id,
 						"exe": exe.value,
 						"params": p,
+						"workDir": "",
 						"env": e,
 						"match": matches.list,
 						"user": ids
@@ -179,11 +180,12 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 						"server": server.name,
 						"exe": exe.value,
 						"params": p,
+						"workDir": "",
 						"env": e,
 						"match": matches.list,
 						"user": ids
 					})
-					.then(id => server.commands.set(id, new Command(server, id, exe.value, p, e, matches.list, ids)))
+					.then(id => server.commands.set(id, new Command(server, id, exe.value, p, "", e, matches.list, ids)))
 				)
 				.catch(err => shell.alert("Error", err.message, icon));
 				w.remove();
@@ -343,6 +345,7 @@ class Command {
 	id: Uint;
 	exe: string;
 	params: string[];
+	workDir: string;
 	env: Record<string, string>;
 	match: Match[];
 	status: Uint;
@@ -352,10 +355,11 @@ class Command {
 	error: string;
 	user?: UserID;
 	startStop: SVGSVGElement;
-	constructor(server: Server, id: Uint, exe: string, params: string[], env: Record<string, string>, match: Match[], user?: UserID, status: Uint = 0, error = "") {
+	constructor(server: Server, id: Uint, exe: string, params: string[], workDir: string, env: Record<string, string>, match: Match[], user?: UserID, status: Uint = 0, error = "") {
 		this.id = id;
 		this.exe = exe;
 		this.params = params;
+		this.workDir = workDir;
 		this.env = env;
 		this.match = match;
 		this.status = status;
@@ -424,7 +428,7 @@ class Server {
 	constructor([name, rs, cs]: ListItem) {
 		this.name = name;
 		this.redirects = new NodeMap<Uint, Redirect & {[node]: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => [id, new Redirect(this, id, from, to, active, matchData2Match(match))]));
-		this.commands = new NodeMap<Uint, Command & {[node]: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, env, status, error, user, ...match]) => [id, new Command(this, id, exe, params, env, matchData2Match(match), user || undefined, status, error)]));
+		this.commands = new NodeMap<Uint, Command & {[node]: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, workDir, env, status, error, user, ...match]) => [id, new Command(this, id, exe, params, workDir, env, matchData2Match(match), user || undefined, status, error)]));
 		this.nameSpan = span(name);
 		this[node] = li([
 			div([
@@ -482,7 +486,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 	rpc.waitAddCommand().then(c => {
 		const server = servers.get(c.server);
 		if (server) {
-			server.commands.set(c.id, new Command(server, c.id, c.exe, c.params, c.env, c.match, c.user, 0, ""));
+			server.commands.set(c.id, new Command(server, c.id, c.exe, c.params, c.workDir, c.env, c.match, c.user, 0, ""));
 		}
 	});
 	rpc.waitModifyCommand().then(c => servers.get(c.server)?.commands.get(c.id)?.update(c.exe, c.params, c.env, c.match, c.user));
