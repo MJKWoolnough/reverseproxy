@@ -138,7 +138,7 @@ func (u *UnixCmd) runCmdLoop(msn MatchServiceName) {
 			u.mu.Unlock()
 			u.cmd.Wait()
 			u.mu.Lock()
-			u.exited = tyue
+			u.exited = true
 			u.mu.Unlock()
 			return
 		}
