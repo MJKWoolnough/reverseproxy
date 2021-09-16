@@ -44,6 +44,7 @@ type UnixCmd struct {
 	mu     sync.Mutex
 	open   map[uint16]*Port
 	closed bool
+	exited bool
 }
 
 // Close closes all ports for the server and sends a signal to the server to
@@ -80,7 +81,7 @@ func (u *UnixCmd) Status() Status {
 	return Status{
 		Ports:   ports,
 		Closing: closed,
-		Active:  !u.cmd.ProcessState.Exited(),
+		Active:  !u.exited,
 	}
 }
 
@@ -134,6 +135,10 @@ func (u *UnixCmd) runCmdLoop(msn MatchServiceName) {
 				u.conn.Close()
 				u.closed = true
 			}
+			u.mu.Unlock()
+			u.cmd.Wait()
+			u.mu.Lock()
+			u.exited = tyue
 			u.mu.Unlock()
 			return
 		}
