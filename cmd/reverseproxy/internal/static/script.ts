@@ -324,7 +324,6 @@ class Redirect {
 			" ➔ ",
 			this.toSpan,
 			this.startStop,
-			info({"title": "Redirect Information", "onclick": () => shell.addWindow(windows({"window-title": "Redirect Information", "window-icon": infoIcon}))}),
 			edit({"title": "Edit Redirect", "onclick": () => editRedirect(server, this)}),
 			remove({"title": "Remove Redirect", "onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this redirect?", removeIcon).then(c => {
 				if (c) {
