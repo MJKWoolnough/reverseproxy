@@ -399,7 +399,10 @@ class Command {
 			this.statusSpan,
 			this.exeSpan,
 			this.startStop,
-			info({"title": "Command Information", "onclick": () => shell.addWindow(windows({"window-title": "Command Information", "window-icon": infoIcon}))}),
+			info({"title": "Command Information", "onclick": () => (this.status === 1 ? rpc.getCommandPorts({"server": server.name, id}) : Promise.resolve([])).then(ports => shell.addWindow(windows({"window-title": "Command Information", "window-icon": infoIcon}, [
+				div(`Error: ${this.error}`),
+				div(`Open Ports: ${ports.join(", ")}`)
+			])))}),
 			edit({"title": "Edit Command", "onclick": () => editCommand(server, this)}),
 			remove({"title": "Remove Command", "onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this command?", removeIcon).then(c => {
 				if (c) {
