@@ -135,11 +135,12 @@ type user struct {
 }
 
 type commandData struct {
-	Exe    string            `json:"exe"`
-	Params []string          `json:"params"`
-	Env    map[string]string `json:"env"`
-	Match  []match           `json:"match"`
-	User   *user             `json:"user,omitempty"`
+	Exe     string            `json:"exe"`
+	Params  []string          `json:"params"`
+	WorkDir string            `json:"workDir"`
+	Env     map[string]string `json:"env"`
+	Match   []match           `json:"match"`
+	User    *user             `json:"user,omitempty"`
 }
 
 type command struct {
@@ -177,7 +178,11 @@ func (c *command) Run() error {
 				},
 			}
 		}
-		cmd.Dir = filepath.Dir(c.Exe)
+		if c.WorkDir == "" {
+			cmd.Dir = filepath.Dir(c.Exe)
+		} else {
+			cmd.Dir = c.WorkDir
+		}
 		uc, err := reverseproxy.RegisterCmd(c.matchServiceName, cmd)
 		if err != nil {
 			c.err = err.Error()
