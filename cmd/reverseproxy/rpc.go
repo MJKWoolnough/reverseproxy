@@ -522,12 +522,24 @@ func (s *socket) getCommandPorts(data json.RawMessage) (interface{}, error) {
 	if err := json.Unmarshal(data, &cp); err != nil {
 		return nil, err
 	}
-	var ports []uint16
-	err := s.getCommand(cp, func(_ *server, c *command) error {
-		ports = c.unixCmd.Status().Ports
-		return nil
-	})
-	return ports, err
+	config.mu.Lock()
+	serv, ok := config.Servers[cp.Server]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrNoServer
+	}
+	c, ok := serv.Commands[cp.ID]
+	if !ok {
+		config.mu.Unlock()
+		return nil, ErrUnknownCommand
+	}
+	if c.status != 1 {
+		config.mu.Unlock()
+		return nil, ErrServerNotRunning
+	}
+	ports := c.unixCmd.Status().Ports
+	config.mu.Unlock()
+	return ports, nil
 }
 
 var (
