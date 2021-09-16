@@ -148,7 +148,7 @@ func buildInitialMessage() json.RawMessage {
 				}
 				fmt.Fprintf(&buf, "%q", param)
 			}
-			buf = append(buf, ']', ',', '{')
+			fmt.Fprintf(&buf, "],%q,{", cmd.WorkDir)
 			o := true
 			for key, value := range cmd.Env {
 				if o {
