@@ -250,7 +250,7 @@ class MatchMaker {
 type Env = {
 	key: HTMLInputElement;
 	value: HTMLInputElement;
-	[node]: HTMLLIElement;
+	[node]: HTMLTableRowElement;
 }
 
 class EnvMaker {
@@ -258,12 +258,19 @@ class EnvMaker {
 	m: NodeMap<number, Env>;
 	[node]: HTMLDivElement;
 	constructor(environment: Record<string, string>) {
-		this.m = new NodeMap<number, Env>(ul());
+		this.m = new NodeMap<number, Env>(tbody());
 		for (const key in environment) {
 			this.addEnv(key, environment[key]);
 		}
 		this[node] = div([
-			this.m[node],
+			table([
+				thead(tr([
+					th("Key"),
+					th("Value"),
+					th(img({"src": removeIcon, "style": {"width": "1em", "height": "1em"}}))
+				])),
+				this.m[node]
+			]),
 			button({"onclick": () => this.addEnv()}, "+")
 		]);
 	}
@@ -274,10 +281,10 @@ class EnvMaker {
 		this.m.set(id, {
 			"key": k,
 			"value": v,
-			[node]: li([
-				k,
-				v,
-				remove({"onclick": () => this.m.delete(id)})
+			[node]: tr([
+				td(k),
+				td(v),
+				td(remove({"onclick": () => this.m.delete(id)}))
 			])
 		});
 	}
