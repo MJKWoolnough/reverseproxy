@@ -34,7 +34,14 @@ if [ "$1" = "-size" ]; then
 	exit 0;
 fi;
 
-echo -e "package main\n\nconst (\n	uncompressedSize = $(stat --format "%s" "$tmpFile")\n	indexUpdated     = $(date "+%s")\n)" > "index_size.go";
+cat > "index_size.go" <<HEREDOC
+package main
+
+const (
+	uncompressedSize = $(stat --format "%s" "$tmpFile")
+	indexUpdated     = $(date "+%s")
+)
+HEREDOC
 
 zopfli --gzip --i1000 -c "$tmpFile" > index.gz;
 rm -f "$tmpFile";
