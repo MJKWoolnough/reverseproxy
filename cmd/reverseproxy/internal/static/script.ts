@@ -145,10 +145,11 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		br(),
 		addLabel("Working Directory: ", workDir),
 		br(),
-		label("Environment:"),
+		br(),
 		env[node],
 		br(),
 		matches[node],
+		br(),
 		addLabel("Run as different user?:", userID),
 		br(),
 		addLabel("UID:", uid),
@@ -265,7 +266,7 @@ class EnvMaker {
 		this[node] = div([
 			table([
 				thead(tr([
-					th("Key"),
+					th("Env Key"),
 					th("Value"),
 					th(img({"src": removeIcon, "style": {"width": "1em", "height": "1em"}}))
 				])),
