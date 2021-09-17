@@ -2,7 +2,7 @@ import type {Uint, Match, MatchData, ListItem, UserID} from './types.js';
 import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML, svgNS} from './lib/dom.js';
-import {br, button, div, img, input, label, h1, li, span, table, tbody, td, th, tr, ul} from './lib/html.js';
+import {br, button, div, img, input, label, h1, li, span, table, tbody, td, th, thead, tr, ul} from './lib/html.js';
 import {createSVG, circle, g, line, path, polyline, rect, svg, symbol, title, use} from './lib/svg.js';
 import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
@@ -219,11 +219,11 @@ class MatchMaker {
 		}
 		this[node] = div([
 			table([
-				tr([
+				thead(tr([
 					th("Matches"),
 					th("Is Suffix?"),
 					th(img({"src": removeIcon, "style": {"width": "1em", "height": "1em"}}))
-				]),
+				])),
 				this.u,
 			]),
 			button({"onclick": () => this.add()}, "Add Match")
