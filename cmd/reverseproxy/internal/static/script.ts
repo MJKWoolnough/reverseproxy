@@ -2,7 +2,7 @@ import type {Uint, Match, MatchData, ListItem, UserID} from './types.js';
 import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
 import {clearElement, createHTML, svgNS} from './lib/dom.js';
-import {br, button, div, input, label, h1, li, span, ul} from './lib/html.js';
+import {br, button, div, img, input, label, h1, li, span, table, tbody, td, th, tr, ul} from './lib/html.js';
 import {createSVG, circle, g, line, path, polyline, rect, svg, symbol, title, use} from './lib/svg.js';
 import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
@@ -207,7 +207,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 class MatchMaker {
 	list: Match[];
 	[node]: HTMLDivElement;
-	u = ul();
+	u = tbody();
 	w: WindowElement;
 	constructor(w: WindowElement, matches: Match[]) {
 		this.list = [];
@@ -218,25 +218,31 @@ class MatchMaker {
 			this.add();
 		}
 		this[node] = div([
-			"Matches",
-			this.u,
+			table([
+				tr([
+					th("Matches"),
+					th("Is Suffix?"),
+					th(img({"src": removeIcon, "style": {"width": "1em", "height": "1em"}}))
+				]),
+				this.u,
+			]),
 			button({"onclick": () => this.add()}, "Add Match")
 		]);
 		this.w = w;
 	}
 	add(m: Match = {"name": "", "isSuffix": false}) {
 		this.list.push(m);
-		const l = this.u.appendChild(li([
-				input({"onchange": function(this: HTMLInputElement){m.name = this.value}, "value": m.name}),
-				input({"type": "checkbox", "onchange": function(this: HTMLInputElement){m.isSuffix = this.checked}, "checked": m.isSuffix}),
-				remove({"title": "Remove Match", "onclick": () => {
+		const l = this.u.appendChild(tr([
+				td(input({"onchange": function(this: HTMLInputElement){m.name = this.value}, "value": m.name})),
+				td(input({"type": "checkbox", "onchange": function(this: HTMLInputElement){m.isSuffix = this.checked}, "checked": m.isSuffix})),
+				td(remove({"title": "Remove Match", "onclick": () => {
 					if (this.list.length === 1) {
 						this.w.alert("Cannot remove Match", "Must have at least 1 Match", removeIcon);
 					} else {
 						this.list.splice(this.list.indexOf(m), 1);
 						l.remove();
 					}
-				}})
+				}}))
 		      ]));
 	}
 }
