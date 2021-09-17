@@ -277,7 +277,7 @@ class EnvMaker {
 			[node]: li([
 				k,
 				v,
-				button({"onclick": () => this.m.delete(id)}, "-")
+				remove({"onclick": () => this.m.delete(id)})
 			])
 		});
 	}
