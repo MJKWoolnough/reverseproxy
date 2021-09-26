@@ -190,6 +190,7 @@ func (c *command) Run() error {
 			return err
 		}
 		c.status = 1
+		c.err = ""
 		c.unixCmd = uc
 		go func() {
 			err := cmd.Wait()
