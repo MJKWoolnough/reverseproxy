@@ -61,7 +61,6 @@ func runListenLoop() {
 			atomic.StoreUint32(&fallback, 1)
 			break
 		}
-
 		if oobn == 0 {
 			if n == 2 {
 				port := uint16(buf[1])<<8 | uint16(buf[0])
