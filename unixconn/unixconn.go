@@ -81,28 +81,32 @@ func runListenLoop() {
 			if fd, err := syscall.ParseUnixRights(&msg[0]); err == nil && len(fd) == 1 {
 				nf := os.NewFile(uintptr(fd[0]), "")
 				if cn, err := net.FileConn(nf); err == nil {
-					var port uint16
-					if tcpaddr, ok := cn.LocalAddr().(*net.TCPAddr); ok {
-						port = uint16(tcpaddr.Port)
-					} else {
-						port = getPort(cn.LocalAddr().String())
-					}
-					c, ok := sockets[port]
-					if ok {
-						if ka, ok := cn.(keepAlive); ok {
-							if err := ka.SetKeepAlive(true); err != nil {
-								ka.SetKeepAlivePeriod(3 * time.Minute)
+					if ra := cn.RemoteAddr(); ra != nil {
+						var port uint16
+						if tcpaddr, ok := cn.LocalAddr().(*net.TCPAddr); ok {
+							port = uint16(tcpaddr.Port)
+						} else {
+							port = getPort(cn.LocalAddr().String())
+						}
+						c, ok := sockets[port]
+						if ok {
+							if ka, ok := cn.(keepAlive); ok {
+								if err := ka.SetKeepAlive(true); err != nil {
+									ka.SetKeepAlivePeriod(3 * time.Minute)
+								}
 							}
+							cc := &conn{
+								Conn:   cn,
+								buf:    buf,
+								length: n,
+							}
+							buf = bufPool.Get().(*buffer)
+							runtime.SetFinalizer(cc, (*conn).Close)
+							go sendConn(c, cc)
+							continue
+						} else {
+							cn.Close()
 						}
-						cc := &conn{
-							Conn:   cn,
-							buf:    buf,
-							length: n,
-						}
-						buf = bufPool.Get().(*buffer)
-						runtime.SetFinalizer(cc, (*conn).Close)
-						go sendConn(c, cc)
-						continue
 					} else {
 						cn.Close()
 					}
