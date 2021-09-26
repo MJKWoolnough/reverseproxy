@@ -120,6 +120,7 @@ func sendConn(c chan net.Conn, conn *conn) {
 	t := time.NewTimer(time.Minute * 3)
 	select {
 	case <-t.C:
+		conn.Close()
 	case c <- conn:
 	}
 	t.Stop()
