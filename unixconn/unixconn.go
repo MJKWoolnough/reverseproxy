@@ -162,6 +162,7 @@ func (c *conn) Close() error {
 	if c.buf != nil {
 		c.clearBuffer()
 	}
+	runtime.SetFinalizer(c, nil)
 	return c.Conn.Close()
 }
 
