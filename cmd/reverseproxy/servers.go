@@ -202,6 +202,7 @@ func (c *command) Run() error {
 				broadcast(broadcastCommandStopped, append(strconv.AppendUint(append(strconv.AppendQuote(json.RawMessage{'['}, c.server.name), ','), c.id, 10), ']'), 0)
 				c.status = 2
 			}
+			c.unixCmd = nil
 			config.mu.Unlock()
 		}()
 		c.Start = true
