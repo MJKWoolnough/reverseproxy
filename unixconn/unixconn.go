@@ -184,6 +184,7 @@ func (l *listener) Close() error {
 	if l.socket == 0 {
 		return net.ErrClosed
 	}
+	runtime.SetFinalizer(l, nil)
 	var buf [2]byte
 	buf[0] = byte(l.socket)
 	buf[1] = byte(l.socket >> 8)
