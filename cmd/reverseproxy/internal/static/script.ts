@@ -234,16 +234,16 @@ class MatchMaker {
 	add(m: Match = {"name": "", "isSuffix": false}) {
 		this.list.push(m);
 		const l = this.u.appendChild(tr([
-				td(input({"onchange": function(this: HTMLInputElement){m.name = this.value}, "value": m.name})),
-				td(input({"type": "checkbox", "onchange": function(this: HTMLInputElement){m.isSuffix = this.checked}, "checked": m.isSuffix})),
-				td(remove({"title": "Remove Match", "onclick": () => {
-					if (this.list.length === 1) {
-						this.w.alert("Cannot remove Match", "Must have at least 1 Match", removeIcon);
-					} else {
-						this.list.splice(this.list.indexOf(m), 1);
-						l.remove();
-					}
-				}}))
+			td(input({"onchange": function(this: HTMLInputElement){m.name = this.value}, "value": m.name})),
+			td(input({"type": "checkbox", "onchange": function(this: HTMLInputElement){m.isSuffix = this.checked}, "checked": m.isSuffix})),
+			td(remove({"title": "Remove Match", "onclick": () => {
+				if (this.list.length === 1) {
+					this.w.alert("Cannot remove Match", "Must have at least 1 Match", removeIcon);
+				} else {
+					this.list.splice(this.list.indexOf(m), 1);
+					l.remove();
+				}
+			}}))
 		      ]));
 	}
 }
