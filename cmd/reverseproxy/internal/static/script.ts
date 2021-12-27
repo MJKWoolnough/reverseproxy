@@ -1,9 +1,9 @@
 import type {Uint, Match, MatchData, ListItem, UserID} from './types.js';
 import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
-import {clearElement, createHTML, svgNS} from './lib/dom.js';
+import {clearElement, makeElement} from './lib/dom.js';
 import {br, button, div, img, input, label, h1, li, span, table, tbody, td, th, thead, tr, ul} from './lib/html.js';
-import {createSVG, circle, g, line, path, polyline, rect, svg, symbol, title, use} from './lib/svg.js';
+import {ns as svgNS, circle, g, line, path, polyline, rect, svg, symbol, title, use} from './lib/svg.js';
 import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
@@ -21,14 +21,14 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       shell = shellElement(),
       addLabel = (name: string, input: HTMLInputElement): [HTMLLabelElement, HTMLInputElement] => {
 	const id = "ID_" + nextID++;
-	return [label({"for": id}, name), createHTML(input, {id})];
+	return [label({"for": id}, name), makeElement(input, {id})];
       },
       maxID = 4294967296,
       symbols = svg(),
       addSymbol = (s: SVGSymbolElement): [(props?: Props) => SVGSVGElement, string] => {
 	const id = "ID_" + nextID++,
 	      str = s.outerHTML.slice(7, -7);
-	createSVG(symbols, createSVG(s, {id}));
+	makeElement(symbols, makeElement(s, {id}));
 	return [
 		(props: Props = {}) => svg(props, [
 			typeof props["title"] === "string" ? title(props["title"]) : [],
@@ -81,7 +81,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	      to = input({"value": data?.to}),
 	      w = windows(),
 	      matches = new MatchMaker(w, data?.match ?? []);
-	shell.addWindow(createHTML(w, {"window-title": (data ? "Edit" : "Add") + " Redirect", "window-icon": icon}, [
+	shell.addWindow(makeElement(w, {"window-title": (data ? "Edit" : "Add") + " Redirect", "window-icon": icon}, [
 		addLabel("From:", from),
 		br(),
 		addLabel("To:", to),
@@ -131,7 +131,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	      gid = input({"type": "number", "min": 0, "max": maxID, "value": data?.user?.gid, "disabled": data?.user === undefined}),
 	      w = windows(),
 	      matches = new MatchMaker(w, data?.match ?? []);
-	shell.addWindow(createHTML(w, {"window-title": (data ? "Edit" : "Add") + " Command", "window-icon": icon}, [
+	shell.addWindow(makeElement(w, {"window-title": (data ? "Edit" : "Add") + " Command", "window-icon": icon}, [
 		addLabel("Executable:", exe),
 		br(),
 		label("Params:"),
@@ -488,7 +488,7 @@ pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.locati
 	for (const s of list) {
 		servers.set(s[0], new Server(s));
 	}
-	clearElement(document.body).appendChild(createHTML(shell, desktop([
+	clearElement(document.body).appendChild(makeElement(shell, desktop([
 		symbols,
 		h1("Reverse Proxy"),
 		addServer({"title": "Add Server", "onclick": () => shell.prompt("Server Name", "Please enter a name for the new server", "", addServerIcon).then(name => {
