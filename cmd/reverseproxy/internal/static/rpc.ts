@@ -1,5 +1,5 @@
 import type {RPC as RPCType} from './types.js';
-import RPC from './lib/rpc_ws.js';
+import RPC from './lib/rpc.js';
 
 const broadcastList = -1, broadcastAdd = -2, broadcastRename = -3, broadcastRemove = -4, broadcastAddRedirect = -5, broadcastAddCommand = -6, broadcastModifyRedirect = -7, broadcastModifyCommand = -8, broadcastRemoveRedirect = -9, broadcastRemoveCommand = -10, broadcastStartRedirect = -11, broadcastStartCommand = -12, broadcastStopRedirect = -13, broadcastStopCommand = -14, broadcastCommandStopped = -15, broadcastCommandError = -16;
 
@@ -25,7 +25,7 @@ export default (url: string): Promise<void> => {
 				["waitStopCommand",    broadcastStopCommand],
 				["waitCommandStopped", broadcastCommandStopped],
 				["waitCommandError",   broadcastCommandError]
-			] as [string, number][]).map(([wait, id]) => [wait, () => arpc.await(id, true)]),
+			] as [string, number][]).map(([wait, id]) => [wait, () => arpc.subscribe(id)]),
 			[
 				"add",
 				"rename",
