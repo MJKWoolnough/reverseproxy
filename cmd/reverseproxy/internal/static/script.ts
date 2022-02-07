@@ -484,7 +484,7 @@ class Server {
 	}
 }
 
-pageLoad.then(() => RPC(`ws${window.location.protocol.slice(4)}//${window.location.host}/socket`).then(() => {rpc.waitList().then(list => {
+pageLoad.then(() => RPC("/socket").then(() => {rpc.waitList().then(list => {
 	for (const s of list) {
 		servers.set(s[0], new Server(s));
 	}
