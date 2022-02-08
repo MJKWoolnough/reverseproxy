@@ -6,7 +6,7 @@ const broadcastList = -1, broadcastAdd = -2, broadcastRename = -3, broadcastRemo
 export const rpc = {} as Readonly<RPCType>;
 
 export default (url: string): Promise<void> => {
-	return RPC(url, 1.1).then(arpc => {
+	return RPC(url).then(arpc => {
 		Object.freeze(Object.assign(rpc, Object.fromEntries([
 			([
 				["waitList",           broadcastList],
