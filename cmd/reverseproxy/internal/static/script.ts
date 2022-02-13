@@ -31,7 +31,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	amendNode(symbols, amendNode(s, {id}));
 	return [
 		(props: Props = {}) => svg(props, [
-			typeof props["title"] === "string" ? title(props["title"]) : [],
+			!(props instanceof NamedNodeMap) && typeof props["title"] === "string" ? title(props["title"]) : [],
 			use({"href": `#${id}`})
 		]),
 		"data:image/svg+xml," + encodeURIComponent(`<svg xmlns="${svgNS}"${str}svg>`)
