@@ -1,12 +1,14 @@
 import type {RPC as RPCType} from './types.js';
-import RPC from './lib/rpc.js';
+import {WS} from './lib/conn.js';
+import {RPC} from './lib/rpc.js';
 
 const broadcastList = -1, broadcastAdd = -2, broadcastRename = -3, broadcastRemove = -4, broadcastAddRedirect = -5, broadcastAddCommand = -6, broadcastModifyRedirect = -7, broadcastModifyCommand = -8, broadcastRemoveRedirect = -9, broadcastRemoveCommand = -10, broadcastStartRedirect = -11, broadcastStartCommand = -12, broadcastStopRedirect = -13, broadcastStopCommand = -14, broadcastCommandStopped = -15, broadcastCommandError = -16;
 
 export const rpc = {} as Readonly<RPCType>;
 
 export default (url: string): Promise<void> => {
-	return RPC(url).then(arpc => {
+	return WS(url).then(ws => {
+		const arpc = new RPC(ws);
 		Object.freeze(Object.assign(rpc, Object.fromEntries([
 			([
 				["waitList",           broadcastList],
