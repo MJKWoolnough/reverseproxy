@@ -25,13 +25,13 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       },
       maxID = 4294967296,
       symbols = svg(),
-      addSymbol = (s: SVGSymbolElement): [(props?: Props) => SVGSVGElement, string] => {
+      addSymbol = (s: SVGSymbolElement): [(props?: Exclude<Props, NamedNodeMap>) => SVGSVGElement, string] => {
 	const id = "ID_" + nextID++,
 	      str = s.outerHTML.slice(7, -7);
 	amendNode(symbols, amendNode(s, {id}));
 	return [
-		(props: Props = {}) => svg(props, [
-			!(props instanceof NamedNodeMap) && typeof props["title"] === "string" ? title(props["title"]) : [],
+		(props: Exclude<Props, NamedNodeMap> = {}) => svg(props, [
+			typeof props["title"] === "string" ? title(props["title"]) : [],
 			use({"href": `#${id}`})
 		]),
 		"data:image/svg+xml," + encodeURIComponent(`<svg xmlns="${svgNS}"${str}svg>`)
