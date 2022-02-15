@@ -1,6 +1,6 @@
 package main
 
 const (
-	uncompressedSize = 36290
-	indexUpdated     = 1644750096
+	uncompressedSize = 36263
+	indexUpdated     = 1644912820
 )
