@@ -3,7 +3,7 @@ import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
 import {amendNode, clearNode} from './lib/dom.js';
 import {br, button, div, img, input, label, h1, li, span, table, tbody, td, th, thead, tr, ul} from './lib/html.js';
-import {ns as svgNS, circle, g, line, path, polyline, rect, svg, symbol, title, use} from './lib/svg.js';
+import {svgData, circle, g, line, path, polyline, rect, svg, symbol, title, use} from './lib/svg.js';
 import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
@@ -26,15 +26,14 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       maxID = 4294967296,
       symbols = svg(),
       addSymbol = (s: SVGSymbolElement) => {
-	const id = "ID_" + nextID++,
-	      str = s.outerHTML.slice(7, -7);
+	const id = "ID_" + nextID++;
 	amendNode(symbols, amendNode(s, {id}));
 	return [
 		(props: Exclude<Props, NamedNodeMap> = {}) => svg(props, [
 			typeof props["title"] === "string" ? title(props["title"]) : [],
 			use({"href": `#${id}`})
 		]),
-		"data:image/svg+xml," + encodeURIComponent(`<svg xmlns="${svgNS}"${str}svg>`)
+		svgData(s)
 	] as const;
       },
       [remove, removeIcon] = addSymbol(symbol({"viewBox": "0 0 32 34"}, path({"d": "M10,5 v-3 q0,-1 1,-1 h10 q1,0 1,1 v3 m8,0 h-28 q-1,0 -1,1 v2 q0,1 1,1 h28 q1,0 1,-1 v-2 q0,-1 -1,-1 m-2,4 v22 q0,2 -2,2 h-20 q-2,0 -2,-2 v-22 m2,3 v18 q0,1 1,1 h3 q1,0 1,-1 v-18 q0,-1 -1,-1 h-3 q-1,0 -1,1 m7.5,0 v18 q0,1 1,1 h3 q1,0 1,-1 v-18 q0,-1 -1,-1 h-3 q-1,0 -1,1 m7.5,0 v18 q0,1 1,1 h3 q1,0 1,-1 v-18 q0,-1 -1,-1 h-3 q-1,0 -1,1", "style": "stroke: currentColor", "fill": "none"}))),
