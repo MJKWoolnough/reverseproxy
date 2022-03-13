@@ -353,12 +353,8 @@ class Redirect {
 		this.match = match;
 	}
 	setActive(v: boolean) {
-		this.statusSpan.style.setProperty("color", statusColours[v ? 1 : 0]);
-		if (this.active = v) {
-			this.startStop.style.setProperty("--h", "auto");
-		} else {
-			this.startStop.style.removeProperty("--h");
-		}
+		amendNode(this.statusSpan, {"style": {"color": statusColours[+v]}});
+		amendNode(this.startStop, {"style": {"--h": (this.active = v) ? "auto" : undefined}});
 	}
 }
 
@@ -432,12 +428,8 @@ class Command {
 		this.user = user;
 	}
 	setStatus (s: Uint) {
-		this.statusSpan.style.setProperty("color", statusColours[this.status = s]);
-		if (s === 1) {
-			this.startStop.style.setProperty("--h", "auto");
-		} else {
-			this.startStop.style.removeProperty("--h");
-		}
+		amendNode(this.statusSpan, {"style": {"color": statusColours[this.status = s]}});
+		amendNode(this.startStop, {"style": {"--h": s === 1 ? "auto" : undefined}});
 	}
 	setError (e: string) {
 		this.error = e;
