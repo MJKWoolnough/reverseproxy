@@ -232,7 +232,7 @@ class MatchMaker {
 	}
 	add(m: Match = {"name": "", "isSuffix": false}) {
 		this.list.push(m);
-		const l = this.u.appendChild(tr([
+		const l = tr([
 			td(input({"onchange": function(this: HTMLInputElement){m.name = this.value}, "value": m.name})),
 			td(input({"type": "checkbox", "onchange": function(this: HTMLInputElement){m.isSuffix = this.checked}, "checked": m.isSuffix})),
 			td(remove({"title": "Remove Match", "onclick": () => {
@@ -243,7 +243,8 @@ class MatchMaker {
 					l.remove();
 				}
 			}}))
-		      ]));
+		      ]);
+		amendNode(this.u, l);
 	}
 }
 
