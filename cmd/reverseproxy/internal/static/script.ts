@@ -123,8 +123,8 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	      env = new EnvMaker(data?.env ?? {}),
 	      workDir = input({"value": data?.workDir}),
 	      userID = input({"type": "checkbox", "checked": data?.user !== undefined, "onchange": () => {
-		      uid.toggleAttribute("disabled", !userID.checked);
-		      gid.toggleAttribute("disabled", !userID.checked);
+		      amendNode(uid, {"disabled": !userID.checked});
+		      amendNode(gid, {"disabled": !userID.checked});
 	      }}),
 	      uid = input({"type": "number", "min": 0, "max": maxID, "value": data?.user?.uid, "disabled": data?.user === undefined}),
 	      gid = input({"type": "number", "min": 0, "max": maxID, "value": data?.user?.gid, "disabled": data?.user === undefined}),
