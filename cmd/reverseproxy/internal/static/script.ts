@@ -495,17 +495,13 @@ pageLoad.then(() => RPC("/socket").then(() => {rpc.waitList().then(list => {
 	rpc.waitRemove().then(name => servers.delete(name));
 	rpc.waitAddRedirect().then(r => {
 		const server = servers.get(r.server);
-		if (server) {
-			server.redirects.set(r.id, new Redirect(server, r.id, r.from, r.to, false, r.match));
-		}
+		server?.redirects.set(r.id, new Redirect(server, r.id, r.from, r.to, false, r.match));
 	});
 	rpc.waitModifyRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.update(r.from, r.to, r.match));
 	rpc.waitRemoveRedirect().then(r => servers.get(r.server)?.redirects.delete(r.id));
 	rpc.waitAddCommand().then(c => {
 		const server = servers.get(c.server);
-		if (server) {
-			server.commands.set(c.id, new Command(server, c.id, c.exe, c.params, c.workDir, c.env, c.match, c.user, 0, ""));
-		}
+		server?.commands.set(c.id, new Command(server, c.id, c.exe, c.params, c.workDir, c.env, c.match, c.user, 0, ""));
 	});
 	rpc.waitModifyCommand().then(c => servers.get(c.server)?.commands.get(c.id)?.update(c.exe, c.params, c.env, c.match, c.user));
 	rpc.waitRemoveCommand().then(c => servers.get(c.server)?.commands.delete(c.id));
