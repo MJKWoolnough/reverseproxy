@@ -106,7 +106,7 @@ func (c *Config) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if u, p, ok := r.BasicAuth(); ok && u == c.Username && sha256.Sum256([]byte(p)) == c.Password {
 		switch r.URL.Path {
 		case "/":
-			index(w, r)
+			index.ServeHTTP(w, r)
 		case "/socket":
 			websocket.Handler(NewConn).ServeHTTP(w, r)
 		default:
@@ -153,7 +153,7 @@ func run() error {
 		config.Servers = make(servers)
 	}
 	config.Servers.Init()
-	var s = http.Server{
+	s := http.Server{
 		Handler: &config,
 	}
 	go s.Serve(l)
