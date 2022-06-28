@@ -107,7 +107,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 						"server": server.name,
 						"from": f,
 						"to": to.value,
-						"match": matches.list,
+						"match": matches.list
 					})
 					.then(id => server.redirects.set(id, new Redirect(server, id, f, to.value, false, matches.list)))
 				).catch(err => shell.alert("Error", err.message, icon));
@@ -224,7 +224,7 @@ class MatchMaker {
 					th("Is Suffix?"),
 					th(img({"src": removeIcon, "style": {"width": "1em", "height": "1em"}}))
 				])),
-				this.u,
+				this.u
 			]),
 			button({"onclick": () => this.add()}, "Add Match")
 		]);
