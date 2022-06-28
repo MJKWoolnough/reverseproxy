@@ -25,7 +25,7 @@ type http2https struct {
 
 func (hh http2https) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.TLS == nil {
-		var url = "https://" + r.Host + r.URL.Path
+		url := "https://" + r.Host + r.URL.Path
 		if len(r.URL.RawQuery) != 0 {
 			url += "?" + r.URL.RawQuery
 		}
