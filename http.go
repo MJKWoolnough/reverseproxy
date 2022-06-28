@@ -37,6 +37,4 @@ func readHTTPServerName(r io.Reader, buf []byte) (string, []byte, error) {
 	return string(buf[h : h+l]), buf[:n], nil
 }
 
-var (
-	errNoServerHeader = errors.New("no server header")
-)
+var errNoServerHeader = errors.New("no server header")
