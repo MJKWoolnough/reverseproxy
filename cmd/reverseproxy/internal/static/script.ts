@@ -1,10 +1,10 @@
-import type {Uint, Match, MatchData, ListItem, UserID} from './types.js';
+import type {ListItem, Match, MatchData, Uint, UserID} from './types.js';
 import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
 import {amendNode, clearNode} from './lib/dom.js';
-import {br, button, div, img, input, label, h1, li, span, table, tbody, td, th, thead, tr, ul} from './lib/html.js';
-import {svgData, circle, g, line, path, polyline, rect, svg, symbol, title, use} from './lib/svg.js';
-import {stringSort, node, NodeMap, NodeArray, noSort} from './lib/nodes.js';
+import {br, button, div, h1, img, input, label, li, span, table, tbody, td, th, thead, tr, ul} from './lib/html.js';
+import {NodeArray, NodeMap, node, noSort, stringSort} from './lib/nodes.js';
+import {circle, g, line, path, polyline, rect, svg, svgData, symbol, title, use} from './lib/svg.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
 
