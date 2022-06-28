@@ -4,20 +4,20 @@ export type Uint = number;
 
 export type MatchData = [boolean, string];
 
-export type ListItem = [string, [Uint, Uint, string, boolean, string, ...MatchData[]][], [Uint, string, string[], string, Record<string, string>, Uint, string, UserID | null, ...MatchData[]][]]
+export type ListItem = [string, [Uint, Uint, string, boolean, string, ...MatchData[]][], [Uint, string, string[], string, Record<string, string>, Uint, string, UserID | null, ...MatchData[]][]];
 
 type List = ListItem[];
 
 export type Match = {
 	isSuffix: boolean;
 	name:     string;
-};
+}
 
 type Redirect = NameID & {
 	from:   Uint;
 	to:     string;
 	match:  Match[];
-};
+}
 
 export type UserID = {
 	uid: Uint;
@@ -31,7 +31,7 @@ type Command = NameID & {
 	env:     Record<string, string>;
 	match:   Match[];
 	user?:   UserID;
-};
+}
 
 type NameID = {
 	server: string;
@@ -70,4 +70,4 @@ export type RPC = {
 	stopRedirect:    (redirect: NameID)                      => Promise<void>;
 	stopCommand:     (command: NameID)                       => Promise<void>;
 	getCommandPorts: (command: NameID)                       => Promise<Uint[]>;
-};
+}
