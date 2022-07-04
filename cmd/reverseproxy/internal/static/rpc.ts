@@ -43,7 +43,7 @@ export default (url: string): Promise<void> => {
 				"stopRedirect",
 				"stopCommand",
 				"getCommandPorts"
-			].map(ep => [ep, arpc.request.bind(null, ep)])
+			].map(ep => [ep, arpc.request.bind(arpc, ep)])
 		].flat()) as RPCType))
 	});
 };
