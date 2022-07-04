@@ -10,10 +10,6 @@ import RPC, {rpc} from './rpc.js';
 
 declare const pageLoad: Promise<void>;
 
-type Param = {
-	[node]: HTMLInputElement;
-}
-
 let nextID = 0;
 
 const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
@@ -119,7 +115,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       editCommand = (server: Server, data?: Command) => {
 	const icon = data ? editIcon : addCommandIcon,
 	      exe = input({"value": data?.exe}),
-	      params = new NodeArray<Param>(div(), noSort, data?.params.map(p => ({[node]: input({"value": p})})) ?? []),
+	      params = new NodeArray(div(), noSort, data?.params.map(p => ({[node]: input({"value": p})})) ?? []),
 	      env = new EnvMaker(data?.env ?? {}),
 	      workDir = input({"value": data?.workDir}),
 	      userID = input({"type": "checkbox", "checked": data?.user !== undefined, "onchange": () => {
