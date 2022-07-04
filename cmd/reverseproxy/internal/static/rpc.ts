@@ -6,44 +6,42 @@ const broadcastList = -1, broadcastAdd = -2, broadcastRename = -3, broadcastRemo
 
 export const rpc = {} as Readonly<RPCType>;
 
-export default (url: string): Promise<void> => {
-	return WS(url).then(ws => {
-		const arpc = new RPC(ws);
-		Object.freeze(Object.assign(rpc, Object.fromEntries([
-			([
-				["waitList",           broadcastList],
-				["waitAdd",            broadcastAdd],
-				["waitRename",         broadcastRename],
-				["waitRemove",         broadcastRemove],
-				["waitAddRedirect",    broadcastAddRedirect],
-				["waitAddCommand",     broadcastAddCommand],
-				["waitModifyRedirect", broadcastModifyRedirect],
-				["waitModifyCommand",  broadcastModifyCommand],
-				["waitRemoveRedirect", broadcastRemoveRedirect],
-				["waitRemoveCommand",  broadcastRemoveCommand],
-				["waitStartRedirect",  broadcastStartRedirect],
-				["waitStartCommand",   broadcastStartCommand],
-				["waitStopRedirect",   broadcastStopRedirect],
-				["waitStopCommand",    broadcastStopCommand],
-				["waitCommandStopped", broadcastCommandStopped],
-				["waitCommandError",   broadcastCommandError]
-			] as [string, number][]).map(([wait, id]) => [wait, () => arpc.subscribe(id)]),
-			[
-				"add",
-				"rename",
-				"remove",
-				"addRedirect",
-				"addCommand",
-				"modifyRedirect",
-				"modifyCommand",
-				"removeRedirect",
-				"removeCommand",
-				"startRedirect",
-				"startCommand",
-				"stopRedirect",
-				"stopCommand",
-				"getCommandPorts"
-			].map(ep => [ep, arpc.request.bind(arpc, ep)])
-		].flat()) as RPCType))
-	});
-};
+export default (url: string): Promise<void> => WS(url).then(ws => {
+	const arpc = new RPC(ws);
+	Object.freeze(Object.assign(rpc, Object.fromEntries([
+		([
+			["waitList",           broadcastList],
+			["waitAdd",            broadcastAdd],
+			["waitRename",         broadcastRename],
+			["waitRemove",         broadcastRemove],
+			["waitAddRedirect",    broadcastAddRedirect],
+			["waitAddCommand",     broadcastAddCommand],
+			["waitModifyRedirect", broadcastModifyRedirect],
+			["waitModifyCommand",  broadcastModifyCommand],
+			["waitRemoveRedirect", broadcastRemoveRedirect],
+			["waitRemoveCommand",  broadcastRemoveCommand],
+			["waitStartRedirect",  broadcastStartRedirect],
+			["waitStartCommand",   broadcastStartCommand],
+			["waitStopRedirect",   broadcastStopRedirect],
+			["waitStopCommand",    broadcastStopCommand],
+			["waitCommandStopped", broadcastCommandStopped],
+			["waitCommandError",   broadcastCommandError]
+		] as [string, number][]).map(([wait, id]) => [wait, () => arpc.subscribe(id)]),
+		[
+			"add",
+			"rename",
+			"remove",
+			"addRedirect",
+			"addCommand",
+			"modifyRedirect",
+			"modifyCommand",
+			"removeRedirect",
+			"removeCommand",
+			"startRedirect",
+			"startCommand",
+			"stopRedirect",
+			"stopCommand",
+			"getCommandPorts"
+		].map(ep => [ep, arpc.request.bind(arpc, ep)])
+	].flat()) as RPCType))
+});
