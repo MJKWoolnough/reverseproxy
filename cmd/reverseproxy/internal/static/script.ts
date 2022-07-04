@@ -82,7 +82,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		addLabel("To:", to),
 		br(),
 		matches[node],
-		button({"onclick": () => {
+		button({"onclick": function(this: HTMLButtonElement) {
 			const f = parseInt(from.value);
 			if (f <= 0 || f > 65535) {
 				w.alert("Invalid Port", `Invalid from port: ${from.value}`, icon);
@@ -91,6 +91,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 			} else if (matches.list.some(({name}) => name === "")) {
 				w.alert("Invalid Match", "Cannot have empty match", icon);
 			} else {
+				amendNode(this, {"disabled": true});
 				(data ?
 					rpc.modifyRedirect({
 						"server": server.name,
@@ -106,8 +107,10 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 						"match": matches.list
 					})
 					.then(id => server.redirects.set(id, new Redirect(server, id, f, to.value, false, matches.list)))
-				).catch(err => shell.alert("Error", err.message, icon));
-				w.remove();
+				)
+				.then(() => w.remove())
+				.catch(err => w.alert("Error", err.message, icon))
+				.finally(() => amendNode(this, {"disabled": false}));
 			}
 		}}, (data ? "Edit" : "Create") + " Redirect")
 	]));
@@ -151,7 +154,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		br(),
 		addLabel("GID:", gid),
 		br(),
-		button({"onclick": () => {
+		button({"onclick": function(this: HTMLButtonElement) {
 			const u = parseInt(uid.value),
 			      g = parseInt(gid.value);
 			if (exe.value === "") {
@@ -163,6 +166,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 			} else if (g < 0 || g > maxID) {
 				w.alert("Invalid GID", `GID must be in range 0 < uid < ${maxID}`, icon);
 			} else {
+				amendNode(this, {"disabled": true});
 				const p = params.map(p => p[node].value),
 				      e = env.toObject(),
 				      ids = userID.checked ? {
@@ -191,8 +195,9 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 					})
 					.then(id => server.commands.set(id, new Command(server, id, exe.value, p, workDir.value, e, matches.list, ids)))
 				)
-				.catch(err => shell.alert("Error", err.message, icon));
-				w.remove();
+				.then(() => w.remove())
+				.catch(err => w.alert("Error", err.message, icon))
+				.finally(() => amendNode(this, {"disabled": false}));
 			}
 		}}, (data ? "Edit" : "Create") + " Command")
 	]));
