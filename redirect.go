@@ -7,9 +7,9 @@ import (
 )
 
 type addrService struct {
+	copying uint64
 	MatchServiceName
 	net.Addr
-	copying uint64
 }
 
 func (a *addrService) Transfer(buf []byte, conn *net.TCPConn) error {
