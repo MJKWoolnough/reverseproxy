@@ -208,8 +208,8 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 class MatchMaker {
 	list: Match[];
 	[node]: HTMLDivElement;
-	u = tbody();
-	w: WindowElement;
+	#u = tbody();
+	#w: WindowElement;
 	constructor(w: WindowElement, matches: Match[]) {
 		this.list = [];
 		for (const m of matches) {
@@ -225,11 +225,11 @@ class MatchMaker {
 					th("Is Suffix?"),
 					th(img({"src": removeIcon, "style": {"width": "1em", "height": "1em"}}))
 				])),
-				this.u
+				this.#u
 			]),
 			button({"onclick": () => this.add()}, "Add Match")
 		]);
-		this.w = w;
+		this.#w = w;
 	}
 	add(m: Match = {"name": "", "isSuffix": false}) {
 		this.list.push(m);
@@ -238,14 +238,14 @@ class MatchMaker {
 			td(input({"type": "checkbox", "onchange": function(this: HTMLInputElement){m.isSuffix = this.checked}, "checked": m.isSuffix})),
 			td(remove({"title": "Remove Match", "onclick": () => {
 				if (this.list.length === 1) {
-					this.w.alert("Cannot remove Match", "Must have at least 1 Match", removeIcon);
+					this.#w.alert("Cannot remove Match", "Must have at least 1 Match", removeIcon);
 				} else {
 					this.list.splice(this.list.indexOf(m), 1);
 					l.remove();
 				}
 			}}))
 		      ]);
-		amendNode(this.u, l);
+		amendNode(this.#u, l);
 	}
 }
 
@@ -256,11 +256,11 @@ type Env = {
 }
 
 class EnvMaker {
-	nextID = 0;
-	m: NodeMap<number, Env>;
+	#nextID = 0;
+	#m: NodeMap<number, Env>;
 	[node]: HTMLDivElement;
 	constructor(environment: Record<string, string>) {
-		this.m = new NodeMap<number, Env>(tbody());
+		this.#m = new NodeMap<number, Env>(tbody());
 		for (const key in environment) {
 			this.addEnv(key, environment[key]);
 		}
@@ -271,28 +271,28 @@ class EnvMaker {
 					th("Value"),
 					th(img({"src": removeIcon, "style": {"width": "1em", "height": "1em"}}))
 				])),
-				this.m[node]
+				this.#m[node]
 			]),
 			button({"onclick": () => this.addEnv()}, "+")
 		]);
 	}
 	addEnv(key = "", value = "") {
-		const id = this.nextID++,
+		const id = this.#nextID++,
 		      k = input({"value": key}),
 		      v = input({value});
-		this.m.set(id, {
+		this.#m.set(id, {
 			"key": k,
 			"value": v,
 			[node]: tr([
 				td(k),
 				td(v),
-				td(remove({"onclick": () => this.m.delete(id)}))
+				td(remove({"onclick": () => this.#m.delete(id)}))
 			])
 		});
 	}
 	toObject() {
 		const env: Record<string, string> = {};
-		for (const e of this.m.values()) {
+		for (const e of this.#m.values()) {
 			if (e.key.value) {
 				env[e.key.value] = e.value.value;
 			}
@@ -306,24 +306,24 @@ class Redirect {
 	from: Uint;
 	to: string;
 	match: Match[];
-	active: boolean;
+	#active: boolean;
 	[node]: HTMLLIElement;
-	fromSpan: HTMLSpanElement;
-	toSpan: HTMLSpanElement;
-	statusSpan: HTMLSpanElement;
-	startStop: SVGSVGElement;
+	#fromSpan: HTMLSpanElement;
+	#toSpan: HTMLSpanElement;
+	#statusSpan: HTMLSpanElement;
+	#startStop: SVGSVGElement;
 	constructor(server: Server, id: Uint, from: Uint, to: string, active: boolean, match: Match[]) {
 		this.id = id;
 		this.from = from;
 		this.to = to;
 		this.match = match;
-		this.active = active;
-		this.fromSpan = span(from + ""),
-		this.toSpan = span(to);
-		this.statusSpan = span({"style": {"color": statusColours[+active]}});
-		this.startStop = start({"onclick": () => {
+		this.#active = active;
+		this.#fromSpan = span(from + ""),
+		this.#toSpan = span(to);
+		this.#statusSpan = span({"style": {"color": statusColours[+active]}});
+		this.#startStop = start({"onclick": () => {
 			const sid = {"server": server.name, id};
-			if (this.active) {
+			if (this.#active) {
 				rpc.stopRedirect(sid)
 				.then(() => this.setActive(false))
 				.catch(err => shell.alert("Error stopping redirect", err.message, startIcon));
@@ -334,11 +334,11 @@ class Redirect {
 			}
 		}, "style": active ? "--h: auto" : undefined});
 		this[node] = li	([
-			this.statusSpan,
-			this.fromSpan,
+			this.#statusSpan,
+			this.#fromSpan,
 			" ➔ ",
-			this.toSpan,
-			this.startStop,
+			this.#toSpan,
+			this.#startStop,
 			edit({"title": "Edit Redirect", "onclick": () => editRedirect(server, this)}),
 			remove({"title": "Remove Redirect", "onclick": () => shell.confirm("Are you sure?", "Are you sure you wish to remove this redirect?", removeIcon).then(c => {
 				if (c) {
@@ -350,13 +350,13 @@ class Redirect {
 		]);
 	}
 	update(from: Uint, to: string, match: Match[]) {
-		this.fromSpan.innerText = (this.from = from) + "";
-		this.toSpan.innerText = this.to = to;
+		this.#fromSpan.innerText = (this.from = from) + "";
+		this.#toSpan.innerText = this.to = to;
 		this.match = match;
 	}
 	setActive(v: boolean) {
-		amendNode(this.statusSpan, {"style": {"color": statusColours[+v]}});
-		amendNode(this.startStop, {"style": {"--h": (this.active = v) ? "auto" : undefined}});
+		amendNode(this.#statusSpan, {"style": {"color": statusColours[+v]}});
+		amendNode(this.#startStop, {"style": {"--h": (this.#active = v) ? "auto" : undefined}});
 	}
 }
 
@@ -367,13 +367,13 @@ class Command {
 	workDir: string;
 	env: Record<string, string>;
 	match: Match[];
-	status: Uint;
+	#status: Uint;
 	[node]: HTMLLIElement;
-	exeSpan: HTMLSpanElement;
-	statusSpan: HTMLSpanElement;
-	error: string;
+	#exeSpan: HTMLSpanElement;
+	#statusSpan: HTMLSpanElement;
+	#error: string;
 	user?: UserID;
-	startStop: SVGSVGElement;
+	#startStop: SVGSVGElement;
 	constructor(server: Server, id: Uint, exe: string, params: string[], workDir: string, env: Record<string, string>, match: Match[], user?: UserID, status: Uint = 0, error = "") {
 		this.id = id;
 		this.exe = exe;
@@ -381,14 +381,14 @@ class Command {
 		this.workDir = workDir;
 		this.env = env;
 		this.match = match;
-		this.status = status;
-		this.exeSpan = span(exe + " " + params.join(" "));
-		this.statusSpan = span({"class": "status", "style": {"color": statusColours[status]}});
-		this.error = error;
+		this.#status = status;
+		this.#exeSpan = span(exe + " " + params.join(" "));
+		this.#statusSpan = span({"class": "status", "style": {"color": statusColours[status]}});
+		this.#error = error;
 		this.user = user;
-		this.startStop = start({"onclick": () => {
+		this.#startStop = start({"onclick": () => {
 			const sid = {"server": server.name, id}
-			if (this.status === 1) {
+			if (this.#status === 1) {
 				rpc.stopCommand(sid)
 				.then(() => this.setStatus(0))
 				.catch(err => {
@@ -406,11 +406,11 @@ class Command {
 			}
 		}, "style": status === 1 ? "--h: auto" : undefined});
 		this[node] = li([
-			this.statusSpan,
-			this.exeSpan,
-			this.startStop,
-			info({"title": "Command Information", "onclick": () => (this.status === 1 ? rpc.getCommandPorts({"server": server.name, id}) : Promise.resolve([])).then(ports => shell.addWindow(windows({"window-title": "Command Information", "window-icon": infoIcon}, [
-				div(`Error: ${this.error}`),
+			this.#statusSpan,
+			this.#exeSpan,
+			this.#startStop,
+			info({"title": "Command Information", "onclick": () => (this.#status === 1 ? rpc.getCommandPorts({"server": server.name, id}) : Promise.resolve([])).then(ports => shell.addWindow(windows({"window-title": "Command Information", "window-icon": infoIcon}, [
+				div(`Error: ${this.#error}`),
 				div(`Open Ports: ${ports.sort((a: Uint, b: Uint) => b - a).join(", ")}`)
 			]))).catch(e => shell.alert("Error getting information", e.message, infoIcon))}),
 			edit({"title": "Edit Command", "onclick": () => editCommand(server, this)}),
@@ -424,17 +424,17 @@ class Command {
 		]);
 	}
 	update(exe: string, params: string[], env: Record<string, string>, match: Match[], user?: UserID) {
-		this.exeSpan.innerText = (this.exe = exe) + " " + (this.params = params).join(" ");
+		this.#exeSpan.innerText = (this.exe = exe) + " " + (this.params = params).join(" ");
 		this.env = env;
 		this.match = match;
 		this.user = user;
 	}
 	setStatus (s: Uint) {
-		amendNode(this.statusSpan, {"style": {"color": statusColours[this.status = s]}});
-		amendNode(this.startStop, {"style": {"--h": s === 1 ? "auto" : undefined}});
+		amendNode(this.#statusSpan, {"style": {"color": statusColours[this.#status = s]}});
+		amendNode(this.#startStop, {"style": {"--h": s === 1 ? "auto" : undefined}});
 	}
 	setError (e: string) {
-		this.error = e;
+		this.#error = e;
 	}
 }
 
@@ -443,15 +443,15 @@ class Server {
 	redirects: NodeMap<Uint, Redirect>;
 	commands: NodeMap<Uint, Command>;
 	[node]: HTMLLIElement;
-	nameSpan: HTMLSpanElement;
+	#nameSpan: HTMLSpanElement;
 	constructor([name, rs, cs]: ListItem) {
 		this.name = name;
 		this.redirects = new NodeMap<Uint, Redirect & {[node]: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => [id, new Redirect(this, id, from, to, active, matchData2Match(match))]));
 		this.commands = new NodeMap<Uint, Command & {[node]: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, workDir, env, status, error, user, ...match]) => [id, new Command(this, id, exe, params, workDir, env, matchData2Match(match), user || undefined, status, error)]));
-		this.nameSpan = span(name);
+		this.#nameSpan = span(name);
 		this[node] = li([
 			div([
-				this.nameSpan,
+				this.#nameSpan,
 				addRedirect({"title": "Add Redirect", "onclick": () => editRedirect(this)}),
 				addCommand({"title": "Add Command", "onclick": () => editCommand(this)}),
 				rename({"title": "Rename Server", "onclick": () => shell.prompt("New Name", "Plese enter a new name for this server", this.name, renameIcon).then(name => {
@@ -472,7 +472,7 @@ class Server {
 	}
 	setName(name: string) {
 		servers.delete(this.name);
-		this.nameSpan.innerText = this.name = name;
+		this.#nameSpan.innerText = this.name = name;
 		servers.set(name, this);
 	}
 }
