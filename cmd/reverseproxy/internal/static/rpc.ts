@@ -6,7 +6,7 @@ const broadcastList = -1, broadcastAdd = -2, broadcastRename = -3, broadcastRemo
 
 export const rpc = {} as Readonly<RPCType>;
 
-export default (url: string): Promise<void> => WS(url).then(ws => {
+export default (url: string) => WS(url).then(ws => {
 	const arpc = new RPC(ws);
 	Object.freeze(Object.assign(rpc, Object.fromEntries([
 		([
