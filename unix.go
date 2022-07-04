@@ -11,9 +11,9 @@ import (
 )
 
 type unixService struct {
-	MatchServiceName
-	conn         *net.UnixConn
 	transferring uint64
+	MatchServiceName
+	conn *net.UnixConn
 }
 
 func (u *unixService) Transfer(buf []byte, conn *net.TCPConn) error {
