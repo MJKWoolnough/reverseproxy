@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 )
 
 var (
@@ -29,9 +28,7 @@ func readHTTPServerName(r io.Reader, buf []byte) (string, []byte, error) {
 			return "", buf, errNoServerHeader
 		}
 		if err != nil {
-			if terr, ok := err.(net.Error); !ok || !terr.Temporary() {
-				return "", buf, fmt.Errorf("error reading headers: %w", err)
-			}
+			return "", buf, fmt.Errorf("error reading headers: %w", err)
 		}
 	}
 	return string(buf[h : h+l]), buf[:n], nil
