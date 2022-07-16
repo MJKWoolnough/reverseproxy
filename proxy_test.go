@@ -101,6 +101,9 @@ func TestListener(t *testing.T) {
 	}
 	sb := make(testService)
 	q, err := addPort(pa, testServiceB{sb})
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	const secondSend = "GET / HTTP/1.1\r\nHost: " + bDomain + "\r\n\r\n"
 	go func() {
 		c, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", pa))
