@@ -104,7 +104,6 @@ func readTLSServerName(c io.Reader, buf []byte) (string, []byte, error) {
 }
 
 var (
-	errNoHandshake   = errors.New("not a handshake")
 	errNoClientHello = errors.New("not a client hello")
 	errInvalidLength = errors.New("invalid length")
 	errNoName        = errors.New("no server name")
