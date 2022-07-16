@@ -41,17 +41,14 @@ func (l *listener) listen() {
 			if errors.Is(err, net.ErrClosed) {
 				return
 			}
-			if nerr, ok := err.(net.Error); !ok || !nerr.Temporary() {
-				l.Close()
-				l.mu.Lock()
-				for p := range l.ports {
-					p.closed = true
-					delete(l.ports, p)
-				}
-				l.mu.Unlock()
-				return
+			l.Close()
+			l.mu.Lock()
+			for p := range l.ports {
+				p.closed = true
+				delete(l.ports, p)
 			}
-			continue
+			l.mu.Unlock()
+			return
 		}
 		go l.transfer(c)
 	}
