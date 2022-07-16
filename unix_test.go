@@ -100,6 +100,9 @@ func TestUnix(t *testing.T) {
 	fd, _ := syscall.ParseUnixRights(&msg[0])
 	nf = os.NewFile(uintptr(fd[0]), "")
 	cn, err := net.FileConn(nf)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	nf.Close()
 	addr := cn.LocalAddr().(*net.TCPAddr)
 	if addr.Port != int(pa) {
