@@ -459,10 +459,6 @@ func (s *socket) startCommand(data json.RawMessage) (interface{}, error) {
 	})
 }
 
-func stop(data json.RawMessage) (interface{}, error) {
-	return nil, nil
-}
-
 func (s *socket) stopRedirect(data json.RawMessage) (interface{}, error) {
 	var sr nameID
 	if err := json.Unmarshal(data, &sr); err != nil {
