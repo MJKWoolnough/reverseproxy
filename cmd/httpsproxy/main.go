@@ -24,7 +24,7 @@ var (
 	forwardHeader bool
 	headerPool    = sync.Pool{
 		New: func() interface{} {
-			return [bufSize]byte{}
+			return &[bufSize]byte{}
 		},
 	}
 	eol     = []byte{'\r', '\n'}
@@ -57,7 +57,7 @@ func proxyConn(c net.Conn) {
 		return
 	}
 	if forwardHeader {
-		buf := headerPool.Get().([bufSize]byte)
+		buf := headerPool.Get().(*[bufSize]byte)
 		n := 0
 		l := 0
 		for {
