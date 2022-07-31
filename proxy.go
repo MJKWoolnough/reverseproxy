@@ -24,12 +24,14 @@ type listener struct {
 var (
 	httpPool = sync.Pool{
 		New: func() interface{} {
-			return make([]byte, http.DefaultMaxHeaderBytes)
+			b := make([]byte, http.DefaultMaxHeaderBytes)
+			return &b
 		},
 	}
 	tlsPool = sync.Pool{
 		New: func() interface{} {
-			return make([]byte, maxTLSRead)
+			b := make([]byte, maxTLSRead)
+			return &b
 		},
 	}
 )
@@ -69,7 +71,8 @@ func (l *listener) transfer(c *net.TCPConn) {
 			pool = &httpPool
 			readServerName = readHTTPServerName
 		}
-		buf := pool.Get().([]byte)
+		b := pool.Get().(*[]byte)
+		buf := *b
 		buf[0] = tlsByte[0]
 		name, buf, err = readServerName(c, buf)
 		if err == nil {
@@ -94,7 +97,7 @@ func (l *listener) transfer(c *net.TCPConn) {
 		for n := range buf {
 			buf[n] = 0
 		}
-		pool.Put(buf[:cap(buf)])
+		pool.Put(b)
 	} else {
 		c.Close()
 	}
