@@ -89,9 +89,6 @@ func proxySSL(l net.Listener) {
 	for {
 		c, err := l.Accept()
 		if err != nil {
-			if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
-				continue
-			}
 			wg.Done()
 			return
 		}
