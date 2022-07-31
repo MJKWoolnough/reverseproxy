@@ -70,9 +70,7 @@ func proxyConn(c net.Conn) {
 				break
 			}
 			if err != nil {
-				if terr, ok := err.(net.Error); !ok || !terr.Temporary() {
-					return
-				}
+				return
 			}
 		}
 		pc.Write(buf[l:n])
