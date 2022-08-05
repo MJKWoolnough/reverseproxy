@@ -9,7 +9,6 @@ import (
 
 	"golang.org/x/net/websocket"
 	"vimagination.zapto.org/jsonrpc"
-	"vimagination.zapto.org/memio"
 )
 
 const (
@@ -108,7 +107,7 @@ func (s *socket) HandleRPC(method string, data json.RawMessage) (interface{}, er
 
 func buildInitialMessage() json.RawMessage {
 	config.mu.RLock()
-	buf := memio.Buffer{'['}
+	buf := []byte{'['}
 	f := true
 	for name, server := range config.Servers {
 		if f {
@@ -116,7 +115,7 @@ func buildInitialMessage() json.RawMessage {
 		} else {
 			buf = append(buf, ',')
 		}
-		fmt.Fprintf(&buf, "[%q,[", name)
+		buf = fmt.Appendf(buf, "[%q,[", name)
 		first := true
 		for id, redirect := range server.Redirects {
 			if first {
@@ -124,12 +123,12 @@ func buildInitialMessage() json.RawMessage {
 			} else {
 				buf = append(buf, ',')
 			}
-			fmt.Fprintf(&buf, "[%d,%d,%q,%t,%q,", id, redirect.From, redirect.To, redirect.Start, redirect.err)
+			buf = fmt.Appendf(buf, "[%d,%d,%q,%t,%q,", id, redirect.From, redirect.To, redirect.Start, redirect.err)
 			for n, m := range redirect.Match {
 				if n > 0 {
 					buf = append(buf, ',')
 				}
-				fmt.Fprintf(&buf, "[%t,%q]", m.IsSuffix, m.Name)
+				buf = fmt.Appendf(buf, "[%t,%q]", m.IsSuffix, m.Name)
 			}
 			buf = append(buf, ']')
 		}
@@ -141,14 +140,14 @@ func buildInitialMessage() json.RawMessage {
 			} else {
 				buf = append(buf, ',')
 			}
-			fmt.Fprintf(&buf, "[%d,%q,[", id, cmd.Exe)
+			buf = fmt.Appendf(buf, "[%d,%q,[", id, cmd.Exe)
 			for n, param := range cmd.Params {
 				if n > 0 {
 					buf = append(buf, ',')
 				}
-				fmt.Fprintf(&buf, "%q", param)
+				buf = fmt.Appendf(buf, "%q", param)
 			}
-			fmt.Fprintf(&buf, "],%q,{", cmd.WorkDir)
+			buf = fmt.Appendf(buf, "],%q,{", cmd.WorkDir)
 			o := true
 			for key, value := range cmd.Env {
 				if o {
@@ -156,16 +155,16 @@ func buildInitialMessage() json.RawMessage {
 				} else {
 					buf = append(buf, ',')
 				}
-				fmt.Fprintf(&buf, "%q:%q", key, value)
+				buf = fmt.Appendf(buf, "%q:%q", key, value)
 			}
-			fmt.Fprintf(&buf, "},%d,%q,", cmd.status, cmd.err)
+			buf = fmt.Appendf(buf, "},%d,%q,", cmd.status, cmd.err)
 			if cmd.User != nil {
-				fmt.Fprintf(&buf, "{\"uid\":%d,\"gid\":%d}", cmd.User.UID, cmd.User.GID)
+				buf = fmt.Appendf(buf, "{\"uid\":%d,\"gid\":%d}", cmd.User.UID, cmd.User.GID)
 			} else {
 				buf = append(buf, 'n', 'u', 'l', 'l')
 			}
 			for _, m := range cmd.Match {
-				fmt.Fprintf(&buf, ",[%t,%q]", m.IsSuffix, m.Name)
+				buf = fmt.Appendf(buf, ",[%t,%q]", m.IsSuffix, m.Name)
 			}
 			buf = append(buf, ']')
 		}
