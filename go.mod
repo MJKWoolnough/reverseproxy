@@ -12,3 +12,8 @@ require (
 	vimagination.zapto.org/jsonrpc v1.0.0
 	vimagination.zapto.org/memio v1.0.0
 )
+
+require (
+	golang.org/x/text v0.3.3 // indirect
+	vimagination.zapto.org/httpencoding v1.0.0 // indirect
+)
