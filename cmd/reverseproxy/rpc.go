@@ -228,7 +228,9 @@ func (s *socket) getRedirect(n nameID, fn func(*server, *redirect) error) error 
 	if err := fn(serv, r); err != nil {
 		return err
 	}
-	saveConfig()
+	if err := saveConfig(); err != nil {
+		return fmt.Errorf("error saving config: %w", err)
+	}
 	return nil
 }
 
@@ -249,7 +251,9 @@ func (s *socket) getCommand(n nameID, fn func(*server, *command) error) error {
 	if err := fn(serv, c); err != nil {
 		return err
 	}
-	saveConfig()
+	if err := saveConfig(); err != nil {
+		return fmt.Errorf("error saving config: %w", err)
+	}
 	return nil
 }
 
@@ -268,7 +272,9 @@ func (s *socket) add(data json.RawMessage) (interface{}, error) {
 		Commands:  make(map[uint64]*command),
 		name:      name,
 	}
-	saveConfig()
+	if err := saveConfig(); err != nil {
+		return nil, fmt.Errorf("error saving config: %w", err)
+	}
 	broadcast(broadcastAdd, data, s.id)
 	return nil, nil
 }
@@ -289,7 +295,9 @@ func (s *socket) rename(data json.RawMessage) (interface{}, error) {
 	}
 	delete(config.Servers, name[0])
 	config.Servers[name[1]] = serv
-	saveConfig()
+	if err := saveConfig(); err != nil {
+		return nil, fmt.Errorf("error saving config: %w", err)
+	}
 	broadcast(broadcastRename, data, s.id)
 	return nil, nil
 }
@@ -316,7 +324,9 @@ func (s *socket) remove(data json.RawMessage) (interface{}, error) {
 		}
 	}
 	delete(config.Servers, name)
-	saveConfig()
+	if err := saveConfig(); err != nil {
+		return nil, fmt.Errorf("error saving config: %w", err)
+	}
 	broadcast(broadcastRemove, data, s.id)
 	return nil, nil
 }
@@ -336,7 +346,9 @@ func (s *socket) addRedirect(data json.RawMessage) (interface{}, error) {
 		return nil, ErrNoServer
 	}
 	id := serv.addRedirect(ar.redirectData)
-	saveConfig()
+	if err := saveConfig(); err != nil {
+		return nil, fmt.Errorf("error saving config: %w", err)
+	}
 	broadcast(broadcastAddRedirect, append(strconv.AppendUint(append(data[:len(data)-1], ",\"id\":"...), id, 10), '}'), s.id)
 	return id, nil
 }
@@ -356,7 +368,9 @@ func (s *socket) addCommand(data json.RawMessage) (interface{}, error) {
 		return nil, ErrNoServer
 	}
 	id := serv.addCommand(ac.commandData)
-	saveConfig()
+	if err := saveConfig(); err != nil {
+		return nil, fmt.Errorf("error saving config: %w", err)
+	}
 	broadcast(broadcastAddCommand, append(strconv.AppendUint(append(data[:len(data)-1], ",\"id\":"...), id, 10), '}'), s.id)
 	return id, nil
 }
@@ -463,7 +477,9 @@ func (s *socket) stopRedirect(data json.RawMessage) (interface{}, error) {
 	}
 	r.Stop()
 	broadcast(broadcastStopRedirect, data, s.id)
-	saveConfig()
+	if err := saveConfig(); err != nil {
+		return nil, fmt.Errorf("error saving config: %w", err)
+	}
 	return nil, nil
 }
 
@@ -487,7 +503,9 @@ func (s *socket) stopCommand(data json.RawMessage) (interface{}, error) {
 	}
 	c.Stop()
 	broadcast(broadcastStopCommand, data, s.id)
-	saveConfig()
+	if err := saveConfig(); err != nil {
+		return nil, fmt.Errorf("error saving config: %w", err)
+	}
 	return nil, nil
 }
 
