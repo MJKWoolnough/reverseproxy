@@ -16,19 +16,15 @@ type unixService struct {
 	conn *net.UnixConn
 }
 
-func (u *unixService) Transfer(buf []byte, conn *net.TCPConn) error {
+func (u *unixService) Transfer(buf []byte, conn *net.TCPConn) {
 	f, err := conn.File()
 	conn.Close()
 	if err == nil {
 		atomic.AddUint64(&u.transferring, 1)
-		_, _, err = u.conn.WriteMsgUnix(buf, syscall.UnixRights(int(f.Fd())), nil)
+		u.conn.WriteMsgUnix(buf, syscall.UnixRights(int(f.Fd())), nil)
 		atomic.AddUint64(&u.transferring, ^uint64(0))
-		errr := f.Close()
-		if err == nil {
-			err = errr
-		}
+		f.Close()
 	}
-	return err
 }
 
 func (u *unixService) Active() bool {

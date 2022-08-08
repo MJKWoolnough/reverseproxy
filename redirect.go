@@ -12,7 +12,7 @@ type addrService struct {
 	net.Addr
 }
 
-func (a *addrService) Transfer(buf []byte, conn *net.TCPConn) error {
+func (a *addrService) Transfer(buf []byte, conn *net.TCPConn) {
 	p, err := net.Dial(a.Network(), a.String())
 	if err == nil {
 		if _, err = p.Write(buf); err == nil {
@@ -21,7 +21,6 @@ func (a *addrService) Transfer(buf []byte, conn *net.TCPConn) error {
 			go copyConn(conn, p, &a.copying)
 		}
 	}
-	return err
 }
 
 func (a *addrService) Active() bool {

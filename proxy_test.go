@@ -20,9 +20,8 @@ type testData struct {
 
 type testService chan testData
 
-func (t testService) Transfer(buf []byte, conn *net.TCPConn) error {
+func (t testService) Transfer(buf []byte, conn *net.TCPConn) {
 	t <- testData{append(make([]byte, 0, len(buf)), buf...), conn}
-	return nil
 }
 
 func (t testService) Active() bool {
