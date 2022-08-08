@@ -213,51 +213,43 @@ type nameID struct {
 
 func (s *socket) getRedirect(n nameID, fn func(*server, *redirect) error) error {
 	config.mu.Lock()
+	defer config.mu.Unlock()
 	serv, ok := config.Servers[n.Server]
 	if !ok {
-		config.mu.Unlock()
 		return ErrNoServer
 	}
 	r, ok := serv.Redirects[n.ID]
 	if !ok {
-		config.mu.Unlock()
 		return ErrUnknownRedirect
 	}
 	if r.Start {
-		config.mu.Unlock()
 		return ErrServerRunning
 	}
 	if err := fn(serv, r); err != nil {
-		config.mu.Unlock()
 		return err
 	}
 	saveConfig()
-	config.mu.Unlock()
 	return nil
 }
 
 func (s *socket) getCommand(n nameID, fn func(*server, *command) error) error {
 	config.mu.Lock()
+	defer config.mu.Unlock()
 	serv, ok := config.Servers[n.Server]
 	if !ok {
-		config.mu.Unlock()
 		return ErrNoServer
 	}
 	c, ok := serv.Commands[n.ID]
 	if !ok {
-		config.mu.Unlock()
 		return ErrUnknownCommand
 	}
 	if c.status == 1 {
-		config.mu.Unlock()
 		return ErrServerRunning
 	}
 	if err := fn(serv, c); err != nil {
-		config.mu.Unlock()
 		return err
 	}
 	saveConfig()
-	config.mu.Unlock()
 	return nil
 }
 
@@ -267,8 +259,8 @@ func (s *socket) add(data json.RawMessage) (interface{}, error) {
 		return nil, err
 	}
 	config.mu.Lock()
+	defer config.mu.Unlock()
 	if _, ok := config.Servers[name]; ok {
-		config.mu.Unlock()
 		return nil, ErrNameExists
 	}
 	config.Servers[name] = &server{
@@ -278,7 +270,6 @@ func (s *socket) add(data json.RawMessage) (interface{}, error) {
 	}
 	saveConfig()
 	broadcast(broadcastAdd, data, s.id)
-	config.mu.Unlock()
 	return nil, nil
 }
 
@@ -288,20 +279,18 @@ func (s *socket) rename(data json.RawMessage) (interface{}, error) {
 		return nil, err
 	}
 	config.mu.Lock()
+	defer config.mu.Unlock()
 	if _, ok := config.Servers[name[1]]; ok {
-		config.mu.Unlock()
 		return nil, ErrNameExists
 	}
 	serv, ok := config.Servers[name[0]]
 	if !ok {
-		config.mu.Unlock()
 		return nil, ErrNoServer
 	}
 	delete(config.Servers, name[0])
 	config.Servers[name[1]] = serv
 	saveConfig()
 	broadcast(broadcastRename, data, s.id)
-	config.mu.Unlock()
 	return nil, nil
 }
 
@@ -311,27 +300,24 @@ func (s *socket) remove(data json.RawMessage) (interface{}, error) {
 		return nil, err
 	}
 	config.mu.Lock()
+	defer config.mu.Unlock()
 	serv, ok := config.Servers[name]
 	if !ok {
-		config.mu.Unlock()
 		return nil, ErrNoServer
 	}
 	for _, r := range serv.Redirects {
 		if r.Start {
-			config.mu.Unlock()
 			return nil, ErrServerRunning
 		}
 	}
 	for _, c := range serv.Commands {
 		if c.status != 0 {
-			config.mu.Unlock()
 			return nil, ErrServerRunning
 		}
 	}
 	delete(config.Servers, name)
 	saveConfig()
 	broadcast(broadcastRemove, data, s.id)
-	config.mu.Unlock()
 	return nil, nil
 }
 
@@ -344,15 +330,14 @@ func (s *socket) addRedirect(data json.RawMessage) (interface{}, error) {
 		return nil, err
 	}
 	config.mu.Lock()
+	defer config.mu.Unlock()
 	serv, ok := config.Servers[ar.Server]
 	if !ok {
-		config.mu.Unlock()
 		return nil, ErrNoServer
 	}
 	id := serv.addRedirect(ar.redirectData)
 	saveConfig()
 	broadcast(broadcastAddRedirect, append(strconv.AppendUint(append(data[:len(data)-1], ",\"id\":"...), id, 10), '}'), s.id)
-	config.mu.Unlock()
 	return id, nil
 }
 
@@ -365,15 +350,14 @@ func (s *socket) addCommand(data json.RawMessage) (interface{}, error) {
 		return nil, err
 	}
 	config.mu.Lock()
+	defer config.mu.Unlock()
 	serv, ok := config.Servers[ac.Server]
 	if !ok {
-		config.mu.Unlock()
 		return nil, ErrNoServer
 	}
 	id := serv.addCommand(ac.commandData)
 	saveConfig()
 	broadcast(broadcastAddCommand, append(strconv.AppendUint(append(data[:len(data)-1], ",\"id\":"...), id, 10), '}'), s.id)
-	config.mu.Unlock()
 	return id, nil
 }
 
@@ -465,24 +449,21 @@ func (s *socket) stopRedirect(data json.RawMessage) (interface{}, error) {
 		return nil, err
 	}
 	config.mu.Lock()
+	defer config.mu.Unlock()
 	serv, ok := config.Servers[sr.Server]
 	if !ok {
-		config.mu.Unlock()
 		return nil, ErrNoServer
 	}
 	r, ok := serv.Redirects[sr.ID]
 	if !ok {
-		config.mu.Unlock()
 		return nil, ErrUnknownRedirect
 	}
 	if !r.Start {
-		config.mu.Unlock()
 		return nil, ErrServerNotRunning
 	}
 	r.Stop()
 	broadcast(broadcastStopRedirect, data, s.id)
 	saveConfig()
-	config.mu.Unlock()
 	return nil, nil
 }
 
@@ -492,24 +473,21 @@ func (s *socket) stopCommand(data json.RawMessage) (interface{}, error) {
 		return nil, err
 	}
 	config.mu.Lock()
+	defer config.mu.Unlock()
 	serv, ok := config.Servers[sc.Server]
 	if !ok {
-		config.mu.Unlock()
 		return nil, ErrNoServer
 	}
 	c, ok := serv.Commands[sc.ID]
 	if !ok {
-		config.mu.Unlock()
 		return nil, ErrUnknownCommand
 	}
 	if c.status != 1 {
-		config.mu.Unlock()
 		return nil, ErrServerNotRunning
 	}
 	c.Stop()
 	broadcast(broadcastStopCommand, data, s.id)
 	saveConfig()
-	config.mu.Unlock()
 	return nil, nil
 }
 
@@ -519,22 +497,19 @@ func (s *socket) getCommandPorts(data json.RawMessage) (interface{}, error) {
 		return nil, err
 	}
 	config.mu.Lock()
+	defer config.mu.Unlock()
 	serv, ok := config.Servers[cp.Server]
 	if !ok {
-		config.mu.Unlock()
 		return nil, ErrNoServer
 	}
 	c, ok := serv.Commands[cp.ID]
 	if !ok {
-		config.mu.Unlock()
 		return nil, ErrUnknownCommand
 	}
 	if c.status != 1 {
-		config.mu.Unlock()
 		return nil, ErrServerNotRunning
 	}
 	ports := c.unixCmd.Status().Ports
-	config.mu.Unlock()
 	return ports, nil
 }
 
