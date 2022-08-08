@@ -289,6 +289,7 @@ func (s *socket) rename(data json.RawMessage) (interface{}, error) {
 	}
 	config.mu.Lock()
 	if _, ok := config.Servers[name[1]]; ok {
+		config.mu.Unlock()
 		return nil, ErrNameExists
 	}
 	serv, ok := config.Servers[name[0]]
