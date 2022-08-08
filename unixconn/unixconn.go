@@ -91,7 +91,7 @@ func runListenLoop() {
 						c, ok := sockets[port]
 						if ok {
 							if ka, ok := cn.(keepAlive); ok {
-								if err := ka.SetKeepAlive(true); err != nil {
+								if err := ka.SetKeepAlive(true); err == nil {
 									ka.SetKeepAlivePeriod(3 * time.Minute)
 								}
 							}
