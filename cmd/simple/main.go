@@ -161,7 +161,11 @@ func run() error {
 		}
 		go server.ServeTLS(l, "", "")
 	}
-	go server.Serve(l)
+	go func() {
+		if err := server.Serve(l); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			fmt.Fprintln(os.Stderr, err)
+		}
+	}()
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, os.Interrupt)

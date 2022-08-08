@@ -156,7 +156,11 @@ func run() error {
 	s := http.Server{
 		Handler: &config,
 	}
-	go s.Serve(l)
+	go func() {
+		if err := s.Serve(l); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			fmt.Fprintln(os.Stderr, err)
+		}
+	}()
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, os.Interrupt)
 	<-sc
