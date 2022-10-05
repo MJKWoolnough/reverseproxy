@@ -3,12 +3,11 @@ import type {Props} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
 import {amendNode, clearNode} from './lib/dom.js';
 import {br, button, div, h1, img, input, label, li, span, table, tbody, td, th, thead, tr, ul} from './lib/html.js';
+import pageLoad from './lib/load.js';
 import {NodeArray, NodeMap, node, noSort, stringSort} from './lib/nodes.js';
 import {circle, g, line, path, polyline, rect, svg, svgData, symbol, title, use} from './lib/svg.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
-
-declare const pageLoad: Promise<void>;
 
 let nextID = 0;
 
