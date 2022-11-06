@@ -476,7 +476,7 @@ class Server {
 	}
 }
 
-pageLoad.then(() => RPC("/socket").then(() => {rpc.waitList().then(list => {
+pageLoad.then(() => RPC("/socket").then(() => rpc.waitList().when(list => {
 	for (const s of list) {
 		servers.set(s[0], new Server(s));
 	}
@@ -490,25 +490,25 @@ pageLoad.then(() => RPC("/socket").then(() => {rpc.waitList().then(list => {
 		})}),
 		servers[node]
 	])));
-	rpc.waitAdd().then(name => servers.set(name, new Server([name, [], []])));
-	rpc.waitRename().then(([oldName, newName]) => servers.get(oldName)?.setName(newName));
-	rpc.waitRemove().then(name => servers.delete(name));
-	rpc.waitAddRedirect().then(r => {
+	rpc.waitAdd().when(name => servers.set(name, new Server([name, [], []])));
+	rpc.waitRename().when(([oldName, newName]) => servers.get(oldName)?.setName(newName));
+	rpc.waitRemove().when(name => servers.delete(name));
+	rpc.waitAddRedirect().when(r => {
 		const server = servers.get(r.server);
 		server?.redirects.set(r.id, new Redirect(server, r.id, r.from, r.to, false, r.match));
 	});
-	rpc.waitModifyRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.update(r.from, r.to, r.match));
-	rpc.waitRemoveRedirect().then(r => servers.get(r.server)?.redirects.delete(r.id));
-	rpc.waitAddCommand().then(c => {
+	rpc.waitModifyRedirect().when(r => servers.get(r.server)?.redirects.get(r.id)?.update(r.from, r.to, r.match));
+	rpc.waitRemoveRedirect().when(r => servers.get(r.server)?.redirects.delete(r.id));
+	rpc.waitAddCommand().when(c => {
 		const server = servers.get(c.server);
 		server?.commands.set(c.id, new Command(server, c.id, c.exe, c.params, c.workDir, c.env, c.match, c.user, 0, ""));
 	});
-	rpc.waitModifyCommand().then(c => servers.get(c.server)?.commands.get(c.id)?.update(c.exe, c.params, c.env, c.match, c.user));
-	rpc.waitRemoveCommand().then(c => servers.get(c.server)?.commands.delete(c.id));
-	rpc.waitStartRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.setActive(true));
-	rpc.waitStopRedirect().then(r => servers.get(r.server)?.redirects.get(r.id)?.setActive(false));
-	rpc.waitStartCommand().then(c => servers.get(c.server)?.commands.get(c.id)?.setStatus(1));
-	rpc.waitStopCommand().then(c => servers.get(c.server)?.commands.get(c.id)?.setStatus(0));
-	rpc.waitCommandStopped().then(([server, id]) => servers.get(server)?.commands.get(id)?.setStatus(2));
-	rpc.waitCommandError().then(c => servers.get(c.server)?.commands.get(c.id)?.setError(c.err));
-})}));
+	rpc.waitModifyCommand().when(c => servers.get(c.server)?.commands.get(c.id)?.update(c.exe, c.params, c.env, c.match, c.user));
+	rpc.waitRemoveCommand().when(c => servers.get(c.server)?.commands.delete(c.id));
+	rpc.waitStartRedirect().when(r => servers.get(r.server)?.redirects.get(r.id)?.setActive(true));
+	rpc.waitStopRedirect().when(r => servers.get(r.server)?.redirects.get(r.id)?.setActive(false));
+	rpc.waitStartCommand().when(c => servers.get(c.server)?.commands.get(c.id)?.setStatus(1));
+	rpc.waitStopCommand().when(c => servers.get(c.server)?.commands.get(c.id)?.setStatus(0));
+	rpc.waitCommandStopped().when(([server, id]) => servers.get(server)?.commands.get(id)?.setStatus(2));
+	rpc.waitCommandError().when(c => servers.get(c.server)?.commands.get(c.id)?.setError(c.err));
+})));
