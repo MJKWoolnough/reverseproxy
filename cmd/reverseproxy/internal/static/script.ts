@@ -1,5 +1,5 @@
 import type {ListItem, Match, MatchData, Uint, UserID} from './types.js';
-import type {Props} from './lib/dom.js';
+import type {PropsObject} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
 import {amendNode, clearNode} from './lib/dom.js';
 import {br, button, div, h1, img, input, label, li, span, table, tbody, td, th, thead, tr, ul} from './lib/html.js';
@@ -24,7 +24,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 	const id = "ID_" + nextID++;
 	amendNode(symbols, amendNode(s, {id}));
 	return [
-		(props: Exclude<Props, NamedNodeMap> = {}) => svg(props, [
+		(props: PropsObject = {}) => svg(props, [
 			typeof props["title"] === "string" ? title(props["title"]) : [],
 			use({"href": `#${id}`})
 		]),
