@@ -169,8 +169,8 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 				const p = params.map(p => p[node].value),
 				      e = env.toObject(),
 				      ids = userID.checked ? {
-					      "uid": u,
-					      "gid": g
+					"uid": u,
+					"gid": g
 				      } : undefined;
 				(data ?
 					rpc.modifyCommand({
