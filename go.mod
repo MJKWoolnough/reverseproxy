@@ -14,6 +14,6 @@ require (
 )
 
 require (
-	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/text v0.3.8 // indirect
 	vimagination.zapto.org/httpencoding v1.0.0 // indirect
 )
