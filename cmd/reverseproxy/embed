@@ -47,7 +47,7 @@ import (
 var (
 	//go:embed index.gz
 	indexData []byte
-	index     = httpembed.HandleBuffer(indexData, $(stat --format "%s" "$tmpFile"), time.Unix($(date "+%s"), 0))
+	index     = httpembed.HandleBuffer("index.html", indexData, $(stat --format "%s" "$tmpFile"), time.Unix($(date "+%s"), 0))
 )
 HEREDOC
 
