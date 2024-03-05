@@ -4,7 +4,7 @@ import type {WindowElement} from './lib/windows.js';
 import {amendNode, clearNode} from './lib/dom.js';
 import {br, button, div, h1, img, input, label, li, span, table, tbody, td, th, thead, tr, ul} from './lib/html.js';
 import pageLoad from './lib/load.js';
-import {NodeArray, NodeMap, node, noSort, stringSort} from './lib/nodes.js';
+import {NodeArray, NodeMap, node, stringSort} from './lib/nodes.js';
 import {circle, g, line, path, polyline, rect, svg, svgData, symbol, title, use} from './lib/svg.js';
 import {desktop, shell as shellElement, windows} from './lib/windows.js';
 import RPC, {rpc} from './rpc.js';
@@ -117,7 +117,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
       editCommand = (server: Server, data?: Command) => {
 	const icon = data ? editIcon : addCommandIcon,
 	      exe = input({"value": data?.exe}),
-	      params = new NodeArray(div(), noSort, data?.params.map(p => ({[node]: input({"value": p})})) ?? []),
+	      params = new NodeArray(div(), data?.params.map(p => ({[node]: input({"value": p})})) ?? []),
 	      env = new EnvMaker(data?.env ?? {}),
 	      workDir = input({"value": data?.workDir}),
 	      userID = input({"type": "checkbox", "checked": data?.user !== undefined, "onchange": () => {
