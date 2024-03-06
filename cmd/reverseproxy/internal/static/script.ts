@@ -80,7 +80,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		br(),
 		addLabel("To:", to),
 		br(),
-		matches[node],
+		matches,
 		button({"onclick": function(this: HTMLButtonElement) {
 			const f = parseInt(from.value);
 			if (f <= 0 || f > 65535) {
@@ -132,7 +132,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		addLabel("Executable:", exe),
 		br(),
 		label("Params:"),
-		params[node],
+		params,
 		button({"onclick": () => {
 			if (params.length > 0) {
 				params.pop();
@@ -143,9 +143,9 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		addLabel("Working Directory: ", workDir),
 		br(),
 		br(),
-		env[node],
+		env,
 		br(),
-		matches[node],
+		matches,
 		br(),
 		addLabel("Run as different user?:", userID),
 		br(),
@@ -201,7 +201,7 @@ const rcSort = (a: Redirect | Command, b: Redirect | Command) => a.id - b.id,
 		}}, (data ? "Edit" : "Create") + " Command")
 	]));
       },
-      servers = new NodeMap<string, Server>(ul(), (a: Server, b: Server) => stringSort(a.name, b.name)),
+      servers = new NodeMap<string, Server, HTMLUListElement>(ul(), (a: Server, b: Server) => stringSort(a.name, b.name)),
       statusColours = ["#f00", "#0f0", "#f80"];
 
 class MatchMaker {
@@ -256,10 +256,10 @@ type Env = {
 
 class EnvMaker {
 	#nextID = 0;
-	#m: NodeMap<number, Env>;
+	#m: NodeMap<number, Env, HTMLTableSectionElement>;
 	[node]: HTMLDivElement;
 	constructor(environment: Record<string, string>) {
-		this.#m = new NodeMap<number, Env>(tbody());
+		this.#m = new NodeMap<number, Env, HTMLTableSectionElement>(tbody());
 		for (const key in environment) {
 			this.addEnv(key, environment[key]);
 		}
@@ -270,7 +270,7 @@ class EnvMaker {
 					th("Value"),
 					th(img({"src": removeIcon, "style": {"width": "1em", "height": "1em"}}))
 				])),
-				this.#m[node]
+				this.#m
 			]),
 			button({"onclick": () => this.addEnv()}, "+")
 		]);
@@ -439,14 +439,14 @@ class Command {
 
 class Server {
 	name: string;
-	redirects: NodeMap<Uint, Redirect>;
-	commands: NodeMap<Uint, Command>;
+	redirects: NodeMap<Uint, Redirect, HTMLUListElement>;
+	commands: NodeMap<Uint, Command, HTMLUListElement>;
 	[node]: HTMLLIElement;
 	#nameSpan: HTMLSpanElement;
 	constructor([name, rs, cs]: ListItem) {
 		this.name = name;
-		this.redirects = new NodeMap<Uint, Redirect & {[node]: HTMLLIElement}>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => [id, new Redirect(this, id, from, to, active, matchData2Match(match))]));
-		this.commands = new NodeMap<Uint, Command & {[node]: HTMLLIElement}>(ul(), rcSort, cs.map(([id, exe, params, workDir, env, status, error, user, ...match]) => [id, new Command(this, id, exe, params, workDir, env, matchData2Match(match), user || undefined, status, error)]));
+		this.redirects = new NodeMap<Uint, Redirect & {[node]: HTMLLIElement}, HTMLUListElement>(ul(), rcSort, rs.map(([id, from, to, active, _, ...match]) => [id, new Redirect(this, id, from, to, active, matchData2Match(match))]));
+		this.commands = new NodeMap<Uint, Command & {[node]: HTMLLIElement}, HTMLUListElement>(ul(), rcSort, cs.map(([id, exe, params, workDir, env, status, error, user, ...match]) => [id, new Command(this, id, exe, params, workDir, env, matchData2Match(match), user || undefined, status, error)]));
 		this.#nameSpan = span(name);
 		this[node] = li([
 			div([
@@ -465,8 +465,8 @@ class Server {
 					}
 				})})
 			]),
-			this.redirects[node],
-			this.commands[node]
+			this.redirects,
+			this.commands
 		]);
 	}
 	setName(name: string) {
@@ -488,7 +488,7 @@ pageLoad.then(() => RPC("/socket").then(() => rpc.waitList().when(list => {
 				rpc.add(name).catch(err => shell.alert("Error", err, addServerIcon)).then(() => servers.set(name, new Server([name, [], []])));
 			}
 		})}),
-		servers[node]
+		servers
 	])));
 	rpc.waitAdd().when(name => servers.set(name, new Server([name, [], []])));
 	rpc.waitRename().when(([oldName, newName]) => servers.get(oldName)?.setName(newName));
