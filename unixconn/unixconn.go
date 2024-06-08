@@ -1,4 +1,4 @@
-// Package unixconn facilitates creating reverse proxy connections
+// Package unixconn facilitates creating reverse proxy connections.
 package unixconn // import "vimagination.zapto.org/reverseproxy/unixconn"
 
 import (
@@ -39,10 +39,12 @@ func init() {
 	if err == nil {
 		u, ok := c.(*net.UnixConn)
 		uc = u
+
 		if ok {
 			fallback = 0
 			newSocket = make(chan ns)
 			listeningSockets = make(map[uint16]struct{})
+
 			go runListenLoop()
 		}
 	}
@@ -52,15 +54,19 @@ func runListenLoop() {
 	buf := bufPool.Get().(*buffer)
 	oob := make([]byte, syscall.CmsgLen(4))
 	sockets := make(map[uint16]chan net.Conn)
+
 	for {
-		n, oobn, _, _, err := uc.ReadMsgUnix(buf[:], oob[:])
+		n, oobn, _, _, err := uc.ReadMsgUnix(buf[:], oob)
 		if err != nil {
 			for _, c := range sockets {
 				close(c)
 			}
+
 			atomic.StoreUint32(&fallback, 1)
+
 			break
 		}
+
 		if oobn == 0 {
 			if n == 2 {
 				port := uint16(buf[1])<<8 | uint16(buf[0])
@@ -83,11 +89,13 @@ func runListenLoop() {
 				if cn, err := net.FileConn(nf); err == nil {
 					if ra := cn.RemoteAddr(); ra != nil {
 						var port uint16
+
 						if tcpaddr, ok := cn.LocalAddr().(*net.TCPAddr); ok {
 							port = uint16(tcpaddr.Port)
 						} else {
 							port = getPort(cn.LocalAddr().String())
 						}
+
 						c, ok := sockets[port]
 						if ok {
 							if ka, ok := cn.(keepAlive); ok {
@@ -95,14 +103,19 @@ func runListenLoop() {
 									ka.SetKeepAlivePeriod(3 * time.Minute)
 								}
 							}
+
 							cc := &conn{
 								Conn:   cn,
 								buf:    buf,
 								length: n,
 							}
+
 							buf = bufPool.Get().(*buffer)
+
 							runtime.SetFinalizer(cc, (*conn).Close)
+
 							go sendConn(c, cc)
+
 							continue
 						} else {
 							cn.Close()
@@ -111,9 +124,11 @@ func runListenLoop() {
 						cn.Close()
 					}
 				}
+
 				nf.Close()
 			}
 		}
+
 		for n := range buf[:n] {
 			buf[n] = 0
 		}
@@ -122,11 +137,13 @@ func runListenLoop() {
 
 func sendConn(c chan net.Conn, conn *conn) {
 	t := time.NewTimer(time.Minute * 3)
+
 	select {
 	case <-t.C:
 		conn.Close()
 	case c <- conn:
 	}
+
 	t.Stop()
 }
 
@@ -146,11 +163,14 @@ func (c *conn) Read(b []byte) (int, error) {
 	if c.buf != nil {
 		n := copy(b, c.buf[c.pos:c.length])
 		c.pos += n
+
 		if c.pos == c.length {
 			c.clearBuffer()
 		}
+
 		return n, nil
 	}
+
 	return c.Conn.Read(b)
 }
 
@@ -158,7 +178,9 @@ func (c *conn) clearBuffer() {
 	for n := range c.buf[:c.length] {
 		c.buf[n] = 0
 	}
+
 	bufPool.Put(c.buf)
+
 	c.buf = nil
 }
 
@@ -166,7 +188,9 @@ func (c *conn) Close() error {
 	if c.buf != nil {
 		c.clearBuffer()
 	}
+
 	runtime.SetFinalizer(c, nil)
+
 	return c.Conn.Close()
 }
 
@@ -181,6 +205,7 @@ func (l *listener) Accept() (net.Conn, error) {
 	if !ok {
 		return nil, net.ErrClosed
 	}
+
 	return c, nil
 }
 
@@ -188,14 +213,17 @@ func (l *listener) Close() error {
 	if l.socket == 0 {
 		return net.ErrClosed
 	}
+
 	runtime.SetFinalizer(l, nil)
-	var buf [2]byte
-	buf[0] = byte(l.socket)
-	buf[1] = byte(l.socket >> 8)
+
+	buf := [2]byte{byte(l.socket), byte(l.socket >> 8)}
+
 	l.socket = 0
+
 	ucMu.Lock()
 	_, _, err := uc.WriteMsgUnix(buf[:], nil, nil)
 	ucMu.Unlock()
+
 	return err
 }
 
@@ -216,52 +244,64 @@ func (a addr) String() string {
 }
 
 // Listen creates a reverse proxy connection, falling back to the net package if
-// the reverse proxy is not available
+// the reverse proxy is not available.
 func Listen(network, address string) (net.Listener, error) {
 	if atomic.LoadUint32(&fallback) == 1 {
 		return net.Listen(network, address)
 	}
+
 	port := getPort(address)
 	if port == 0 {
 		return nil, ErrInvalidAddress
 	}
-	var buf [2]byte
-	buf[0] = byte(port)
-	buf[1] = byte(port >> 8)
+
+	buf := [2]byte{byte(port), byte(port >> 8)}
+
 	ucMu.Lock()
+
 	if _, ok := listeningSockets[port]; ok {
 		ucMu.Unlock()
+
 		return nil, ErrAlreadyListening
 	}
+
 	_, _, err := uc.WriteMsgUnix(buf[:], nil, nil)
 	if err != nil {
 		ucMu.Unlock()
+
 		return nil, err
 	}
-	ns := <-newSocket
+
+	nss := <-newSocket
+
 	ucMu.Unlock()
-	if ns.err != nil {
-		return nil, ns.err
+
+	if nss.err != nil {
+		return nil, nss.err
 	}
+
 	l := &listener{
 		socket: port,
-		c:      ns.c,
+		c:      nss.c,
 		addr: addr{
 			network: network,
 			address: address,
 		},
 	}
+
 	runtime.SetFinalizer(l, (*listener).Close)
+
 	return l, nil
 }
 
 func getPort(address string) uint16 {
 	_, portStr, _ := net.SplitHostPort(address)
 	port, _ := strconv.ParseUint(portStr, 10, 16)
+
 	return uint16(port)
 }
 
-// Errors
+// Errors.
 var (
 	ErrInvalidAddress   = errors.New("port must be 0 < port < 2^16")
 	ErrAlreadyListening = errors.New("port already being listened on")
