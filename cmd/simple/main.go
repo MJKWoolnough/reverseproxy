@@ -26,12 +26,16 @@ type http2https struct {
 func (hh http2https) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.TLS == nil {
 		url := "https://" + r.Host + r.URL.Path
+
 		if len(r.URL.RawQuery) != 0 {
 			url += "?" + r.URL.RawQuery
 		}
+
 		http.Redirect(w, r, url, http.StatusMovedPermanently)
+
 		return
 	}
+
 	hh.Handler.ServeHTTP(w, r)
 }
 
@@ -43,6 +47,7 @@ func (p *paths) String() string {
 
 func (p *paths) Set(path string) error {
 	*p = append(*p, http.Dir(path))
+
 	return nil
 }
 
@@ -54,6 +59,7 @@ func (s *serverNames) String() string {
 
 func (s *serverNames) Set(serverName string) error {
 	*s = append(*s, serverName)
+
 	return nil
 }
 
@@ -76,19 +82,23 @@ type values struct {
 
 func (c *contact) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
+
 	var v values
+
 	if r.Method == http.MethodPost {
 		r.ParseForm()
+
 		if r.Form.Get("submit") != "" {
-			err := form.Process(r, &v)
-			if err == nil {
+			if err := form.Process(r, &v); err == nil {
 				go smtp.SendMail(c.Host, c.Auth, c.From, []string{c.To}, []byte(fmt.Sprintf("To: %s\r\nFrom: %s\r\nSubject: Message Received\r\n\r\nName: %s\nEmail: %s\nPhone: %s\nSubject: %s\nMessage: %s", c.To, c.From, v.Name, v.Email, v.Phone, v.Subject, v.Message)))
+
 				v.Done = true
 			} else {
 				v.Errors = err.(form.ErrorMap)
 			}
 		}
 	}
+
 	c.Template.Execute(w, &v)
 }
 
@@ -101,35 +111,42 @@ func main() {
 func run() error {
 	var (
 		contactTmpl string
-		paths       paths
-		serverNames serverNames
+		sPaths      paths
+		sNames      serverNames
 	)
+
 	flag.StringVar(&contactTmpl, "c", "", "contact form template")
-	flag.Var(&serverNames, "s", "server name(s) for TLS")
-	flag.Var(&paths, "p", "server path")
+	flag.Var(&sNames, "s", "server name(s) for TLS")
+	flag.Var(&sPaths, "p", "server path")
 	flag.Parse()
-	if len(paths) == 0 {
+
+	if len(sPaths) == 0 {
 		return errors.New("")
 	}
+
 	server := &http.Server{
 		Handler: http.DefaultServeMux,
 	}
+
 	if contactTmpl != "" {
 		from := os.Getenv("contactFrom")
-		os.Unsetenv("contactFrom")
 		to := os.Getenv("contactTo")
-		os.Unsetenv("contactTo")
 		addr := os.Getenv("contactAddr")
-		os.Unsetenv("contactAddr")
 		username := os.Getenv("contactUsername")
-		os.Unsetenv("contactUsername")
 		password := os.Getenv("contactPassword")
-		os.Unsetenv("contactPassword")
 		p := strings.IndexByte(addr, ':')
 		addrNoPort := addr
+
+		os.Unsetenv("contactFrom")
+		os.Unsetenv("contactTo")
+		os.Unsetenv("contactAddr")
+		os.Unsetenv("contactUsername")
+		os.Unsetenv("contactPassword")
+
 		if p > 0 {
 			addrNoPort = addrNoPort[:p]
 		}
+
 		http.Handle("/contact.html", &contact{
 			Template: template.Must(template.ParseFiles(contactTmpl)),
 			From:     from,
@@ -138,29 +155,34 @@ func run() error {
 			Auth:     smtp.PlainAuth("", username, password, addrNoPort),
 		})
 	}
-	http.Handle("/", httpgzip.FileServer(paths[0], paths[1:]...))
+
+	http.Handle("/", httpgzip.FileServer(sPaths[0], sPaths[1:]...))
 
 	l, err := unixconn.Listen("tcp", ":80")
 	if err != nil {
 		return errors.New("unable to open port 80")
 	}
-	if len(serverNames) > 0 {
-		l, err := unixconn.Listen("tcp", ":443")
+
+	if len(sNames) > 0 {
+		tl, err := unixconn.Listen("tcp", ":443")
 		if err != nil {
 			return errors.New("unable to open port 443")
 		}
+
 		leManager := &autocert.Manager{
 			Prompt:     autocert.AcceptTOS,
 			Cache:      autocert.DirCache("./certcache/"),
-			HostPolicy: autocert.HostWhitelist(serverNames...),
+			HostPolicy: autocert.HostWhitelist(sNames...),
 		}
 		server.Handler = leManager.HTTPHandler(http2https{server.Handler})
 		server.TLSConfig = &tls.Config{
 			GetCertificate: leManager.GetCertificate,
 			NextProtos:     []string{"h2", "http/1.1"},
 		}
-		go server.ServeTLS(l, "", "")
+
+		go server.ServeTLS(tl, "", "")
 	}
+
 	go func() {
 		if err := server.Serve(l); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			fmt.Fprintln(os.Stderr, err)
@@ -168,9 +190,13 @@ func run() error {
 	}()
 
 	sc := make(chan os.Signal, 1)
+
 	signal.Notify(sc, os.Interrupt)
+
 	<-sc
+
 	signal.Stop(sc)
 	close(sc)
+
 	return server.Shutdown(context.Background())
 }
