@@ -17,6 +17,7 @@ func (a *addrService) Transfer(buf []byte, conn *net.TCPConn) {
 	if err == nil {
 		if _, err = p.Write(buf); err == nil {
 			atomic.AddUint64(&a.copying, 2)
+
 			go copyConn(p, conn, &a.copying)
 			go copyConn(conn, p, &a.copying)
 		}
@@ -34,7 +35,7 @@ func copyConn(a, b net.Conn, c *uint64) {
 	atomic.AddUint64(c, ^uint64(0))
 }
 
-// AddRedirect sets a port to be redirected to an external service
+// AddRedirect sets a port to be redirected to an external service.
 func AddRedirect(serviceName MatchServiceName, port uint16, to net.Addr) (*Port, error) {
 	return addPort(port, &addrService{
 		MatchServiceName: serviceName,
