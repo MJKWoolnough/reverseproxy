@@ -50,9 +50,11 @@ func NewConn(conn *websocket.Conn) {
 	s.Server = jsonrpc.New(conn, &s)
 
 	connMu.Lock()
+
 	nextID++
 	s.id = nextID
 	conns[&s] = struct{}{}
+
 	connMu.Unlock()
 
 	s.SendData(buildInitialMessage())
@@ -474,6 +476,7 @@ func (s *socket) modifyRedirect(data json.RawMessage) (interface{}, error) {
 	return nil, s.getRedirect(mr.nameID, func(_ *server, r *redirect) error {
 		r.redirectData = mr.redirectData
 		broadcast(broadcastModifyRedirect, data, s.id)
+
 		return nil
 	})
 }
@@ -491,6 +494,7 @@ func (s *socket) modifyCommand(data json.RawMessage) (interface{}, error) {
 	return nil, s.getCommand(mc.nameID, func(_ *server, c *command) error {
 		c.commandData = mc.commandData
 		broadcast(broadcastModifyCommand, data, s.id)
+
 		return nil
 	})
 }
@@ -505,6 +509,7 @@ func (s *socket) removeRedirect(data json.RawMessage) (interface{}, error) {
 	return nil, s.getRedirect(rr, func(serv *server, _ *redirect) error {
 		delete(serv.Redirects, rr.ID)
 		broadcast(broadcastRemoveRedirect, data, s.id)
+
 		return nil
 	})
 }
@@ -519,6 +524,7 @@ func (s *socket) removeCommand(data json.RawMessage) (interface{}, error) {
 	return nil, s.getCommand(rc, func(serv *server, _ *command) error {
 		delete(serv.Commands, rc.ID)
 		broadcast(broadcastRemoveCommand, data, s.id)
+
 		return nil
 	})
 }
@@ -533,6 +539,7 @@ func (s *socket) startRedirect(data json.RawMessage) (interface{}, error) {
 	return nil, s.getRedirect(sr, func(_ *server, r *redirect) error {
 		r.Run()
 		broadcast(broadcastStartRedirect, data, s.id)
+
 		return nil
 	})
 }
