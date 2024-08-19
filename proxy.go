@@ -25,12 +25,14 @@ var (
 	httpPool = sync.Pool{
 		New: func() interface{} {
 			b := make([]byte, http.DefaultMaxHeaderBytes)
+
 			return &b
 		},
 	}
 	tlsPool = sync.Pool{
 		New: func() interface{} {
 			b := make([]byte, maxTLSRead)
+
 			return &b
 		},
 	}
@@ -191,6 +193,7 @@ func (p *Port) Close() error {
 
 			l.mu.Unlock()
 		}
+
 		p.closed = true
 	}
 

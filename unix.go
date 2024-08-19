@@ -71,7 +71,7 @@ func (u *UnixCmd) Close() error {
 	return errr
 }
 
-// Status retrieves the Status of the UnixCmd
+// Status retrieves the Status of the UnixCmd.
 func (u *UnixCmd) Status() Status {
 	u.mu.Lock()
 	defer u.mu.Unlock()
@@ -199,7 +199,7 @@ func (u *UnixCmd) runCmdLoop(msn MatchServiceName) {
 	}
 }
 
-// Error
+// Error.
 var (
 	ErrClosed = errors.New("closed")
 )
