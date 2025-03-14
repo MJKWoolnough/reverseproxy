@@ -1,6 +1,6 @@
-import type {ListItem, Match, MatchData, Uint, UserID} from './types.js';
 import type {PropsObject} from './lib/dom.js';
 import type {WindowElement} from './lib/windows.js';
+import type {ListItem, Match, MatchData, Uint, UserID} from './types.js';
 import {amendNode, clearNode} from './lib/dom.js';
 import {br, button, div, h1, img, input, label, li, span, table, tbody, td, th, thead, tr, ul} from './lib/html.js';
 import pageLoad from './lib/load.js';
