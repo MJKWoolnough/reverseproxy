@@ -167,7 +167,7 @@ func TestUnixConn(t *testing.T) {
 	if err != nil {
 		t.Errorf("test 15: unexpected error: %s", err)
 	} else if ct == nil {
-		t.Error("test 15: recieved nil conn when conn expected")
+		t.Error("test 15: received nil conn when conn expected")
 	}
 	n, err = c.Read(buf[:])
 	if err != nil {
