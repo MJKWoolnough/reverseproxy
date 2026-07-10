@@ -23,14 +23,14 @@ type listener struct {
 
 var (
 	httpPool = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			b := make([]byte, http.DefaultMaxHeaderBytes)
 
 			return &b
 		},
 	}
 	tlsPool = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			b := make([]byte, maxTLSRead)
 
 			return &b
